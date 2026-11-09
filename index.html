@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Painel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="app.css?v=384">
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><div class="brand-mark" title="Painel · Fernando e Leticia">PA</div><span class="brand-word" title="Painel · Fernando e Leticia">Painel</span><div><h1>Painel</h1><small>Fernando · Leticia</small></div></div>
+    <nav class="nav" id="nav" aria-label="Módulos"></nav>
+    <div class="bar-r">
+      <div class="seg gexec" id="gexec" role="group" aria-label="Filtrar tudo por executivo" title="Vale para todos os módulos"></div>
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Buscar em tudo" autocomplete="off" aria-label="Buscar em tudo" title="Buscar em tudo">
+        <div class="results" id="results" hidden></div>
+      </div>
+      <a class="drive-link" id="driveLink" href="https://drive.google.com/drive/folders/1Vne9tQl8NuetZV7oOHWPQf1YlGx5pEzd" target="_blank" rel="noopener" title="Abrir no Google Drive"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg><span class="drive-l">Pasta no Drive</span></a>
+      <button class="btn primary" id="newTask" title="Nova demanda"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="btn-new-l">Nova demanda</span></button>
+    </div>
+  </header>
+  <main class="views" id="views">
+    <section class="view scroll" id="v-capa"></section>
+    <section class="view scroll" id="v-area" hidden></section>
+    <section class="view scroll" id="v-cad" hidden></section>
+    <section class="view scroll" id="v-dp" hidden></section>
+    <section class="view scroll" id="v-fac" hidden></section>
+    <section class="view scroll" id="v-sau" hidden></section>
+    <section class="view scroll" id="v-fam" hidden></section>
+    <section class="view scroll" id="v-age" hidden></section>
+    <section class="view scroll" id="v-neg" hidden></section>
+    <section class="view scroll" id="v-brd" hidden></section>
+    <section class="view scroll" id="v-via" hidden></section>
+    <section class="view scroll" id="v-rel" hidden></section>
+    <section class="view frame-host" id="v-mod" hidden></section>
+  </main>
+</div>
+<div id="drawer"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/00-nucleo.js?v=384"></script>
+<script src="js/01-registros.js?v=362"></script>
+<script src="js/02-dp.js?v=362"></script>
+<script src="js/03-facilities.js?v=361"></script>
+<script src="js/04-gaveta.js?v=363"></script>
+<script src="js/05-capa.js?v=362"></script>
+<script src="js/06-saude-negocios.js?v=411"></script>
+<script src="js/07-agenda.js?v=385"></script>
+<script src="js/08-boards.js?v=379"></script>
+<script src="js/09-familia.js?v=363"></script>
+<script src="js/10-drive.js?v=363"></script>
+<script src="js/11-viagens.js?v=405"></script>
+<script src="js/12-menus.js?v=364"></script>
+<script src="js/13-demandas.js?v=364"></script>
+<script src="js/14-relatorios.js?v=377"></script>
+<script src="js/14b-financas.js?v=362"></script>
+<script src="js/15-inicio.js?v=361"></script>
+<script src="js/16-edicao.js?v=362"></script>
+
+</body></html>
