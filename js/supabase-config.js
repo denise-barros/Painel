@@ -5,5 +5,5 @@
    NUNCA coloque aqui a chave "service_role" / "secret". */
 window.PAINEL_SUPABASE = {
   url: 'https://itkcvvovzjjepkeblffe.supabase.co',
-  anonKey: ''
+  anonKey: 'sb_publishable_d5abNAgZSKY4BB-HOrJGUg_4Yu8mTN1'
 };
