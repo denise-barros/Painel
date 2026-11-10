@@ -294,8 +294,7 @@ function attLi(it,seen){let h=itemHtml(it,false);const k=esc(attKey(it));
 function attSave(){S.attSeen=Object.assign({},S.attSeen);const lim=new Date(Date.now()-120*864e5).toISOString().slice(0,10);Object.keys(S.attSeen).forEach(k=>{if(S.attSeen[k]<lim)delete S.attSeen[k];});
   if(S.db)S.db.doc('meta/atencao').set({vistos:S.attSeen}).catch(()=>toast('Não foi possível salvar agora. Tente de novo.'));renderCapa();}
 document.addEventListener('click',e=>{const o=e.target.closest('[data-att-ok]');if(o){e.stopPropagation();S.attSeen=Object.assign({},S.attSeen,{[o.dataset.attOk]:todayISO()});attSave();return;}
-  const u=e.target.closest('[data-att-undo]');if(u){e.stopPropagation();S.attSeen=Object.assign({},S.attSeen);delete S.attSeen[u.dataset.attUndo];attSave();return;}
-  const t=e.target.closest('[data-att-seen]');if(t){e.stopPropagation();S.attShowSeen=!S.attShowSeen;renderCapa();}},true);
+  const u=e.target.closest('[data-att-undo]');if(u){e.stopPropagation();S.attSeen=Object.assign({},S.attSeen);delete S.attSeen[u.dataset.attUndo];attSave();return;}},true);
 function itemHtml(it,showDate){
   return '<li><button class="item '+(it.sev||'')+'" data-go="'+it.go+'"><span class="sev"></span><span style="min-width:0"><span class="tt">'+esc(it.title)+'</span><span class="mm"><span class="tag mod-'+esc(it.go||'')+'">'+esc(it.kind)+'</span>'+tagsHtml(it.meta)+'</span></span><span class="rr">'+(it.right?'<b>'+esc(it.right)+'</b>':'')+(showDate?'<small>'+esc(fmtDate(it.date))+'</small>':'')+'</span></button></li>';
 }
@@ -304,7 +303,7 @@ function itemHtml(it,showDate){
 function renderCapa(){
   const el=$('#v-capa');const c=compute();const d=new Date();
   const execName=S.exec?EXEC[S.exec].split(' ')[0]:'';
-  const attAll=c.attention,attV=attAll.filter(i=>!S.attSeen[attKey(i)]),attS=attAll.filter(i=>S.attSeen[attKey(i)]);
+  const attAll=c.attention,attV=attAll.filter(i=>!S.attSeen[attKey(i)]);
   const att=attV.length;
   const summary=!S.loaded?'Carregando os dados…':
     (att?att+(att===1?' item precisa':' itens precisam')+' de atenção':'Nada atrasado')+' · '+c.open.length+' demanda'+(c.open.length===1?'':'s')+' em aberto · '+c.upcoming.length+' compromisso'+(c.upcoming.length===1?'':'s')+' nos próximos 3 dias';
@@ -317,7 +316,6 @@ function renderCapa(){
   if(!att)h+='<ul class="list"><li><div class="empty"><b>Tudo em dia</b>Nenhuma demanda atrasada, pagamento vencido ou espera longa.</div></li></ul>';
   else{const rows=capaRows(attV,'vencido');
     h+='<div class="att-scroll"><ul class="list">'+rows.map(r=>r.grp?grpHtml(r,'att'):attLi(r)).join('')+'</ul></div>';}
-  if(attS.length)h+='<button class="btn sm ghost capa-more" data-att-seen="1" aria-expanded="'+!!S.attShowSeen+'">'+(S.attShowSeen?'Esconder vistos':'Vistos ('+attS.length+')')+'</button>'+(S.attShowSeen?'<div class="att-scroll"><ul class="list">'+attS.map(i=>attLi(i,true)).join('')+'</ul></div>':'');
   h+='</div><div><div class="sec-h"><h3>Próximos 3 dias</h3><span class="cnt">'+c.upcoming.length+'</span></div>';
   if(!c.upcoming.length)h+='<ul class="list"><li><div class="empty"><b>Agenda livre</b>Prazos de demandas e vencimentos de pagamentos aparecem aqui.</div></li></ul>';
   else{const g={};c.upcoming.forEach(u=>{(g[u.date]=g[u.date]||[]).push(u);});
