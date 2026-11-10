@@ -287,7 +287,7 @@ const pacSaldoTxt=s=>s>0?s+' diária(s) a usar':s<0?(-s)+' folga(s) para ela':'z
 function pacoteHtml(p,compact){const k=pacoteOf(p);if(!k)return '';
   const sl=pacSaldoTxt(k.saldo);
   return '<div class="panel"><div class="sec-h"><h3>Pacote de diárias'+(compact?' · '+esc(String(p.nome).split(' ')[0]):'')+'</h3><span class="act"><span class="tag '+(k.saldo>0?'info':k.saldo<0?'ok':'')+'">Saldo: '+esc(sl)+'</span></span></div>'+
-    '<p class="hint" style="margin:0 0 10px">Pacote mensal de '+k.pac+' diárias. O que ela não cumpre no mês fica de saldo para usar depois, por exemplo na cobertura de férias, faltas e folgas. O que ela faz a mais vira folga para ela. Lance as diárias feitas conforme a escala em PDF que ela devolve; o mês atual só entra no saldo quando fechar.</p>'+
+    '<p class="hint" style="margin:0 0 10px">Pacote mensal de '+k.pac+' diárias. O que ela não cumpre no mês fica de saldo para usar depois na cobertura de férias, faltas e folgas. O que ela faz a mais vira folga para ela. Lance as diárias feitas conforme a escala em PDF que ela devolve; o mês atual só entra no saldo quando fechar.</p>'+
     '<table class="pac"><thead><tr><th>Mês</th><th class="c">Feitas</th><th class="c">Saldo do mês</th></tr></thead><tbody>'+
     k.rows.slice().reverse().map(r=>{const isCur=k.cur&&r.ym===k.cur.ym;const dif=r.v==null?null:k.pac-r.v;
       return '<tr><td>'+esc(fmtYm(r.ym))+'</td><td class="c"><input class="pac-in" type="number" min="0" max="31" inputmode="numeric" data-pac-p="'+esc(p.id)+'" data-pac-ym="'+r.ym+'" value="'+(r.v!=null?r.v:'')+'" placeholder="—" aria-label="Diárias feitas em '+esc(fmtYm(r.ym))+'"> <small class="sub">de '+k.pac+'</small></td><td class="c">'+
