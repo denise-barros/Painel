@@ -11,12 +11,13 @@ function renderDP(){
   const prevMes=pagMes.filter(p=>p.status!=='Pago').reduce((a,p)=>a+(+p.valor||0),0);
   const ocMes=recs('dp-oc').filter(o=>String(o.data||'').slice(0,7)===ym&&ids.has(o.pessoa)).length;
   const foraL=active.map(p=>({p,s:dayStatus(p.id,t0)})).filter(x=>x.s&&(x.s.k==='ferias'||x.s.k==='afast'||x.s.k==='atest'));const fora=foraL.length;
-  const TAB=['ind','equipe','pag','mov','esc','oc'].includes(S.dpTab)?S.dpTab:'ind';
-  const HERO={ind:['Departamento pessoal','Indicadores, avisos, demandas e o que vem pela frente.'],equipe:['Equipe','Funcionários e prestadores.'],pag:['Pagamentos','Salários, extras, 13º, férias e guias, mês a mês.'],mov:['Movimentações','O que já aconteceu: admissões, reajustes, férias e desligamentos. O que ainda vem fica em Visão geral › Pela frente.'],esc:['Escalas','Escalas de trabalho da equipe.'],oc:['Ocorrências','Faltas, atestados e outras ocorrências.']};
+  const TAB=['ind','equipe','pag','mov','esc','fer','oc'].includes(S.dpTab)?S.dpTab:'ind';
+  const HERO={ind:['Departamento pessoal','Indicadores, avisos, demandas e o que vem pela frente.'],equipe:['Equipe','Funcionários e prestadores.'],pag:['Pagamentos','Salários, extras, 13º, férias e guias, mês a mês.'],mov:['Movimentações','O que já aconteceu: admissões, reajustes, férias e desligamentos. O que ainda vem fica em Visão geral › Pela frente.'],esc:['Escalas','Escalas de trabalho da equipe.'],fer:['Férias','Férias das funcionárias CLT: o que falta tirar, prazos, próximas saídas e quem cobre.'],oc:['Ocorrências','Faltas, atestados e outras ocorrências.']};
   const wrapDp=b=>'<div class="wrap"><div class="side-layout">'+dpMenu()+'<div class="side-main">'+b+'</div></div></div>';
   let h='<div class="plan-hero"><div><h2>'+HERO[TAB][0]+'</h2><p>'+HERO[TAB][1]+'</p></div>'+
-    '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:''}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:''}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button></div></details>')+'</div></div>';
+    '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button></div></details>')+'</div></div>';
   if(TAB==='ind'){h+=dpIndKpis(active,foraL)+dpAvisosHtml()+demBlock('p-dp')+(equipe().length?dpInd():'');el.innerHTML=wrapDp(h);return;}
+  if(TAB==='fer'){h+=equipe().length?dpFer():'';el.innerHTML=wrapDp(h);return;}
   const SLIM=TAB==='mov'||TAB==='oc';
   const SEARCH='<input class="sel qsearch" id="dpf-q" type="search" placeholder="Buscar pessoa" value="'+esc(S.dpF.q||'')+'" aria-label="Buscar pessoa">';
   if(!SLIM)h+='<div class="filters">'+(selHtml('dpf-vinculo',S.dpF.vinculo,[['','Todos os vínculos'],['CLT','CLT'],['CLT doméstica','CLT doméstica'],['PJ','PJ'],['MEI','MEI'],['Autônomo(a)','Autônomo(a)']],'Vínculo')+
@@ -40,8 +41,9 @@ function dpMenu(){
     pag:'<rect x="3.5" y="6" width="17" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
     mov:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
     esc:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+    fer:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     oc:'<path d="M12 4 3 19h18zM12 10v4M12 17v.5"/>'};
-  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['mov','Movimentações'],['pag','Pagamentos'],['oc','Ocorrências']];
+  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['mov','Movimentações'],['pag','Pagamentos'],['oc','Ocorrências']];
   return '<nav class="neg-menu" aria-label="Departamento pessoal"><div class="nm-head"><div class="nm-mark">DP</div><div><b>Departamento pessoal</b><small>Funcionários e prestadores</small></div></div><div class="nm-list">'+
     L.map(([k,l])=>'<div class="nm-grp"><button class="nm-item nm-g'+on(k)+'" data-dp-tab="'+k+'">'+I(IC_[k])+'<b class="lbl">'+l+'</b></button></div>').join('')+'</div></nav>';
 }
@@ -358,9 +360,7 @@ function dpInd(){const t0=todayISO();const ym=ymOf(t0);const y=+t0.slice(0,4);le
       '<ul class="list">'+lista.slice(0,3).map(o=>rowBtn('dp-oc',o,'<span style="min-width:0"><span class="tt">'+esc(refName('equipe',o.pessoa))+' · '+esc(o.tipo)+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(o.data))+'</span>'+(+o.dias?'<span class="tag warn">'+esc(o.dias)+' dia'+(+o.dias>1?'s':'')+'</span>':'')+filesHtml(o.anexos)+'</span>'+(o.descricao?'<span class="desc-line">'+esc(String(o.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>',o.tipo==='Falta'?'bad':'warn')).join('')+'</ul></div>':'<p class="hint">Nenhuma falta ou atestado registrado em '+y+'.</p>')+'</div>';
   // pacotes
   let hpc='';equipe().filter(p=>+p.pacoteDiarias&&isActive(p.id)).forEach(p=>{hpc+=pacoteHtml(p,true);});
-  // ferias status
-  const fi=equipe().map(p=>({p,f:feriasInfo(p)})).filter(x=>x.f);
-  const hfv=fi.length?'<div class="panel"><div class="sec-h"><h3>Férias por funcionária CLT</h3></div><table class="pac"><thead><tr><th>Pessoa</th><th>Férias a tirar</th><th>Direito a novas férias em</th></tr></thead><tbody>'+fi.map(({p,f})=>'<tr><td><button class="lnk" data-person="'+esc(p.id)+'">'+esc(p.nome.split(' ')[0])+'</button></td><td>'+(f.venc?esc(f.venc.per)+': '+(f.venc.falta?'<b class="warn">'+f.venc.falta+' dia(s) sem data</b><br><small class="sub">tirar até '+esc(fmtDateFull(f.venc.lim))+'</small>':f.venc.progd&&!f.venc.ult?'<b>Programadas</b> em '+esc(fmtDateFull(f.venc.progd))+(f.venc.agend?'':''):f.venc.progd?'tiradas em '+esc(fmtDateFull(f.venc.ult))+' <small class="sub">(+ programadas '+esc(fmtDateFull(f.venc.progd))+')</small>':'<b class="pos">Tiradas</b> em '+esc(fmtDateFull(f.venc.ult))):'<span class="sub">Ainda no 1º ano</span>')+'</td><td>'+esc(fmtDateFull(f.proxDireito))+'</td></tr>').join('')+'</tbody></table><p class="hint" style="margin:8px 0 0">Calculado pela data de admissão e pelas férias registradas em Movimentações. Férias vindas do eSocial sem data de fim contam como 30 dias.</p></div>':'';
+  const hfv=ferResumoHtml();
   h+='<div class="dp-col">'+hfv+hpc+'</div>'+hfa+'</div>';return h;}
 document.addEventListener('change',async e=>{const el=e.target.closest&&e.target.closest('[data-pac-ym]');if(!el||!S.db)return;
   const p=personById(el.dataset.pacP);if(!p)return;const ym=el.dataset.pacYm;const raw=el.value.trim();const v=raw===''?null:Math.max(0,Math.round(+raw));
@@ -387,3 +387,100 @@ async function gerarFolha(){
   catch(e){toast('Não foi possível gerar agora. Tente de novo em instantes.');}
 }
 
+
+/* ---------- Aba Férias ---------- */
+const ferDias=m=>m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;
+const ferFim=m=>m.dataFim&&m.dataFim>m.data?m.dataFim:addDays(m.data,29);
+const fnm=pid=>{const p=personById(pid);return p?String(p.nome).split(' ')[0]:String(pid||'');};
+const COV_COMO={extra:'extra pago à parte',pacote:'do pacote de diárias',diaria:'diária avulsa',troca:'sem custo / troca de folga'};
+function covNome(c){return c.pessoa?fnm(c.pessoa):(c.nome||'?');}
+function ferRows(){const t0=todayISO();
+  return equipe().map(p=>({p,f:feriasInfo(p)})).filter(x=>x.f).map(({p,f})=>{
+    const fer=movsOf(p.id).filter(m=>m.tipo==='Férias');
+    const prox=fer.filter(m=>ferFim(m)>=t0).sort((a,b)=>a.data.localeCompare(b.data));
+    let k=0;while(addMonthsISO(f.curIni,k+1)<=t0)k++;const meses=Math.min(12,k);
+    const v=f.venc;let st;
+    if(!v)st={l:'1º ano',c:'',o:4};
+    else if(v.falta>0)st=dDiff(t0,v.lim)<=90?{l:'Vence em breve',c:'bad',o:0}:{l:'Programar',c:'warn',o:1};
+    else if(dDiff(t0,f.proxDireito)<=60)st={l:'Novo período em '+fmtYm(f.proxDireito.slice(0,7)).split(' ')[0].toLowerCase(),c:'corp',o:2};
+    else if(v.agend>0)st={l:'Programada',c:'info',o:2};
+    else st={l:'Em dia',c:'ok',o:3};
+    return {p,f,v,fer,prox,meses,st};}).sort((a,b)=>a.st.o-b.st.o||String(a.p.nome).localeCompare(String(b.p.nome)));}
+function ferBar(v){if(!v)return '';const pct=n=>Math.round(n/30*100);
+  return '<div class="fer-bar"><span class="b-t" style="width:'+pct(v.usados)+'%"></span><span class="b-p" style="width:'+pct(v.agend)+'%"></span><span class="b-s" style="width:'+pct(v.falta)+'%"></span></div>';}
+function dpFer(){const t0=todayISO();const rows=ferRows();
+  if(!rows.length)return '<ul class="list"><li><div class="empty"><b>Nenhuma funcionária CLT ativa com data de admissão</b>A admissão vem da movimentação "Admissão" ou "Registro inicial".</div></li></ul>';
+  let h='<div class="panel"><div class="sec-h"><h3>Férias por funcionária CLT</h3><span class="cnt">'+rows.length+'</span></div><div class="fer-tw"><table class="pac fer-t"><thead><tr><th>Pessoa</th><th>Situação</th><th>Férias a tirar</th><th>Tirar até</th><th>Próximas férias</th><th>Cobertura</th><th>Período atual</th></tr></thead><tbody>'+
+  rows.map(({p,f,v,prox,meses,st})=>{
+    const tirar=v?esc(v.per)+' · '+(v.falta?'<b class="warn">'+v.falta+' sem data</b>':'')+(v.usados?(v.falta?', ':'')+v.usados+' tirados':'')+(v.agend?((v.falta||v.usados)?', ':'')+v.agend+' programados':'')+ferBar(v):'<span class="sub">ainda não tem</span>';
+    const ate=v?(v.falta?'<b>'+esc(fmtDateFull(v.lim))+'</b>':'<span class="sub">em dia</span>'):'<span class="sub">—</span>';
+    const px=prox.length?prox.map(m=>'<div class="fer-px"><b>'+esc(fmtDateFull(m.data))+' a '+esc(fmtDateFull(ferFim(m)))+'</b><br><small class="sub">'+ferDias(m)+' dias · volta '+esc(fmtDateFull(addDays(ferFim(m),1)))+(m.data>t0?' · pagar até '+esc(fmtDateFull(addDays(m.data,-2))):' · em andamento')+'</small></div>').join(''):'<span class="sub">nada marcado</span>';
+    const cv=prox.length?prox.map(m=>{const cs=Array.isArray(m.cobertura)?m.cobertura:[];
+      return '<div class="fer-cv">'+cs.map(c=>'<span class="fer-chip"><span class="tag '+(c.como==='pacote'?'pess':'info')+'" title="'+esc(COV_COMO[c.como]||'')+(c.obs?' · '+esc(c.obs):'')+'">'+esc(covNome(c))+'</span> <small class="sub">'+esc(fmtDateFull(c.de).slice(0,5))+'–'+esc(fmtDateFull(c.ate).slice(0,5))+'</small><button class="x" data-fcov-del="'+esc(m.id)+'" data-fcov-id="'+esc(c.id)+'" title="Remover cobertura" aria-label="Remover cobertura">×</button></span>').join('')+
+        (cs.length?'':'<small class="sub warn-t">sem cobertura</small> ')+'<button class="btn sm ghost" data-fcov-new="'+esc(m.id)+'">+ Cobertura</button></div>';}).join(''):'<span class="sub">—</span>';
+    return '<tr><td><button class="lnk" data-person="'+esc(p.id)+'">'+esc(String(p.nome).split(' ')[0])+'</button><br><small class="sub">desde '+esc(fmtDateFull(f.adm).slice(3))+'</small></td><td><span class="tag '+st.c+'">'+esc(st.l)+'</span></td><td>'+tirar+'</td><td>'+ate+'</td><td>'+px+'</td><td>'+cv+'</td><td><small class="sub">'+meses+' de 12 meses<br>'+(v?'novas':'1ª')+' em '+esc(fmtDateFull(f.proxDireito))+'</small></td></tr>';}).join('')+
+  '</tbody></table></div><div class="fer-lg"><span><i class="b-t"></i>tirados</span><span><i class="b-p"></i>programados</span><span><i class="b-s"></i>sem data</span></div>'+
+  '<p class="hint" style="margin:8px 0 0">Calculado pela admissão e pelas férias registradas em Movimentações. Férias sem data de volta contam como 30 dias. Para marcar novas férias, use Nova movimentação › Férias.</p></div>';
+  if(S.ferCov)h+=ferCovForm(S.ferCov);
+  h+=ferYear(rows);
+  return h;}
+function ferYear(rows){const t0=todayISO();const a=ymOf(t0)+'-01';const b=addDays(addMonthsISO(a,12),-1);const N=dDiff(a,b)+1;
+  const pos=d=>Math.max(0,Math.min(100,dDiff(a,d)/N*100));const seg=(d1,d2,cls,tt)=>{if(d2<a||d1>b)return '';const l=pos(d1<a?a:d1),r=pos(addDays(d2>b?b:d2,1));return '<span class="s '+cls+'" style="left:'+l.toFixed(2)+'%;width:'+Math.max(.6,r-l).toFixed(2)+'%" title="'+esc(tt)+'"></span>';};
+  const ms=[];for(let i=0;i<12;i++){const m=addMonthsISO(a,i);ms.push(fmtYm(m.slice(0,7)).split(' ')[0].slice(0,3).toLowerCase());}
+  const td='<span class="today" style="left:'+pos(t0).toFixed(2)+'%"></span>';
+  let lanes='';rows.forEach(({p,f,v,fer})=>{const nm=String(p.nome).split(' ')[0];let s='';
+    if(v&&v.falta>0){s+=seg(t0,v.lim,'win','Programar '+v.falta+' dia(s) até '+fmtDateFull(v.lim));if(v.lim<=b)s+='<span class="lim" style="left:'+pos(v.lim).toFixed(2)+'%" title="Limite '+esc(fmtDateFull(v.lim))+'"></span>';}
+    s+=seg(f.proxDireito,b,'win soft','Novo período a partir de '+fmtDateFull(f.proxDireito));
+    let cs='';fer.forEach(m=>{s+=seg(m.data,ferFim(m),'fer','Férias '+fmtDateFull(m.data)+' a '+fmtDateFull(ferFim(m)));(Array.isArray(m.cobertura)?m.cobertura:[]).forEach(c=>{cs+=seg(c.de,c.ate,c.como==='pacote'?'cv-p':'cv-o',covNome(c)+' cobre '+fmtDateFull(c.de)+' a '+fmtDateFull(c.ate));});});
+    lanes+='<span class="yr-n">'+esc(nm)+'</span><div class="lane">'+s+td+'</div>';
+    if(cs)lanes+='<span class="yr-n sub">cobertura</span><div class="lane cov">'+cs+'</div>';});
+  return '<div class="panel"><div class="sec-h"><h3>Faixa do ano</h3><span class="hint" style="margin-left:8px">'+esc(fmtYm(a.slice(0,7)))+' a '+esc(fmtYm(b.slice(0,7)))+'</span></div><div class="fer-yr"><div class="yr-in"><span></span><div class="yr-m">'+ms.map(m=>'<span>'+esc(m)+'</span>').join('')+'</div>'+lanes+'</div></div>'+
+    '<div class="fer-lg"><span><i style="background:var(--accent)"></i>férias</span><span><i class="lg-win"></i>precisa programar</span><span><i class="lg-soft"></i>pode programar</span><span><i class="lg-lim"></i>limite</span><span><i style="background:var(--pess)"></i>cobertura pelo pacote</span><span><i style="background:var(--corp)"></i>outra cobertura</span></div></div>';}
+function ferCovForm(mid){const m=recs('dp-mov').find(x=>x.id===mid);if(!m)return '';const fim=ferFim(m);
+  const opts=equipe().filter(p=>isActive(p.id)&&p.id!==m.pessoa).sort((x,y)=>String(x.nome).localeCompare(String(y.nome))).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.nome)+'</option>').join('');
+  return '<div class="panel" id="dp-fcov"><div class="sec-h"><h3>Cobertura · férias de '+esc(fnm(m.pessoa))+' ('+esc(fmtDateFull(m.data))+' a '+esc(fmtDateFull(fim))+')</h3><span class="act"><button class="btn sm ghost" data-fcov-close="1">Fechar</button></span></div>'+
+    '<div class="fcov-f"><label>Quem cobre<select id="fcov-p" class="sel"><option value="">Escolha…</option>'+opts+'<option value="_outra">Outra pessoa…</option></select></label>'+
+    '<label id="fcov-nm-w" hidden>Nome<input id="fcov-nm" class="pac-in" type="text"></label>'+
+    '<label>De<input id="fcov-de" class="pac-in" type="date" value="'+esc(m.data)+'"></label><label>Até<input id="fcov-ate" class="pac-in" type="date" value="'+esc(fim)+'"></label>'+
+    '<label>Dias<input id="fcov-q" class="pac-in" type="number" min="1" value="'+ferDias(m)+'"></label>'+
+    '<label>Como<select id="fcov-como" class="sel">'+Object.entries(COV_COMO).map(([k,l])=>'<option value="'+k+'">'+esc(l[0].toUpperCase()+l.slice(1))+'</option>').join('')+'</select></label>'+
+    '<label id="fcov-v-w">Valor (R$)<input id="fcov-v" class="pac-in" type="number" min="0" step="0.01" inputmode="decimal"></label>'+
+    '<label class="wide">Observação<input id="fcov-o" class="pac-in" type="text" placeholder="Opcional"></label>'+
+    '<button class="btn primary" data-fcov-save="'+esc(m.id)+'">Salvar cobertura</button></div>'+
+    '<p class="hint" style="margin:8px 0 0">Do pacote de diárias: debita do saldo da pessoa (ex.: Romilda). Extra pago ou diária avulsa: entra como pagamento previsto em Pagamentos, no mês do início da cobertura. "Dias" é quantos dias a pessoa trabalha cobrindo; ajuste se ela não vier todos os dias.</p></div>';}
+function fcovSync(){const sel=$('#fcov-p');if(!sel)return;const p=personById(sel.value);$('#fcov-nm-w').hidden=sel.value!=='_outra';
+  const como=$('#fcov-como');if(p)como.value=+p.pacoteDiarias?'pacote':p.remun==='Por diária'?'diaria':'extra';$('#fcov-v-w').hidden=como.value==='pacote'||como.value==='troca';}
+document.addEventListener('change',e=>{const id=e.target&&e.target.id;if(id==='fcov-p')fcovSync();
+  else if(id==='fcov-como')$('#fcov-v-w').hidden=e.target.value==='pacote'||e.target.value==='troca';
+  else if(id==='fcov-de'||id==='fcov-ate'){const d1=$('#fcov-de').value,d2=$('#fcov-ate').value;if(d1&&d2&&d2>=d1)$('#fcov-q').value=dDiff(d1,d2)+1;}});
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-fcov-new],[data-fcov-close],[data-fcov-save],[data-fcov-del]');if(!t)return;e.preventDefault();
+  if(t.dataset.fcovNew){S.ferCov=t.dataset.fcovNew;renderDP();const f=document.getElementById('dp-fcov');if(f)f.scrollIntoView({block:'center'});return;}
+  if(t.dataset.fcovClose){S.ferCov=null;renderDP();return;}
+  if(!S.db)return;const now=new Date().toISOString();
+  if(t.dataset.fcovDel){const m=recs('dp-mov').find(x=>x.id===t.dataset.fcovDel);if(!m)return;const c=(m.cobertura||[]).find(x=>x.id===t.dataset.fcovId);if(!c)return;
+    if(!confirm('Remover a cobertura de '+covNome(c)+'?'+(c.como==='pacote'?' As diárias voltam para o saldo.':c.pagId?' O pagamento previsto também é removido.':'')))return;
+    try{if(c.como==='pacote'&&c.pessoa){const p=personById(c.pessoa);if(p)await S.db.collection('cad-pessoas').doc(p.id).update({diariasUsadas:(p.diariasUsadas||[]).filter(u=>u.id!=='cov-'+c.id),atualizadoEm:now});}
+      if(c.pagId){const pg=recs('dp-pag').find(x=>x.id===c.pagId);if(pg&&pg.status!=='Pago')await S.db.collection('dp-pag').doc(c.pagId).delete();}
+      await S.db.collection('dp-mov').doc(m.id).update({cobertura:(m.cobertura||[]).filter(x=>x.id!==c.id),atualizadoEm:now});toast('Cobertura removida');}
+    catch(err){toast('Não foi possível salvar agora. Tente de novo.');}return;}
+  const m=recs('dp-mov').find(x=>x.id===t.dataset.fcovSave);if(!m)return;
+  const pv=$('#fcov-p').value,nome=$('#fcov-nm').value.trim(),de=$('#fcov-de').value,ate=$('#fcov-ate').value,q=Math.round(+$('#fcov-q').value),como=$('#fcov-como').value,val=+$('#fcov-v').value||0,obs=$('#fcov-o').value.trim();
+  if(!pv||(pv==='_outra'&&!nome)){toast('Escolha quem cobre.');return;}
+  if(!de||!ate||ate<de){toast('Confira as datas da cobertura.');return;}
+  if(!(q>0)){toast('Informe quantos dias.');return;}
+  const pid=pv==='_outra'?'':pv;if(como==='pacote'&&!(pid&&+(personById(pid)||{}).pacoteDiarias)){toast('Essa pessoa não tem pacote de diárias. Escolha outra forma.');return;}
+  const c={id:uid('cv'),pessoa:pid,nome:pid?'':nome,de,ate,dias:q,como,valor:(como==='extra'||como==='diaria')?val:0,obs,criadoEm:now};
+  const motivo='Cobertura de férias de '+fnm(m.pessoa)+(obs?' · '+obs:'');
+  try{
+    if(como==='pacote'){const p=personById(pid);await S.db.collection('cad-pessoas').doc(p.id).update({diariasUsadas:(Array.isArray(p.diariasUsadas)?p.diariasUsadas:[]).concat([{id:'cov-'+c.id,data:de,qtd:q,obs:motivo,criadoEm:now}]),atualizadoEm:now});}
+    if((como==='extra'||como==='diaria')&&pid){c.pagId=uid('pag');await S.db.collection('dp-pag').doc(c.pagId).set({pessoa:pid,competencia:de.slice(0,7),tipo:como==='diaria'?'Diária':'Extra',valor:val,status:'Previsto',dataPag:'',forma:'',obs:motivo+' ('+fmtDateFull(de)+' a '+fmtDateFull(ate)+', '+q+' dia(s))',anexos:[],criadoEm:now,atualizadoEm:now});}
+    await S.db.collection('dp-mov').doc(m.id).update({cobertura:(Array.isArray(m.cobertura)?m.cobertura:[]).concat([c]),atualizadoEm:now});
+    S.ferCov=null;toast('Cobertura salva'+(como==='pacote'?' e '+q+' diária(s) debitada(s) do pacote':c.pagId?' e pagamento previsto lançado':''));renderDP();}
+  catch(err){toast('Não foi possível salvar agora. Tente de novo.');}});
+function ferResumoHtml(){const t0=todayISO();const rows=ferRows();if(!rows.length)return '';const it=[];
+  rows.forEach(({p,f,v,prox})=>{const nm=String(p.nome).split(' ')[0];
+    if(v&&v.falta>0)it.push({bad:dDiff(t0,v.lim)<=90,t:nm+': '+v.falta+' dia(s) de férias sem data, tirar até '+fmtDateFull(v.lim)});
+    prox.filter(m=>dDiff(t0,m.data)<=60).forEach(m=>{const sc=!(Array.isArray(m.cobertura)&&m.cobertura.length);it.push({bad:sc&&dDiff(t0,m.data)<=15,t:nm+(m.data>t0?' sai em '+fmtDateFull(m.data)+' e volta '+fmtDateFull(addDays(ferFim(m),1))+' · pagar até '+fmtDateFull(addDays(m.data,-2)):' está de férias até '+fmtDateFull(ferFim(m)))+(sc?' · sem cobertura':'')});});
+    if(dDiff(t0,f.proxDireito)<=60)it.push({t:nm+(v?' ganha mais 30 dias':' ganha as primeiras férias')+' em '+fmtDateFull(f.proxDireito)});});
+  return '<div class="panel"><div class="sec-h"><h3>Férias: o que pede ação</h3><span class="act"><button class="btn sm ghost" data-dp-tab="fer">Ver férias ›</button></span></div>'+
+    (it.length?'<ul class="fer-res">'+it.map(x=>'<li class="'+(x.bad?'bad':'')+'">'+esc(x.t)+'</li>').join('')+'</ul>':'<p class="hint" style="margin:0">Todas em dia.</p>')+'</div>';}
