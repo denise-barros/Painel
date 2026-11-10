@@ -339,6 +339,7 @@ tfoot td{border-top:1px solid var(--line-strong);font-weight:700;background:var(
 .dp-ind .dp-sc{max-height:460px;overflow:auto}
 table.pac{min-width:0;font-size:12px}table.pac td.c,table.pac th.c{text-align:center}table.pac b.pos{color:var(--pos)}table.pac b.warn,.dp-ind b.warn{color:var(--warn)}
 .pac-in{width:58px;text-align:center;padding:5px 6px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}
+.pac-uso-f{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.pac-uso-f .pac-d{width:140px}.pac-uso-f .pac-o{flex:1;min-width:120px;width:auto;text-align:left}
 .pac-in::placeholder{color:var(--muted);opacity:.6}
 .ind-grp+.ind-grp{margin-top:14px}.ind-h{display:flex;justify-content:space-between;padding:0 0 6px;border-bottom:1px solid var(--line);margin-bottom:4px;font-variant-numeric:tabular-nums}
 .ind-r{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;color:var(--muted);font-variant-numeric:tabular-nums}
