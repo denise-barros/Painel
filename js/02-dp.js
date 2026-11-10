@@ -280,7 +280,9 @@ function ocResumo(a,b){const m={};recs('dp-oc').filter(o=>(o.tipo==='Falta'||o.t
 function pacoteOf(p){const pac=+p.pacoteDiarias;if(!pac)return null;const t0=todayISO();const ini=p.pacoteInicio||ymOf(t0);const cur=ymOf(t0);const meses=[];
   let ym=ini;while(ym<=cur){meses.push(ym);const [y,m]=ym.split('-').map(Number);ym=m===12?(y+1)+'-01':y+'-'+pad2(m+1);}
   const dm=p.diarias||{};let saldo=0,pend=0;const rows=meses.map(ym=>{const v=dm[ym];const has=v!==undefined&&v!==null&&v!=='';if(has&&ym<cur)saldo+=pac-(+v);else if(!has&&ym<cur)pend++;return {ym,v:has?+v:null,esc:presDias(p,ym).length,dif:has?pac-(+v):null};});
-  return {pac,rows,saldo,pend,cur:rows.find(r=>r.ym===cur)};}
+  const usos=(Array.isArray(p.diariasUsadas)?p.diariasUsadas:[]).filter(u=>u&&u.data&&+u.qtd>0).slice().sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  const usadas=usos.reduce((a,u)=>a+(+u.qtd||0),0);const gerado=saldo;saldo-=usadas;
+  return {pac,rows,saldo,pend,cur:rows.find(r=>r.ym===cur),usos,usadas,gerado};}
 const pacSaldoTxt=s=>s>0?s+' diária(s) a usar':s<0?(-s)+' folga(s) para ela':'zerado';
 function pacoteHtml(p,compact){const k=pacoteOf(p);if(!k)return '';
   const sl=pacSaldoTxt(k.saldo);
@@ -290,7 +292,22 @@ function pacoteHtml(p,compact){const k=pacoteOf(p);if(!k)return '';
     k.rows.slice().reverse().map(r=>{const isCur=k.cur&&r.ym===k.cur.ym;const dif=r.v==null?null:k.pac-r.v;
       return '<tr><td>'+esc(fmtYm(r.ym))+'</td><td class="c"><input class="pac-in" type="number" min="0" max="31" inputmode="numeric" data-pac-p="'+esc(p.id)+'" data-pac-ym="'+r.ym+'" value="'+(r.v!=null?r.v:'')+'" placeholder="—" aria-label="Diárias feitas em '+esc(fmtYm(r.ym))+'"> <small class="sub">de '+k.pac+'</small></td><td class="c">'+
       (isCur?'<small class="sub">'+(dif==null?'mês em andamento':dif>0?'faltam '+dif+' (em andamento)':dif<0?(-dif)+' a mais (em andamento)':'pacote cumprido')+'</small>':dif==null?'<span class="sub">—</span>':dif>0?'<b class="warn">'+dif+'</b> <small class="sub">a usar</small>':dif<0?'<b class="pos">'+(-dif)+'</b> <small class="sub">de folga</small>':'0')+'</td></tr>';}).join('')+
-    '</tbody></table>'+(k.pend?'<p class="hint" style="margin:8px 0 0">'+k.pend+' mês(es) já fechado(s) sem lançamento.</p>':'')+'</div>';}
+    '</tbody></table>'+(k.pend?'<p class="hint" style="margin:8px 0 0">'+k.pend+' mês(es) já fechado(s) sem lançamento.</p>':'')+
+    '<div class="pac-uso"><div class="sec-h" style="margin-top:14px"><h3>Diárias usadas do saldo</h3><span class="cnt">'+k.usadas+'</span></div>'+
+    '<p class="hint" style="margin:0 0 8px">Quando ela cobrir uma diária com o saldo (férias da Neiva, folga de outra pessoa), debite aqui com a data. Saldo acumulado nos meses fechados: <b>'+k.gerado+'</b> · usadas: <b>'+k.usadas+'</b> · restam: <b>'+esc(pacSaldoTxt(k.saldo))+'</b>.</p>'+
+    '<div class="pac-uso-f"><input type="date" class="pac-in pac-d" data-pacu-d="'+esc(p.id)+'" value="'+todayISO()+'" aria-label="Data em que usou"><input type="number" class="pac-in" min="1" max="31" inputmode="numeric" data-pacu-q="'+esc(p.id)+'" value="1" aria-label="Quantas diárias"><input type="text" class="pac-in pac-o" data-pacu-o="'+esc(p.id)+'" placeholder="Motivo (opcional)" aria-label="Motivo"><button class="btn sm" data-pacu-add="'+esc(p.id)+'">Debitar</button></div>'+
+    (k.usos.length?'<table class="pac" style="margin-top:8px"><thead><tr><th>Data</th><th class="c">Diárias</th><th>Motivo</th><th></th></tr></thead><tbody>'+k.usos.map(u=>'<tr><td>'+esc(fmtDateFull(u.data))+'</td><td class="c"><b class="warn">−'+esc(String(+u.qtd))+'</b></td><td>'+esc(u.obs||'')+'</td><td class="c"><button class="btn sm ghost" data-pacu-del="'+esc(p.id)+'" data-pacu-id="'+esc(u.id)+'" title="Remover este débito" aria-label="Remover este débito">×</button></td></tr>').join('')+'</tbody></table>':'<p class="hint" style="margin:8px 0 0">Nenhuma diária debitada ainda.</p>')+
+    '</div></div>';}
+async function pacUsoSave(p,list,msg){try{await S.db.collection('cad-pessoas').doc(p.id).update({diariasUsadas:list,atualizadoEm:new Date().toISOString()});toast(msg);}catch(err){toast('Não foi possível salvar agora. Tente de novo.');}}
+document.addEventListener('click',async e=>{const add=e.target.closest&&e.target.closest('[data-pacu-add]');const del=e.target.closest&&e.target.closest('[data-pacu-del]');if((!add&&!del)||!S.db)return;e.preventDefault();
+  const pid=(add||del).dataset.pacuAdd||(add||del).dataset.pacuDel;const p=personById(pid);if(!p)return;const box=(add||del).closest('.pac-uso');
+  const list=(Array.isArray(p.diariasUsadas)?p.diariasUsadas:[]).slice();
+  if(del){if(!confirm('Remover este débito de diárias?'))return;await pacUsoSave(p,list.filter(u=>u.id!==del.dataset.pacuId),'Débito removido');return;}
+  const d=box.querySelector('[data-pacu-d]').value;const q=Math.round(+box.querySelector('[data-pacu-q]').value);const o=box.querySelector('[data-pacu-o]').value.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){toast('Informe a data em que usou.');return;}
+  if(!(q>0)){toast('Informe quantas diárias usou.');return;}
+  list.push({id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),data:d,qtd:q,obs:o,criadoEm:new Date().toISOString()});
+  await pacUsoSave(p,list,q+(q>1?' diárias debitadas':' diária debitada')+' em '+fmtDateFull(d));});
 function feriasProx(){const t0=todayISO();const out=[];equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;f.prox.forEach(m=>{const dias=m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;out.push({p,m,dias,em:dDiff(t0,m.data),pagar:addDays(m.data,-2),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null});});});return out.sort((a,b)=>a.m.data.localeCompare(b.m.data));}
 function dpEventos(){const t0=todayISO();const y=+t0.slice(0,4);
   const ev=[];const dc=decimo(y);
