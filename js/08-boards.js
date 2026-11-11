@@ -86,7 +86,7 @@ document.addEventListener('click',e=>{
   renderBrd();const v=$('#v-brd');if(v)v.scrollTop=0;
 });
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const c=e.target.closest&&e.target.closest('[data-brd-open]');if(c&&c.getAttribute('role')==='button')c.click();});
-function evLine(e,c){
+function brdEvLine(e,c){
   const b=boardById(e.board);
   return rowBtn('age-ev',e,'<span style="min-width:0"><span class="tt">'+esc(e.titulo||'Evento')+(S.brdB?'':' · '+esc(b?b.nome:'—'))+'</span><span class="mm"><span class="tag info">Evento</span><span class="tag">'+esc(fmtDateFull(e.data))+(e.fim&&e.fim!==e.data?' a '+esc(fmtDateFull(e.fim)):'')+(e.horario?' · '+esc(e.horario):'')+'</span>'+(c?'':(e.formato&&e.formato!=='Presencial'?'<span class="tag">'+esc(e.formato)+'</span>':'')+(e.palestrante==='Sim'?'<span class="tag warn">Palestrante</span>':'')+(e.local?'<span class="tag">'+esc(e.local)+'</span>':'')+filesHtml(e.anexos))+'</span></span><span class="rr"><small>'+esc(fmtDate(e.data<todayISO()?todayISO():e.data))+'</small></span>','info');
 }
@@ -96,7 +96,7 @@ function reunLine(r,c){
 }
 function brdProx(reun,evs){
   const t0=todayISO();const lim=addDays(t0,7);
-  const it=reun.filter(r=>reunUp(r)&&r.data<=lim).map(r=>({d:r.data+(r.hora||''),h:reunLine(r,1)})).concat((evs||[]).filter(e=>evUpTo(e,lim)).map(e=>({d:(e.data<t0?t0:e.data)+'00',h:evLine(e,1)}))).sort((a,b)=>a.d.localeCompare(b.d));
+  const it=reun.filter(r=>reunUp(r)&&r.data<=lim).map(r=>({d:r.data+(r.hora||''),h:reunLine(r,1)})).concat((evs||[]).filter(e=>evUpTo(e,lim)).map(e=>({d:(e.data<t0?t0:e.data)+'00',h:brdEvLine(e,1)}))).sort((a,b)=>a.d.localeCompare(b.d));
   const all=!!S.brdProxAll;const shown=all?it:it.slice(0,4);
   return '<div class="brd-prox"><div class="sec-h"><h3>Próximos compromissos</h3><span class="cnt">'+it.length+'</span><span class="hint">próximos 7 dias</span></div>'+(it.length?'<ul class="list">'+shown.map(x=>x.h).join('')+'</ul>'+(it.length>4?'<button class="btn sm ghost brd-prox-more" data-brd-prox-all>'+(all?'Mostrar menos':'Ver todos ('+it.length+')')+'</button>':''):'<ul class="list"><li><div class="empty"><b>Nenhum compromisso nos próximos 7 dias</b>O que estiver agendado para essa semana aparece aqui.</div></li></ul>')+'</div>';
 }
