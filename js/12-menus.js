@@ -39,3 +39,27 @@ document.addEventListener('click',e=>{
   else if(v==='fam'){S.famTab=tab||'geral';if(tab==='pet'){S.famPet=id||'';const cid=id?'c-'+id:'c-fam-pets';if(catById(cid))S.demSub['p-fam']=cid;else delete S.demSub['p-fam'];}else{S.famPet='';delete S.demSub['p-fam'];S.famP=id!=null?id:S.famP;}saveUi();renderFam();}
   else if(v==='age'){S.ageTab=tab||'geral';saveUi();renderAge();}
 });
+/* tablet e celular: botão ☰ ao lado do título abre o menu lateral como gaveta (igual ao Financeiro) */
+const NM_OPEN='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
+function snavClose(){document.body.classList.remove('snav-open');}
+function snavButtons(){
+  document.querySelectorAll('#views .side-layout').forEach(sl=>{
+    const main=sl.querySelector(':scope>.side-main');if(!main||main.querySelector('.nm-open'))return;
+    const nav=sl.querySelector(':scope>.neg-menu');
+    const b=document.createElement('button');b.type='button';b.className='nm-open';b.dataset.snavOpen='';
+    b.setAttribute('aria-label','Abrir menu'+(nav&&nav.getAttribute('aria-label')?' · '+nav.getAttribute('aria-label'):''));b.title='Abrir menu';b.innerHTML=NM_OPEN;
+    const hero=main.querySelector('.plan-hero');
+    if(hero){hero.classList.add('has-nm-open');hero.prepend(b);}else main.prepend(b);
+  });
+}
+(function(){
+  const sc=document.createElement('div');sc.className='snav-scrim';sc.dataset.snavClose='';document.body.appendChild(sc);
+  const v=document.getElementById('views');
+  if(v)new MutationObserver(snavButtons).observe(v,{childList:true,subtree:true});
+  snavButtons();
+})();
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-snav-open]')){document.body.classList.add('snav-open');return;}
+  if(e.target.closest('[data-snav-close]')||e.target.closest('.neg-menu button')||e.target.closest('#nav button'))snavClose();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('snav-open'))snavClose();});
