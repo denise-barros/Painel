@@ -86,22 +86,24 @@ document.addEventListener('click',e=>{
   renderBrd();const v=$('#v-brd');if(v)v.scrollTop=0;
 });
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const c=e.target.closest&&e.target.closest('[data-brd-open]');if(c&&c.getAttribute('role')==='button')c.click();});
-function evLine(e){
+function evLine(e,c){
   const b=boardById(e.board);
-  return rowBtn('age-ev',e,'<span style="min-width:0"><span class="tt">'+esc(e.titulo||'Evento')+(S.brdB?'':' · '+esc(b?b.nome:'—'))+'</span><span class="mm"><span class="tag info">Evento</span><span class="tag">'+esc(fmtDateFull(e.data))+(e.fim&&e.fim!==e.data?' a '+esc(fmtDateFull(e.fim)):'')+(e.horario?' · '+esc(e.horario):'')+'</span>'+(e.formato&&e.formato!=='Presencial'?'<span class="tag">'+esc(e.formato)+'</span>':'')+(e.palestrante==='Sim'?'<span class="tag warn">Palestrante</span>':'')+(e.local?'<span class="tag">'+esc(e.local)+'</span>':'')+filesHtml(e.anexos)+'</span></span><span class="rr"><small>'+esc(fmtDate(e.data<todayISO()?todayISO():e.data))+'</small></span>','info');
+  return rowBtn('age-ev',e,'<span style="min-width:0"><span class="tt">'+esc(e.titulo||'Evento')+(S.brdB?'':' · '+esc(b?b.nome:'—'))+'</span><span class="mm"><span class="tag info">Evento</span><span class="tag">'+esc(fmtDateFull(e.data))+(e.fim&&e.fim!==e.data?' a '+esc(fmtDateFull(e.fim)):'')+(e.horario?' · '+esc(e.horario):'')+'</span>'+(c?'':(e.formato&&e.formato!=='Presencial'?'<span class="tag">'+esc(e.formato)+'</span>':'')+(e.palestrante==='Sim'?'<span class="tag warn">Palestrante</span>':'')+(e.local?'<span class="tag">'+esc(e.local)+'</span>':'')+filesHtml(e.anexos))+'</span></span><span class="rr"><small>'+esc(fmtDate(e.data<todayISO()?todayISO():e.data))+'</small></span>','info');
 }
-function reunLine(r){
+function reunLine(r,c){
   const b=boardById(r.board);const up=reunUp(r);
-  return rowBtn('brd-reun',r,'<span style="min-width:0"><span class="tt">'+esc(r.titulo||'Reunião')+(S.brdB?'':' · '+esc(b?b.nome:'—'))+'</span><span class="mm"><span class="tag">Reunião</span><span class="tag '+(r.status==='Realizada'?'ok':'')+'">'+esc(r.status||'Agendada')+'</span>'+(r.data?'<span class="tag">'+esc(fmtDateFull(r.data))+(r.hora?' · '+esc(r.hora):'')+'</span>':'')+(b&&b.executivo&&!S.brdB?'<span class="tag">'+esc(EXEC[b.executivo])+'</span>':'')+(r.local?'<span class="tag">'+esc(r.local)+'</span>':'')+filesHtml(r.anexos)+'</span></span><span class="rr">'+(up?'<small>'+esc(fmtDate(r.data))+'</small>':'')+'</span>',up?'info':r.status==='Realizada'?'ok':'');
+  return rowBtn('brd-reun',r,'<span style="min-width:0"><span class="tt">'+esc(r.titulo||'Reunião')+(S.brdB?'':' · '+esc(b?b.nome:'—'))+'</span><span class="mm"><span class="tag">Reunião</span><span class="tag '+(r.status==='Realizada'?'ok':'')+'">'+esc(r.status||'Agendada')+'</span>'+(r.data?'<span class="tag">'+esc(fmtDateFull(r.data))+(r.hora?' · '+esc(r.hora):'')+'</span>':'')+(c?'':(b&&b.executivo&&!S.brdB?'<span class="tag">'+esc(EXEC[b.executivo])+'</span>':'')+(r.local?'<span class="tag">'+esc(r.local)+'</span>':'')+filesHtml(r.anexos))+'</span></span><span class="rr">'+(up?'<small>'+esc(fmtDate(r.data))+'</small>':'')+'</span>',up?'info':r.status==='Realizada'?'ok':'');
 }
 function brdProx(reun,evs){
   const t0=todayISO();const lim=addDays(t0,7);
-  const it=reun.filter(r=>reunUp(r)&&r.data<=lim).map(r=>({d:r.data+(r.hora||''),h:reunLine(r)})).concat((evs||[]).filter(e=>evUpTo(e,lim)).map(e=>({d:(e.data<t0?t0:e.data)+'00',h:evLine(e)}))).sort((a,b)=>a.d.localeCompare(b.d));
-  return '<div class="brd-prox"><div class="sec-h"><h3>Próximos compromissos</h3><span class="cnt">'+it.length+'</span><span class="hint">próximos 7 dias</span></div>'+(it.length?'<ul class="list">'+it.map(x=>x.h).join('')+'</ul>':'<ul class="list"><li><div class="empty"><b>Nenhum compromisso nos próximos 7 dias</b>O que estiver agendado para essa semana aparece aqui.</div></li></ul>')+'</div>';
+  const it=reun.filter(r=>reunUp(r)&&r.data<=lim).map(r=>({d:r.data+(r.hora||''),h:reunLine(r,1)})).concat((evs||[]).filter(e=>evUpTo(e,lim)).map(e=>({d:(e.data<t0?t0:e.data)+'00',h:evLine(e,1)}))).sort((a,b)=>a.d.localeCompare(b.d));
+  const all=!!S.brdProxAll;const shown=all?it:it.slice(0,4);
+  return '<div class="brd-prox"><div class="sec-h"><h3>Próximos compromissos</h3><span class="cnt">'+it.length+'</span><span class="hint">próximos 7 dias</span></div>'+(it.length?'<ul class="list">'+shown.map(x=>x.h).join('')+'</ul>'+(it.length>4?'<button class="btn sm ghost brd-prox-more" data-brd-prox-all>'+(all?'Mostrar menos':'Ver todos ('+it.length+')')+'</button>':''):'<ul class="list"><li><div class="empty"><b>Nenhum compromisso nos próximos 7 dias</b>O que estiver agendado para essa semana aparece aqui.</div></li></ul>')+'</div>';
 }
+document.addEventListener('click',e=>{if(!e.target.closest('[data-brd-prox-all]'))return;S.brdProxAll=!S.brdProxAll;renderBrd();});
 function brdHist(reun){
   const done=reun.filter(r=>!reunUp(r)).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
-  return done.length?'<div><div class="sec-h"><h3>Histórico</h3><span class="cnt">'+done.length+'</span></div><ul class="list">'+done.map(reunLine).join('')+'</ul></div>':'';
+  return done.length?'<div><div class="sec-h"><h3>Histórico</h3><span class="cnt">'+done.length+'</span></div><ul class="list">'+done.map(r=>reunLine(r)).join('')+'</ul></div>':'';
 }
 function brdTodo(tasks){
   if(!tasks.length)return '<ul class="list"><li><div class="empty"><b>Nenhum to-do aberto</b>Os to-dos criados aqui vão para a Operação em Conselhos e Programas, com o item marcado.</div></li></ul>';

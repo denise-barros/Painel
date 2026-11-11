@@ -711,6 +711,7 @@ details.more .more-m .btn{justify-content:flex-start;border:0;width:100%}
 .brd-top{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:18px;align-items:start}
 .brd-top>*{min-width:0}
 .brd-prox .sec-h .hint{margin-left:auto;font-size:10.5px;color:var(--muted)}
+.brd-prox .brd-prox-more{margin-top:8px}
 @media (max-width:900px){.brd-top{grid-template-columns:1fr}}
 
 /* Negócios · visão geral de Todas as empresas */
