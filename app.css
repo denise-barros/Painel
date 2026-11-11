@@ -818,3 +818,10 @@ details.more .more-m .btn{justify-content:flex-start;border:0;width:100%}
 #v-rel .rel-bar>.seg::-webkit-scrollbar,.seg.tabs::-webkit-scrollbar{height:4px}
 #v-rel .rel-bar>.seg::-webkit-scrollbar-thumb,.seg.tabs::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px}
 @media (max-width:600px){#v-rel .rel-bar input[type=date]{flex:1 1 120px;min-width:120px}}
+/* tablet e celular: faixa dos módulos um pouco menor e mais afastada do conteúdo, para não confundir com a rolagem da página */
+@media (max-width:880px){
+  .bar{padding-bottom:12px}
+  .nav{padding:2px;overscroll-behavior-x:contain}
+  .nav button{padding:4px 7px;font-size:10px}
+  #views>.view.scroll{padding-top:28px}
+}
