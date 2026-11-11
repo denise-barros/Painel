@@ -55,7 +55,9 @@ function snavButtons(){
 (function(){
   const sc=document.createElement('div');sc.className='snav-scrim';sc.dataset.snavClose='';document.body.appendChild(sc);
   const v=document.getElementById('views');
-  if(v)new MutationObserver(snavButtons).observe(v,{childList:true,subtree:true});
+  /* faixas de botões que rolam para o lado: mantém o botão marcado à vista */
+  const segOn=()=>document.querySelectorAll('#v-rel .rel-bar>.seg,.seg.tabs').forEach(sg=>{if(sg.scrollWidth<=sg.clientWidth)return;const on=sg.querySelector('button.on');if(!on)return;const l=on.offsetLeft-sg.offsetLeft,r=l+on.offsetWidth;if(l<sg.scrollLeft||r>sg.scrollLeft+sg.clientWidth)sg.scrollLeft=Math.max(0,l-(sg.clientWidth-on.offsetWidth)/2);});
+  if(v)new MutationObserver(()=>{snavButtons();segOn();}).observe(v,{childList:true,subtree:true});
   snavButtons();
 })();
 document.addEventListener('click',e=>{

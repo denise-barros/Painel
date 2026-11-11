@@ -811,3 +811,10 @@ details.more .more-m .btn{justify-content:flex-start;border:0;width:100%}
 /* Viagens: indicadores não ficam espremidos em 4 ou 5 colunas no tablet e no celular */
 @media (max-width:980px){#v-via .kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}#v-via .kpis:has(>.kpi:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media (max-width:560px){#v-via .kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+/* Relatórios e Cadastros: faixa de botões rola para o lado quando não cabe, sem espremer os textos */
+#v-rel .rel-bar>.seg{max-width:100%;overflow-x:auto;flex-shrink:0}
+#v-rel .rel-bar>.seg button,.seg.tabs button{flex:none;white-space:nowrap}
+#v-rel .rel-bar>.seg,.seg.tabs{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+#v-rel .rel-bar>.seg::-webkit-scrollbar,.seg.tabs::-webkit-scrollbar{height:4px}
+#v-rel .rel-bar>.seg::-webkit-scrollbar-thumb,.seg.tabs::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px}
+@media (max-width:600px){#v-rel .rel-bar input[type=date]{flex:1 1 120px;min-width:120px}}
