@@ -202,6 +202,7 @@ button.card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .drawer.ro .dr-body :is(input,select,textarea):disabled{background:transparent;border-color:transparent;color:var(--ink);opacity:1;-webkit-text-fill-color:var(--ink);appearance:none;-webkit-appearance:none;padding-left:0;resize:none;background-image:none}
 .drawer.ro .dr-body button:disabled{opacity:1}
 .drawer.ro .dr-foot .btn:not(.ro-keep){display:none}
+.drawer.ro .file-in,.drawer.ro .file-in+.hint,.drawer.ro .files .file .x{display:none}
 .drawer .edit-btn{margin-right:6px;white-space:nowrap}
 .rel-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rel-bar .grow{flex:1}
 .rel-tbl td,.rel-tbl th{font-size:11.5px}.rel-tbl td.nm{font-weight:400}
