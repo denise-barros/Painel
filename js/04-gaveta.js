@@ -66,18 +66,26 @@ async function uploadFilesRun(files){
       if(!item&&S.assets){const r=await S.assets.upload(f);item={id:r.id,name:f.name,size:r.sizeBytes||f.size,type:r.contentType||f.type};}
       if(!item){toast('Anexos indisponíveis nesta visualização.');continue;}
       d.files.push(item);
+      if(d.savedTo)await appendSaved(d.savedTo,[item]);
     }catch(e){toast(e&&e.code==='too_large'?f.name+' passa do limite de 20 MB.':'Não foi possível enviar '+f.name+'.');}
     finally{tirar(f.name);}
   }
-  toast('Anexo pronto. Salve para manter.');
+  toast(d.savedTo?'Anexo enviado e guardado no registro.':'Anexo pronto. Salve para manter.');
 }
+/* grava anexos que terminaram de subir depois que o registro já foi salvo */
+async function appendSaved(t,items){
+  try{const ref=S.db.collection(t.col).doc(t.id);const snap=await ref.get();if(!snap.exists)return;
+    const cur=(snap.data()||{})[t.k]||[];const novos=items.filter(it=>!cur.some(a=>a.id===it.id));if(!novos.length)return;
+    await ref.update({[t.k]:cur.concat(novos),atualizadoEm:new Date().toISOString()});}
+  catch(e){toast('O anexo subiu para o Drive, mas não entrou no registro. Abra o registro e anexe de novo.');}
+}
+window.addEventListener('beforeunload',e=>{if(upPending){e.preventDefault();e.returnValue='';}});
 async function saveRec(){
-  if(upPending){const b=$('#rf-save'),lb=b&&b.textContent;if(b){b.disabled=true;b.textContent='Enviando anexo…';}toast('Aguarde: terminando de enviar o anexo…');await upIdle();if(b){b.disabled=false;b.textContent=lb;}if(!dr)return;}
   const R=REC[dr.rt];const old=dr.id?recs(dr.rt).find(x=>x.id===dr.id):null;const obj={};
   for(const f of R.fields){
     if(f.onlyNew&&old)continue;
     const el=$('#rf-'+f.k);
-    if(f.t==='files'){obj[f.k]=dr.files||[];continue;}
+    if(f.t==='files'){obj[f.k]=(dr.files||[]).slice();continue;}
     if(f.t==='days'){obj[f.k]=[...document.querySelectorAll('#rf-'+f.k+' input:checked')].map(x=>+x.value);continue;}
     if(f.t==='people'){obj[f.k]=[...document.querySelectorAll('#rf-'+f.k+' input:checked')].map(x=>x.value);continue;}
     if(f.t==='check'){obj[f.k]=!!(el&&el.checked);continue;}
@@ -101,8 +109,12 @@ async function saveRec(){
   try{
     if(wantTask){const tid=await createTaskFromChamado(obj);if(tid)obj.taskId=tid;}
     await S.db.collection(R.col).doc(docId).set(obj);
+    {const d=dr,fk=(R.fields.find(f=>f.t==='files')||{}).k;
+     if(d&&fk&&((d.upl||[]).length||(d.files||[]).length>(obj[fk]||[]).length)){d.savedTo={col:R.col,id:docId,k:fk};
+       const falt=(d.files||[]).filter(it=>!(obj[fk]||[]).some(a=>a.id===it.id));if(falt.length)appendSaved(d.savedTo,falt);}}
     if(extra&&extra.origem&&R.col==='sau-ev'){try{await S.db.collection('sau-ev').doc(extra.origem).update({retornoAgendado:true,atualizadoEm:now});}catch(e){}}
-    closeDrawer();toast(old?'Alterações salvas':(R.fem?'Registrada':'Registrado')+(wantTask&&obj.taskId?' e enviado à Operação':''));
+    const subindo=upPending>0;
+    closeDrawer();toast((old?'Alterações salvas':(R.fem?'Registrada':'Registrado')+(wantTask&&obj.taskId?' e enviado à Operação':''))+(subindo?'. O anexo continua subindo e entra no registro sozinho.':''));
     if(dr===null&&R.col==='brd-boards')driveAfterSave('brd',docId,obj,old);
     if(dr===null&&R.col==='via-viagens')driveAfterSave('via',docId,obj,old);
   }catch(e){b.disabled=false;b.textContent=old?'Salvar':'Registrar';toast(e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não foi possível salvar agora. Tente de novo em instantes.');}
