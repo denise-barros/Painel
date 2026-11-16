@@ -77,6 +77,10 @@ function criar_(a, quem) {
     var nova = pasta.createFolder(a.title || 'Nova pasta');
     return { id: nova.getId(), title: nova.getName(), parentId: pasta.getId(), mimeType: tipo, viewUrl: nova.getUrl() };
   }
+  if (a.subfolder) {
+    var subs = pasta.getFoldersByName(a.subfolder);
+    pasta = subs.hasNext() ? subs.next() : pasta.createFolder(a.subfolder);
+  }
   var blob;
   if (a.base64Content) blob = Utilities.newBlob(Utilities.base64Decode(a.base64Content), tipo, a.title || 'arquivo');
   else blob = Utilities.newBlob(a.textContent || '', tipo, a.title || 'arquivo');

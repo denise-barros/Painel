@@ -69,6 +69,18 @@ async function driveFolderFor(ctx){
   if(rt.indexOf('via-')===0){const b=v.viagem&&recs('via').find(x=>x.id===v.viagem);return via('via',b,'via',DRIVE.via);}
   return DRIVE.sec;
 }
+/* subpasta dentro da pasta da pessoa no DP (criada pelo Apps Script se ainda não existir) */
+function driveSubfolder(ctx){
+  const rt=(ctx&&ctx.rt)||'',v=(ctx&&ctx.vals)||{};
+  const rec=ctx&&ctx.id&&rt&&S.rec[rt]?(S.rec[rt]||[]).find(x=>x.id===ctx.id):null;
+  const tipo=v.tipo||($('#rf-tipo')&&$('#rf-tipo').value)||(rec&&rec.tipo)||'';
+  const txt=((rec&&rec.descricao)||'')+' '+(($('#rf-descricao')&&$('#rf-descricao').value)||'');
+  if(rt==='dp-oc')return tipo==='Atestado'?'Atestados':'Ocorrências';
+  if(rt==='dp-pag')return 'Folhas de Pagamento';
+  if(rt==='dp-mov'){if(tipo==='Férias')return 'Folhas de Pagamento';if(/empr[ée]stimo/i.test(txt))return 'Empréstimos';return 'Documentos';}
+  if(rt==='dp-esc')return 'Documentos';
+  return '';
+}
 const toB64=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=()=>no({code:'bad_request'});r.readAsDataURL(f);});
 async function driveUpload(file,ctx){
   const m=await getMcp();if(!m)throw {code:'not_granted'};
@@ -76,6 +88,7 @@ async function driveUpload(file,ctx){
   const parent=(await driveFolderFor(ctx||{}))||DRIVE.sec;
   const type=file.type||'application/octet-stream';
   const args={title:file.name,parentId:parent,contentMimeType:type,disableConversionToGoogleType:true};
+  const sub=driveSubfolder(ctx);if(sub&&parent!==DRIVE.dp)args.subfolder=sub;
   let fa=false;try{const lt=await m.listTools();fa=!!(lt&&lt.fileArgs);}catch(e){}
   if(fa)args.base64Content={$file:{data:file,name:file.name,type}};
   else{if(file.size>700000)throw {code:'too_large_inline'};args.base64Content=await toB64(file);}
