@@ -10,4 +10,4 @@ window.PAINEL_SUPABASE = {
 
 /* Google Drive: URL do App da Web do Apps Script (apps-script/Painel-Drive.gs), publicado na
    conta da Denise. Termina em /exec. Vazio = Drive desligado (anexos vão para o Supabase). */
-window.PAINEL_DRIVE_URL = '';
+window.PAINEL_DRIVE_URL = 'https://script.google.com/macros/s/AKfycbzty1OVmq_WEVR_QiQeflN9f4JcnGF_ojWEQIQ8q2IkBn-63jd4GGdsSCYvM2BC88RX4Q/exec';
