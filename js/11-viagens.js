@@ -591,7 +591,7 @@ function openNewTask(preCat,o){o=o||{};
   if(!S.db){toast('Os dados não estão disponíveis nesta visualização.');return;}
   const pc=preCat?catById(preCat):null;const root=pc?rootOf(pc.id):null;
   let sub=pc&&pc.id!==root?pc.id:null;if(!sub&&root==='p-neg'&&S.negE&&catById('c-'+S.negE))sub='c-'+S.negE;
-  dr={type:'task',status:ST[o.status]?o.status:'nova'};
+  dr={type:'task',status:ST[o.status]?o.status:'nova',ntFiles:[]};getMcp();
   const lock=!!root;const ppl=S.people||[];
   const showFam=(root==='p-fam')||S.view==='fam',showBrd=(root==='p-brd')||S.view==='brd',showAge=(root==='p-age')||S.view==='age';
   const preBoard=S.brdB||(sub&&sub.indexOf('c-')===0&&boardById(sub.slice(2))?sub.slice(2):'');
@@ -615,6 +615,7 @@ function openNewTask(preCat,o){o=o||{};
     (S.dfields||[]).map(fd=>'<label for="nt-df-'+esc(fd.id)+'">'+esc(fd.name)+'</label><input id="nt-df-'+esc(fd.id)+'" data-nt-df="'+esc(fd.id)+'" type="'+(fd.type==='number'?'number':fd.type==='date'?'date':'text')+'">').join('')+
     '<label for="nt-notes" class="full">Observações</label><textarea id="nt-notes" class="full" placeholder="Contexto, contatos, números de pedido…"></textarea>'+
     '<div class="full rep-flags"><span class="rf-h">No report do executivo</span><label class="rf"><input type="checkbox" id="nt-rel"><span><b>Relevante para o executivo</b></span></label><label class="rf"><input type="checkbox" id="nt-needs"><span><b>Precisa do executivo</b></span></label></div>'+
+    '<label for="nt-anexos" class="full">Anexos</label><div class="full"><div id="nt-files" class="files"></div><input type="file" id="nt-anexos" multiple class="file-in"><span class="hint">Qualquer formato, até 16 MB. Os arquivos vão para a pasta certa no Google Drive.</span></div>'+
     '</div>'+
     '<div class="hint">Entrada em '+new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'. Depois de registrada, a demanda abre na Operação com checklist, anexos e histórico.</div>',
     '<span class="grow"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="nt-save">Registrar demanda</button>');
@@ -629,6 +630,26 @@ document.addEventListener('change',e=>{
     else if(!t.value&&sub&&/^c-brd-/.test(sub.value)&&boardById(sub.value.slice(2)))sub.value='';}
   else if(t.id==='nt-sub'){const bd=$('#nt-board');if(bd&&t.value&&t.value.indexOf('c-')===0&&boardById(t.value.slice(2)))bd.value=t.value.slice(2);}
 });
+/* anexos da nova demanda: ficam na fila e sobem para o Drive logo depois de registrar (a pasta depende da categoria) */
+function ntFilesHtml(){return ((dr&&dr.ntFiles)||[]).map((f,i)=>'<span class="file">'+esc(f.name)+'<button class="x" type="button" data-nt-unfile="'+i+'" aria-label="Remover '+esc(f.name)+'">×</button></span>').join('');}
+document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='nt-anexos'||!dr||dr.type!=='task')return;
+  const fs=[...(t.files||[])];t.value='';const big=fs.filter(f=>f.size>16*1048576);if(big.length)toast(big.map(f=>f.name).join(', ')+': passa do limite de 16 MB.');
+  dr.ntFiles=(dr.ntFiles||[]).concat(fs.filter(f=>f.size<=16*1048576));const l=$('#nt-files');if(l)l.innerHTML=ntFilesHtml();});
+document.addEventListener('click',e=>{const x=e.target.closest&&e.target.closest('[data-nt-unfile]');if(!x||!dr||!dr.ntFiles)return;e.preventDefault();dr.ntFiles.splice(+x.dataset.ntUnfile,1);const l=$('#nt-files');if(l)l.innerHTML=ntFilesHtml();});
+async function ntUploadAfter(t,files){
+  const ref=S.db.collection('tasks').doc(t.id);let ok=0;
+  for(const f of files){
+    let att=null;
+    if(await getMcp()){try{const r=await driveUpload(f,{task:t});att={id:'d'+r.id,kind:'drive',name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()};}
+      catch(e){toast(driveUpErr(e,f.name)+(S.assets?' Salvo só no Painel.':''));}}
+    if(!att&&S.assets){try{const r=await S.assets.upload(f);att={id:r.id,kind:'file',name:f.name,type:r.contentType||f.type,size:r.sizeBytes||f.size,at:new Date().toISOString()};}catch(e){toast('Não foi possível enviar '+f.name+'.');}}
+    if(!att)continue;
+    try{const snap=await ref.get();const cur=snap.exists?(snap.data()||{}):null;if(!cur)continue;const now=new Date().toISOString();
+      await ref.update({attachments:(cur.attachments||[]).concat([att]),history:(cur.history||[]).concat([{at:now,text:'Anexo adicionado: '+f.name+(att.kind==='drive'?' (Drive)':'')}]),updatedAt:now});ok++;}
+    catch(e){toast('“'+f.name+'” subiu, mas não entrou na demanda. Abra a demanda e anexe de novo.');}
+  }
+  if(ok)toast(ok===1?'Anexo guardado na demanda #'+t.num+'.':ok+' anexos guardados na demanda #'+t.num+'.');
+}
 document.addEventListener('click',e=>{const rb=e.target.closest&&e.target.closest('[data-nt-resp]');if(rb){rb.classList.toggle('on');rb.setAttribute('aria-pressed',rb.classList.contains('on'));}});
 async function saveNewTask(){
   const title=$('#nt-title').value.trim();if(!title){toast('Escreva o que precisa ser feito.');$('#nt-title').focus();return;}
@@ -655,7 +676,8 @@ async function saveNewTask(){
     if(kind==='certificado'&&!t.due){toast('Informe o vencimento do certificado em Prazo.');$('#nt-due').focus();return;}
     t.kind=kind;t.fields=Object.assign({},t.fields,kf,kind==='assinatura'?{etapa:'Recebida'}:{},kind==='familia'?{contatoEm:now.slice(0,10)}:{});t.history=[{at:now,text:'Demanda registrada pelo Painel · tipo: '+(KIND_LBL[kind]||kind)}];}
   const b=$('#nt-save');b.disabled=true;b.textContent='Salvando…';
-  try{await S.db.doc('tasks/'+id).set(t);closeDrawer();toast('Demanda #'+num+' registrada');}
+  const files=((dr&&dr.ntFiles)||[]).slice();
+  try{await S.db.doc('tasks/'+id).set(t);closeDrawer();toast('Demanda #'+num+' registrada'+(files.length?'. O anexo continua subindo e entra na demanda sozinho.':''));if(files.length)ntUploadAfter(t,files);}
   catch(e){b.disabled=false;b.textContent='Registrar demanda';toast(e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não foi possível salvar agora. Tente de novo em instantes.');}
 }
 
