@@ -640,10 +640,9 @@ async function ntUploadAfter(t,files){
   const ref=S.db.collection('tasks').doc(t.id);let ok=0;
   for(const f of files){
     let att=null;
-    if(await getMcp()){try{const r=await driveUpload(f,{task:t});att={id:'d'+r.id,kind:'drive',name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()};}
-      catch(e){toast(driveUpErr(e,f.name)+(S.assets?' Salvo só no Painel.':''));}}
-    if(!att&&S.assets){try{const r=await S.assets.upload(f);att={id:r.id,kind:'file',name:f.name,type:r.contentType||f.type,size:r.sizeBytes||f.size,at:new Date().toISOString()};}catch(e){toast('Não foi possível enviar '+f.name+'.');}}
-    if(!att)continue;
+    if(!(await getMcp())){toast('O Google Drive não está disponível agora. Abra a demanda e anexe “'+f.name+'” de novo.');continue;}
+    try{const r=await driveUpload(f,{task:t});att={id:'d'+r.id,kind:'drive',name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()};}
+    catch(e){toast(driveUpErr(e,f.name)+' Abra a demanda e anexe de novo.');continue;}
     try{const snap=await ref.get();const cur=snap.exists?(snap.data()||{}):null;if(!cur)continue;const now=new Date().toISOString();
       await ref.update({attachments:(cur.attachments||[]).concat([att]),history:(cur.history||[]).concat([{at:now,text:'Anexo adicionado: '+f.name+(att.kind==='drive'?' (Drive)':'')}]),updatedAt:now});ok++;}
     catch(e){toast('“'+f.name+'” subiu, mas não entrou na demanda. Abra a demanda e anexe de novo.');}

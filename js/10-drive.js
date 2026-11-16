@@ -2,6 +2,20 @@
 /* =================== sincronização com o Google Drive =================== */
 const GD='Google Drive';
 const DRIVE_SUB={casas:'1oPAKtilXU9W_AYjQdlkUznJawFBbM7jT',carros:'1_O4-IgjmCTtPbdfcayqR65SjWxJkSxMn',escritorios:'1JlOnG-pd70hvg0zHfU_8y7Tj27x8EyZE',servicos:'1sfgqsrzx67nkjI7cREav7Qz2tOcaVFJM'};
+const ativoPasta=a=>a.tipo==='Casa'?DRIVE_SUB.casas:a.tipo==='Carro'?DRIVE_SUB.carros:a.tipo==='Escritório'?DRIVE_SUB.escritorios:a.tipo==='Serviço'?DRIVE_SUB.servicos:DRIVE.fac;
+const FAC_GRP={'c-fac-casas':'casas','c-fac-carros':'carros','c-fac-escritorios':'escritorios','c-fac-servicos':'servicos'};
+const TASK_ROOT=()=>({'p-fin':DRIVE.fin,'p-dp':DRIVE.dp,'p-fac':DRIVE.fac,'p-fam':DRIVE.fam,'p-neg':DRIVE.neg,'p-sau':DRIVE.sau,'p-brd':DRIVE.brd,'k-via':DRIVE.via,'p-age':DRIVE.age});
+function taskCatPath(t){const path=[];let n=catById(t&&t.categoryId),g=0;while(n&&g++<20){path.unshift(n);n=catById(n.parentId);}return path;}
+/* anexo de demanda: dentro da pasta da área (categoria), na subpasta com o nome da subcategoria.
+   Se a subcategoria é um cadastro com pasta própria (empresa, casa, conselho, pet), o anexo fica na pasta dele. */
+function taskSubfolder(t){
+  const f=(t&&t.fields)||{};if(f.empresa||f.board||f.pessoa)return '';
+  const path=taskCatPath(t);if(!path.length)return '';
+  for(let i=path.length-1;i>0;i--){const n=path[i];if(FAC_GRP[n.id])return '';const rid=n.id.indexOf('c-')===0?n.id.slice(2):'';
+    if(rid&&(empById(rid)||ativoById(rid)||recs('brd').some(x=>x.id===rid)||recs('fam-pet').some(x=>x.id===rid)))return '';}
+  const parts=(TASK_ROOT()[path[0].id]?path.slice(1):path).map(n=>String(n.name||'').trim()).filter(Boolean);
+  return parts.join(' - ').replace(/[\\/]/g,'-').slice(0,120);
+}
 const DRIVE_COL={pessoas:'cad-pessoas',ativos:'cad-ativos',empresas:'cad-empresas',brd:'brd-boards',via:'via-viagens',pets:'fam-pet'};
 const driveName=(kind,r)=>kind==='via'?((r.inicio?r.inicio.slice(0,7)+' · ':'')+(r.titulo||'Viagem')):(r.nome||'');
 let mcpNs;
@@ -44,15 +58,17 @@ async function driveFolderFor(ctx){
     if(f.empresa&&empById(f.empresa))return via('empresas',empById(f.empresa),'neg',DRIVE.neg);
     if(f.board){const b=recs('brd').find(x=>x.id===f.board);if(b)return via('brd',b,'brd',DRIVE.brd);}
     if(f.pessoa&&pes(f.pessoa))return via('pessoas',pes(f.pessoa),'fam',DRIVE.fam);
-    const path=[];let n=catById(t.categoryId),g=0;while(n&&g++<20){path.unshift(n);n=catById(n.parentId);}
+    const path=taskCatPath(t);
     if(!path.length)return DRIVE.sec;
-    const last=path[path.length-1];
-    if(last.id.indexOf('c-emp-')===0&&empById(last.id.slice(2)))return via('empresas',empById(last.id.slice(2)),'neg',DRIVE.neg);
-    if(last.id.indexOf('c-ati-')===0&&ativoById(last.id.slice(2))){const a=ativoById(last.id.slice(2));return via('ativos',a,'fac',a.tipo==='Casa'?DRIVE_SUB.casas:DRIVE_SUB.carros);}
-    {const pt=recs('fam-pet').find(x=>'c-'+x.id===last.id);if(pt)return via('pets',pt,'fam',DRIVE_PETS);}
-    if(last.id==='c-fac-casas')return DRIVE_SUB.casas;
-    if(last.id==='c-fac-carros')return DRIVE_SUB.carros;
-    return ({'p-fin':DRIVE.fin,'p-dp':DRIVE.dp,'p-fac':DRIVE.fac,'p-fam':DRIVE.fam,'p-neg':DRIVE.neg,'p-sau':DRIVE.sau,'p-brd':DRIVE.brd,'k-via':DRIVE.via,'p-age':DRIVE.age})[path[0].id]||DRIVE.sec;
+    /* subcategoria que é um cadastro (empresa, casa/carro, conselho, pet): a pasta do próprio cadastro */
+    for(let i=path.length-1;i>0;i--){const n=path[i],rid=n.id.indexOf('c-')===0?n.id.slice(2):'';if(!rid)continue;
+      if(empById(rid))return via('empresas',empById(rid),'neg',DRIVE.neg);
+      if(ativoById(rid)){const a=ativoById(rid);return via('ativos',a,'fac',ativoPasta(a));}
+      {const b=recs('brd').find(x=>x.id===rid);if(b)return via('brd',b,'brd',DRIVE.brd);}
+      {const pt=recs('fam-pet').find(x=>x.id===rid);if(pt)return via('pets',pt,'fam',DRIVE_PETS);}}
+    /* grupos de Facilities com pasta própria (Casas, Carros, Escritórios, Serviços) */
+    for(let i=path.length-1;i>0;i--){const g=FAC_GRP[path[i].id];if(g)return DRIVE_SUB[g];}
+    return TASK_ROOT()[path[0].id]||DRIVE.sec;
   }
   if(ctx.fin)return DRIVE.fin;
   const rt=ctx.rt||'',v=ctx.vals||{};
@@ -73,6 +89,7 @@ async function driveFolderFor(ctx){
    de registro. O Apps Script usa a subpasta que já existir com esse nome (sem diferenciar
    maiúsculas e acentos) ou cria uma nova. */
 function driveSubfolder(ctx){
+  if(ctx&&ctx.task)return taskSubfolder(ctx.task);
   const rt=(ctx&&ctx.rt)||'',v=(ctx&&ctx.vals)||{};
   const rec=ctx&&ctx.id&&rt&&S.rec[rt]?(S.rec[rt]||[]).find(x=>x.id===ctx.id):null;
   const el=k=>{const e=$('#rf-'+k);return e?e.value:'';};
@@ -108,7 +125,7 @@ async function driveUpload(file,ctx){
   const parent=(await driveFolderFor(ctx||{}))||DRIVE.sec;
   const type=file.type||'application/octet-stream';
   const args={title:file.name,parentId:parent,contentMimeType:type,disableConversionToGoogleType:true};
-  const sub=driveSubfolder(ctx);if(sub&&!driveTopFolders().has(parent))args.subfolder=sub;
+  const sub=driveSubfolder(ctx);if(sub&&(ctx&&ctx.task||!driveTopFolders().has(parent)))args.subfolder=sub;
   let fa=false;try{const lt=await m.listTools();fa=!!(lt&&lt.fileArgs);}catch(e){}
   if(fa)args.base64Content={$file:{data:file,name:file.name,type}};
   else{if(file.size>700000)throw {code:'too_large_inline'};args.base64Content=await toB64(file);}
