@@ -1,3 +1,4 @@
 # Instruções para o Claude
 
 - Depois de fazer commit e push de uma mudança, sempre abra o pull request para a `main` e faça o merge (squash) logo em seguida, sem perguntar. O site é publicado a partir da `main`, então sem o merge a mudança não aparece.
+- Todo anexo do Painel (atestados, recibos, comprovantes, documentos…) vai para a pasta certa no Google Drive, nunca só para o armazenamento do Supabase. Suba o arquivo pelo conector do Google Drive na subpasta da pessoa, casa, empresa etc. (o id da pasta-mãe está no campo `drive` do cadastro, ex.: `cad-pessoas/<id>` → `drive.dp`; dentro dela há subpastas como Atestados, Ocorrências, Documentos, Empréstimos, Folhas de Pagamento). Siga o padrão de nome dos arquivos que já estão lá e grave o anexo no registro como `{"id":"<id do Drive>","url":"https://drive.google.com/file/d/<id>/view","name":"…","type":"…","drive":true}`.
