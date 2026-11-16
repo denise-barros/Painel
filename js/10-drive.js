@@ -22,7 +22,8 @@ function gdErr(e){const c=e&&e.code;
   if(c==='needs_reauth')return 'A conexão com o Google Drive expirou. Reconecte em Configurações › Conectores do claude.ai.';
   if(c==='selection_required')return 'Escolha qual conta do Google Drive o Painel deve usar.';
   if(c==='not_in_manifest'||c==='approval_required'||c==='consent_required')return 'O Painel precisa da sua permissão para mexer no Google Drive. Permita quando ela pedir.';
-  if(c==='not_granted'||c==='capability_disabled'||c==='capability_removed')return 'O Google Drive não está disponível nesta visualização. Abra o Painel pelo claude.ai.';
+  if(c==='not_granted'||c==='capability_disabled'||c==='capability_removed')return 'O Google Drive não está disponível agora. Saia e entre de novo no Painel.';
+  if(c==='network')return 'Não foi possível falar com o Google Drive. Confira a internet e tente de novo.';
   if(c==='blocked_by_policy')return 'A política da sua organização não permite este uso do Google Drive.';
   return 'Não foi possível atualizar a pasta no Drive. Em Cadastros, use “Sincronizar com o Drive”.';}
 /* ---------- anexos direto no Drive ---------- */
