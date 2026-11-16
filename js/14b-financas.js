@@ -110,8 +110,8 @@ function finRepasses(ym){
   const fech=sm(f,r=>r.mes===ym),rec=sm(t,r=>r.mes===ym),acc=sm(t,r=>r.mes&&r.mes<=ym)-sm(f,r=>r.mes&&r.mes<=ym);
   /* encontro de contas: itens com valores por mês (r.m) menos devoluções (rep-dev); itens Quitados saem do saldo */
   const dv=S.fin['rep-dev']||[],nm=x=>String(x||'').trim().toLowerCase(),isF=r=>!String(r.lado||'').startsWith('Leticia');
-  const tot=r=>Object.values(r.m||{}).reduce((a,v)=>a+(fnum(v)||0),0),quit=new Set(c.filter(r=>r.status==='Quitado').map(r=>nm(r.item)));
-  const ab=c.filter(r=>r.status!=='Quitado');
+  const tot=r=>Object.values(r.m||{}).reduce((a,v)=>a+(fnum(v)||0),0),done=r=>r.status==='Devolvido'||r.status==='Quitado',quit=new Set(c.filter(done).map(r=>nm(r.item)));
+  const ab=c.filter(r=>!done(r));
   const pend=f=>Math.max(0,ab.filter(r=>isF(r)===f).reduce((a,r)=>a+tot(r),0)-dv.filter(d=>(d.quem!=='Leticia')===f&&!quit.has(nm(d.ref))).reduce((a,d)=>a+(fnum(d.valor)||0),0));
   return {has:has||dv.length>0,fech:f.some(r=>r.mes===ym)?fech:null,rec:t.some(r=>r.mes===ym)?rec:null,acumulado:has?acc:null,
     pendShayer:pend(true),pendLeticia:pend(false),pendN:ab.length};}
