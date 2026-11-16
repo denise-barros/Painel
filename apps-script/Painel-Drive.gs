@@ -70,6 +70,16 @@ function saida_(item, pasta) {
   };
 }
 
+/* usa a subpasta que já existir com esse nome (sem diferenciar maiúsculas e acentos) ou cria */
+function subpasta_(pasta, nome) {
+  var alvo = norm_(nome), it = pasta.getFolders();
+  while (it.hasNext()) { var f = it.next(); if (norm_(f.getName()) === alvo) return f; }
+  return pasta.createFolder(nome);
+}
+function norm_(t) {
+  return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+}
+
 function criar_(a, quem) {
   var pasta = pasta_(a.parentId);
   var tipo = a.mimeType || a.contentMimeType || 'application/octet-stream';
@@ -77,10 +87,7 @@ function criar_(a, quem) {
     var nova = pasta.createFolder(a.title || 'Nova pasta');
     return { id: nova.getId(), title: nova.getName(), parentId: pasta.getId(), mimeType: tipo, viewUrl: nova.getUrl() };
   }
-  if (a.subfolder) {
-    var subs = pasta.getFoldersByName(a.subfolder);
-    pasta = subs.hasNext() ? subs.next() : pasta.createFolder(a.subfolder);
-  }
+  if (a.subfolder) pasta = subpasta_(pasta, a.subfolder);
   var blob;
   if (a.base64Content) blob = Utilities.newBlob(Utilities.base64Decode(a.base64Content), tipo, a.title || 'arquivo');
   else blob = Utilities.newBlob(a.textContent || '', tipo, a.title || 'arquivo');
