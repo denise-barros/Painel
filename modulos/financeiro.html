@@ -277,7 +277,7 @@ table.grid{border-collapse:collapse;width:100%;font-size:10.5px}
 .grid td input{width:100%;min-width:84px;border:0;outline:2px solid var(--accent);background:var(--surface);padding:6px 9px;text-align:right;border-radius:6px}
 .mx td:first-child,.mx th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);min-width:200px}
 .mx th:first-child{background:var(--sunk);z-index:2}
-.enc .enc-fora{display:block;font-size:10px;color:var(--muted);padding:0 8px 4px;white-space:nowrap}.tb-rep-contas>.tiles{margin:6px 0 10px}
+.enc-h{margin:14px 0 6px;font-size:13px;font-weight:700;display:flex;gap:8px;align-items:baseline}.enc-h span{font-weight:500;color:var(--muted);font-size:11.5px}.enc-wrap{max-height:62vh;overflow:auto}.enc-wrap .grid th{z-index:2}.enc-wrap .grid th:first-child{z-index:3}.enc .enc-fora{display:block;font-size:10px;color:var(--muted);padding:0 8px 4px;white-space:nowrap}.tb-rep-contas>.tiles{margin:6px 0 10px}
 .mx tr.grp td:first-child{background:var(--sunk)} .mx tr.tot td:first-child{background:var(--accent-soft)}
 .addcat{all:unset;cursor:pointer;color:var(--accent);font-size:10px;font-weight:600;padding:6px 10px;display:block}
 .x{background:none;border:0;color:var(--faint);padding:6px 8px;border-radius:6px}
@@ -1344,11 +1344,12 @@ function encontroHTML(tb){
   <div class="tiles"><div class="tile"><b class="${C.F.ab>0?"neg":""}">${fmtMoney(C.F.ab)}</b><span>Fernando deve · devolver para o Itaú da Leticia</span></div>
   <div class="tile"><b class="${C.L.ab>0?"neg":""}">${fmtMoney(C.L.ab)}</b><span>Leticia deve · devolver para a C6</span></div>
   <div class="tile"><b>${fmtMoney(Math.abs(liq))}</b><span>Saldo compensado · ${liq>=0?"Fernando deve à Leticia":"Leticia deve ao Fernando"}</span></div></div>
-  <div class="wrap"><table class="grid mx enc"><thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Total do item</th><th>Devolvido</th><th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
+  `;
+  const head=`<thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Total do item</th><th>Devolvido</th><th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
   [[true,"Fernando deve · devolver para o Itaú da Leticia",C.F],[false,"Leticia deve · devolver para a C6",C.L]].forEach(([f,lbl,S])=>{
     const rows=items.filter(r=>encF(r)===f).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
     const tm=Array(13).fill(0);
-    h+=`<tr class="grp"><td>${esc(lbl)}</td>${"<td></td>".repeat(18)}</tr>`;
+    h+=`<h4 class="enc-h">${esc(lbl)} <span>${rows.length} ${rows.length===1?"item":"itens"}</span></h4><div class="wrap enc-wrap"><table class="grid mx enc">${head}`;
     rows.forEach(r=>{const tot=encTotal(r),dv=C.devItem(r),q=r.status==="Quitado";
       const fora=Object.keys(r.m||{}).filter(k=>!k.startsWith(y+"-")&&hasV(r.m[k])).sort();
       h+=`<tr class="${q?"hl":""}"><td><span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}</span>${fora.length?`<small class="enc-fora" title="${esc(fora.map(fmtMonth).join(", "))}">+ ${fora.length} ${fora.length===1?"mês":"meses"} em outro ano</small>`:""}</td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td>`;
@@ -1357,9 +1358,9 @@ function encontroHTML(tb){
       <td class="ro">${state.confirm===tid+"|"+r.id?`<div class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></div>`:`<button class="x" aria-label="Excluir item" data-del="${tid}|${r.id}">✕</button>`}</td></tr>`});
     h+=`<tr><td colspan="19"><button class="addcat" data-addenc="${f?"F":"L"}">+ Adicionar item</button></td></tr>`;
     const ty=tm.reduce((a,b)=>a+b,0);
-    h+=`<tr class="sub"><td><span class="cell">Total do mês</span></td><td></td>${tm.slice(1).map(v=>`<td class="ro"><span class="cell">${v?fmtMoney(v):""}</span></td>`).join("")}<td class="ro"><span class="cell" title="Total de ${y}">${fmtMoney(ty)}</span></td><td class="ro"><span class="cell pos">${S.dv?fmtMoney(S.dv):""}</span></td><td class="ro"><span class="cell ${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</span></td><td></td><td></td></tr>`;
+    h+=`<tr class="sub"><td><span class="cell">Total do mês</span></td><td></td>${tm.slice(1).map(v=>`<td class="ro"><span class="cell">${v?fmtMoney(v):""}</span></td>`).join("")}<td class="ro"><span class="cell" title="Total de ${y}">${fmtMoney(ty)}</span></td><td class="ro"><span class="cell pos">${S.dv?fmtMoney(S.dv):""}</span></td><td class="ro"><span class="cell ${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</span></td><td></td><td></td></tr></tbody></table></div>`;
   });
-  return h+`</tbody></table></div><div class="foot"><span>${items.length} ${items.length===1?"item":"itens"} · valores de ${y} (troque o ano no topo para ver outros meses)</span><span>Em aberto = total do item − devoluções registradas abaixo. Itens Quitados saem do saldo.</span></div></section>`;
+  return h+`<div class="foot"><span>${items.length} ${items.length===1?"item":"itens"} · valores de ${y} (troque o ano no topo para ver outros meses)</span><span>Em aberto = total do item − devoluções registradas abaixo. Itens Quitados saem do saldo.</span></div></section>`;
 }
 function startEncEdit(el){
   const[tid,id,k]=el.dataset.eedit.split("|");const r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;const v=(r.m||{})[k];
