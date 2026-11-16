@@ -45,8 +45,15 @@ function openRec(type,id,pre){
 }
 function filesEdit(){return (dr.files||[]).map((a,i)=>'<span class="file"><a href="'+(a.url?esc(a.url):'/_blob/'+encodeURIComponent(a.id))+'" target="_blank" rel="noopener">'+esc(a.name||'arquivo')+'</a><button class="x" data-unfile="'+i+'" aria-label="Remover '+esc(a.name||'arquivo')+'">×</button></span>').join('');}
 function drawerVals(){const v={};['pessoa','ativo','empresa','board','viagem'].forEach(k=>{const el=$('#rf-'+k);if(el)v[k]=el.value;});return v;}
+/* envios de anexo em andamento: o Salvar espera todos terminarem */
+let upPending=0,upWaiters=[];
+function upDone(){if(--upPending<=0){upPending=0;const w=upWaiters;upWaiters=[];w.forEach(f=>f());}}
+const upIdle=()=>upPending?new Promise(r=>upWaiters.push(r)):Promise.resolve();
 async function uploadFiles(input){
   if(!input.files||!input.files.length)return;const files=[...input.files];input.value='';
+  upPending++;try{await uploadFilesRun(files);}finally{upDone();}
+}
+async function uploadFilesRun(files){
   for(const f of files){
     toast('Enviando '+f.name+'…');
     try{
@@ -61,6 +68,7 @@ async function uploadFiles(input){
   toast('Anexo pronto. Salve para manter.');
 }
 async function saveRec(){
+  if(upPending){const b=$('#rf-save'),lb=b&&b.textContent;if(b){b.disabled=true;b.textContent='Enviando anexo…';}toast('Aguarde: terminando de enviar o anexo…');await upIdle();if(b){b.disabled=false;b.textContent=lb;}if(!dr)return;}
   const R=REC[dr.rt];const old=dr.id?recs(dr.rt).find(x=>x.id===dr.id):null;const obj={};
   for(const f of R.fields){
     if(f.onlyNew&&old)continue;
