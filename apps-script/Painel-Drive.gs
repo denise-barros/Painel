@@ -31,22 +31,33 @@ function doPost(e) {
   }
 }
 
-/* confere o login no Supabase */
+var CACHE = CacheService.getScriptCache();
+function hash_(t) {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(t)));
+}
+
+/* confere o login no Supabase (guarda a conferência por 5 minutos) */
 function usuario_(token) {
   if (!token) return null;
+  var ck = 'u:' + hash_(token), c = CACHE.get(ck);
+  if (c) return JSON.parse(c);
   var r = UrlFetchApp.fetch(SUPABASE_URL + '/auth/v1/user', {
     headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + token },
     muteHttpExceptions: true
   });
   if (r.getResponseCode() !== 200) return null;
-  return JSON.parse(r.getContentText());
+  var u = JSON.parse(r.getContentText());
+  CACHE.put(ck, JSON.stringify({ email: u.email, user_metadata: u.user_metadata || {} }), 300);
+  return u;
 }
 
-/* só aceita pastas que estejam dentro da pasta raiz do Painel */
+/* só aceita pastas que estejam dentro da pasta raiz do Painel (guarda por 6 horas) */
 function dentroDaRaiz_(folder) {
+  var ck = 'f:' + folder.getId();
+  if (CACHE.get(ck)) return true;
   var f = folder, guarda = 0;
   while (f && guarda++ < 30) {
-    if (f.getId() === RAIZ) return true;
+    if (f.getId() === RAIZ || CACHE.get('f:' + f.getId())) { CACHE.put(ck, '1', 21600); return true; }
     var pais = f.getParents();
     f = pais.hasNext() ? pais.next() : null;
   }
@@ -72,9 +83,14 @@ function saida_(item, pasta) {
 
 /* usa a subpasta que já existir com esse nome (sem diferenciar maiúsculas e acentos) ou cria */
 function subpasta_(pasta, nome) {
-  var alvo = norm_(nome), it = pasta.getFolders();
-  while (it.hasNext()) { var f = it.next(); if (norm_(f.getName()) === alvo) return f; }
-  return pasta.createFolder(nome);
+  var alvo = norm_(nome), ck = 's:' + pasta.getId() + ':' + alvo, id = CACHE.get(ck);
+  if (id) { try { var c = DriveApp.getFolderById(id); if (!c.isTrashed()) return c; } catch (e) {} }
+  var it = pasta.getFolders(), achou = null;
+  while (it.hasNext()) { var f = it.next(); if (norm_(f.getName()) === alvo) { achou = f; break; } }
+  if (!achou) achou = pasta.createFolder(nome);
+  CACHE.put(ck, achou.getId(), 21600);
+  CACHE.put('f:' + achou.getId(), '1', 21600);
+  return achou;
 }
 function norm_(t) {
   return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();

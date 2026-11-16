@@ -43,7 +43,7 @@ function openRec(type,id,pre){
   const title=r?(r.titulo||r.nome||(r.pessoa?refName('equipe',r.pessoa)+' · '+(r.tipo||R.one)+(r.data?' · '+fmtDateFull(r.data):''):'')||cut(r.descricao)||r.emissor||R.one):(R.fem?'Nova ':'Novo ')+R.one;
   drawerShell(title,body,(r?'<button class="btn danger" id="rf-del">Excluir</button>':'')+extra+'<span class="grow"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="rf-save">'+(r?'Salvar':'Registrar')+'</button>',!!r);
 }
-function filesEdit(){return (dr.files||[]).map((a,i)=>'<span class="file"><a href="'+(a.url?esc(a.url):'/_blob/'+encodeURIComponent(a.id))+'" target="_blank" rel="noopener">'+esc(a.name||'arquivo')+'</a><button class="x" data-unfile="'+i+'" aria-label="Remover '+esc(a.name||'arquivo')+'">×</button></span>').join('');}
+function filesEdit(){return (dr.upl||[]).map(n=>'<span class="file up">'+esc(n)+' · enviando…</span>').join('')+(dr.files||[]).map((a,i)=>'<span class="file"><a href="'+(a.url?esc(a.url):'/_blob/'+encodeURIComponent(a.id))+'" target="_blank" rel="noopener">'+esc(a.name||'arquivo')+'</a><button class="x" data-unfile="'+i+'" aria-label="Remover '+esc(a.name||'arquivo')+'">×</button></span>').join('');}
 function drawerVals(){const v={};['pessoa','ativo','empresa','board','viagem'].forEach(k=>{const el=$('#rf-'+k);if(el)v[k]=el.value;});return v;}
 /* envios de anexo em andamento: o Salvar espera todos terminarem */
 let upPending=0,upWaiters=[];
@@ -54,6 +54,9 @@ async function uploadFiles(input){
   upPending++;try{await uploadFilesRun(files);}finally{upDone();}
 }
 async function uploadFilesRun(files){
+  const d=dr,redraw=()=>{const l=$('#rf-files-list');if(l&&dr===d)l.innerHTML=filesEdit();};
+  d.upl=(d.upl||[]).concat(files.map(f=>f.name));redraw();
+  const tirar=n=>{const i=(d.upl||[]).indexOf(n);if(i>=0)d.upl.splice(i,1);redraw();};
   for(const f of files){
     toast('Enviando '+f.name+'…');
     try{
@@ -62,8 +65,9 @@ async function uploadFilesRun(files){
         catch(e){if(!S.assets){toast(driveUpErr(e,f.name));continue;}toast(driveUpErr(e,f.name)+' Salvo só no Painel.');}}
       if(!item&&S.assets){const r=await S.assets.upload(f);item={id:r.id,name:f.name,size:r.sizeBytes||f.size,type:r.contentType||f.type};}
       if(!item){toast('Anexos indisponíveis nesta visualização.');continue;}
-      if(!dr)return;dr.files.push(item);const l=$('#rf-files-list');if(l)l.innerHTML=filesEdit();
+      d.files.push(item);
     }catch(e){toast(e&&e.code==='too_large'?f.name+' passa do limite de 20 MB.':'Não foi possível enviar '+f.name+'.');}
+    finally{tirar(f.name);}
   }
   toast('Anexo pronto. Salve para manter.');
 }
