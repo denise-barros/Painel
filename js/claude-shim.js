@@ -8,7 +8,10 @@
    - assets    → Supabase Storage, bucket "anexos" (privado; links assinados)
    - downloads → download direto pelo navegador
    - user      → login do Supabase (e-mail e senha)
-   - mcp       → indisponível (o Drive não é usado fora do claude.ai; anexos vão para o Storage)
+   - mcp       → Google Drive pelo Apps Script da Denise (apps-script/Painel-Drive.gs), se
+                 window.PAINEL_DRIVE_URL estiver preenchido em js/supabase-config.js. Tudo vai
+                 para o Drive da Denise, não importa quem anexou. Sem a URL, o Drive fica
+                 indisponível e os anexos vão para o Storage.
    Dentro do claude.ai nada disto é usado. */
 (function () {
   if (window.claude && typeof window.claude.use === 'function') return;
@@ -338,6 +341,26 @@
     };
   }
 
+  /* ---------------- Google Drive (Apps Script) ---------------- */
+  const DRIVE_URL = window.PAINEL_DRIVE_URL || '';
+  const fileB64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => no(Object.assign(new Error('read'), { code: 'bad_request' })); r.readAsDataURL(f); });
+  const mcpNs = {
+    async listTools() { return { fileArgs: true }; },
+    async callTool(server, tool, input) {
+      const args = Object.assign({}, input || {});
+      const fa = args.base64Content && args.base64Content.$file;
+      if (fa) args.base64Content = await fileB64(fa.data);
+      const { data } = await sb.auth.getSession();
+      const token = data && data.session && data.session.access_token;
+      if (!token) throw Object.assign(new Error('Sem login'), { code: 'not_granted' });
+      let res;
+      try { res = await fetch(DRIVE_URL, { method: 'POST', body: JSON.stringify({ token, tool, args }) }).then(r => r.json()); }
+      catch (e) { throw Object.assign(new Error('Drive fora do ar'), { code: 'network' }); }
+      if (!res || !res.ok) throw Object.assign(new Error((res && res.error) || 'Erro no Drive'), { code: (res && res.code) || 'error' });
+      return { payload: res.payload };
+    }
+  };
+
   window.claude = {
     use: async name => {
       const session = await ready;
@@ -346,7 +369,8 @@
       if (name === 'assets') return assets;
       if (name === 'downloads') return downloads;
       if (name === 'user') return userNs(session);
-      return null; /* mcp (Google Drive) e outros: indisponíveis fora do claude.ai */
+      if (name === 'mcp') return DRIVE_URL ? mcpNs : null;
+      return null;
     }
   };
 })();

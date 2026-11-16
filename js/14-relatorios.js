@@ -272,7 +272,7 @@ async function relExport(kind){
     /* rodapé */
     const np=doc.internal.getNumberOfPages();for(let pg=(LAND?2:1);pg<=np;pg++){doc.setPage(pg);B(LAND?8:7);tc('faint');doc.text('Painel  ·  '+relScopeLabel()+'  ·  '+perLbl,L,Hh-26);doc.text(String(pg).padStart(2,'0')+' / '+String(np).padStart(2,'0'),W-L,Hh-26,{align:'right'});}
     return relSave(relFileBase(R)+'.pdf',doc.output('blob'));}
-  if(kind==='drive'){const m=await getMcp();if(!m){toast('O Google Drive não está disponível nesta visualização.');return;}
+  if(kind==='drive'){const m=await getMcp();if(!m){toast('O Google Drive não está disponível agora.');return;}
     const html='<h1>'+esc(title)+'</h1><p><i>Gerado em '+brD(todayISO())+' pelo Painel.</i></p>'+('<h2>Destaques</h2><h3>O que foi feito</h3><ul>'+R.hero.feito.map(f=>'<li><b>'+esc(String(f[0]))+'</b> '+esc(f[1])+'</li>').join('')+R.hero.entregas.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul><h3>'+R.hero.pT+'</h3>'+(R.hero.precisa.length?'<ul>'+R.hero.precisa.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada pendente.</p>')+'<h3>Próximos 30 dias</h3>'+(R.hero.prox.length?'<ul>'+R.hero.prox.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada agendado.</p>'))+
       R.secs.map(s=>'<h2>'+esc(s.t)+'</h2><ul>'+s.kpis.map(k=>'<li>'+esc(k[0])+': <b>'+esc(String(k[1]))+'</b>'+(k[3]?' ('+esc(k[3])+')':'')+'</li>').join('')+'</ul>'+(s.note?'<p><i>'+esc(s.note)+'</i></p>':'')+(s.rows.length?'<table border="1" cellpadding="4"><tr>'+s.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>'+s.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>':'')).join('');
     toast('Salvando no Drive…');
