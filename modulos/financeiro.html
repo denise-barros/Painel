@@ -521,7 +521,7 @@ const FLUXOS={
     groups:[{k:"andrew",l:"Pago por Andrew",s:0},{k:"leticia",l:"Pago por Leticia",s:0},{k:"comp",l:"Despesas compartilhadas",s:0}]}
 };
 /* Encontro de contas: item × mês (r.m = {"AAAA-MM": valor}) e devoluções em rep-dev */
-const ENC_LADOS=["Fernando · devolver para Itaú da Leticia","Leticia · devolver para C6"];
+const ENC_LADOS=["Fernando deve","Leticia deve"];
 const encF=r=>!String(r.lado||"").startsWith("Leticia");
 const ENC_ST=["Devolver","Cobrança","Devolvido"];const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
 const ENC_REF={k:"ref",l:"Referente a",t:"select",f:true,get opts(){return["Saldo geral",...[...new Set((data["rep-contas"]||[]).map(r=>r.item).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"))]}};
@@ -763,10 +763,10 @@ const LIST={
   value:r=>r.valor,badge:r=>r.status||"A pagar",done:r=>r.status==="Pago",stamp:r=>r.pagoEm,doP:()=>({status:"Pago"}),undoP:()=>({status:"A pagar"})},
  "rep-fech":{cap:"obs",group:r=>({k:(r.mes||"").slice(0,4)||"0",l:(r.mes||"").slice(0,4)||"Sem mês"}),order:r=>r.mes||"",lead:r=>r.mes?MES[+r.mes.slice(5,7)-1]:"—",title:r=>"Fechamento de "+(fmtMonth(r.mes)||"mês não informado"),tags:r=>[T(r.obs)],value:r=>r.valor},
  "rep-transf":{cap:"obs",group:r=>({k:r.mes||"0",l:r.mes?"Competência "+fmtMonth(r.mes):"Sem mês"}),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.rem||"Transferência",tags:r=>[T(r.obs)],value:r=>r.valor},
- "rep-contas":{cap:"item",group:r=>encF(r)?{k:"1",l:"Fernando deve · devolver para Itaú da Leticia"}:{k:"2",l:"Leticia deve · devolver para C6"},order:r=>r.ordem||0,
+ "rep-contas":{cap:"item",group:r=>encF(r)?{k:"1",l:"Fernando deve"}:{k:"2",l:"Leticia deve"},order:r=>r.ordem||0,
   lead:r=>r.tipo||"—",title:r=>r.item,tags:r=>[T(r.obs)],value:r=>encTotal(r),badge:r=>r.status,
   done:encDone,doP:()=>({status:"Devolvido"}),undoP:()=>({status:"Devolver"})},
- "rep-dev":{cap:"obs",group:r=>r.quem==="Leticia"?{k:"2",l:"Leticia → C6"}:{k:"1",l:"Fernando → Itaú da Leticia"},order:r=>r.data||"",lead:r=>dm(r.data),
+ "rep-dev":{cap:"obs",group:r=>r.quem==="Leticia"?{k:"2",l:"Devoluções da Leticia"}:{k:"1",l:"Devoluções do Fernando"},order:r=>r.data||"",lead:r=>dm(r.data),
   title:r=>(r.quem||"Devolução")+(r.ref?" · "+r.ref:""),tags:r=>[T(r.para?"para "+r.para:""),T(r.obs)],value:r=>r.valor},
  parcelas:{cap:"descr",group:r=>({k:r.cartao||"~",l:r.cartao||"Sem cartão"}),order:r=>(r.sub||"")+(r.descr||""),lead:r=>r.total?`${r.atual||0}/${r.total}`:"—",title:r=>r.descr,
   tags:(r,c)=>[T(r.sub),T(r.ref),r.total&&c.ref?T("termina "+fmtMonth(addMonths(c.ref,Math.max(0,r.total-(r.atual||0))))):null,r.reemb==="Sim"?T("reembolso"+(r.dequem?" · "+r.dequem:""),"info"):r.reemb==="Talvez"?T("talvez reembolso","warn"):null],
@@ -1343,12 +1343,12 @@ function encontroHTML(tb){
   const tid=tb.id,y=state.year,items=data[tid]||[],C=encCalc();const ym=i=>y+"-"+String(i).padStart(2,"0");
   const liq=C.F.ab-C.L.ab;
   let h=`<section class="tbl tb-${tid}"><div class="tbl-h"><h3>${esc(tb.title)}</h3><span class="grow"></span><span class="hint-k">Clique no valor para editar · no item para mudar nome, tipo e status</span></div>
-  <div class="tiles"><div class="tile"><b class="${C.F.ab>0?"neg":""}">${fmtMoney(C.F.ab)}</b><span>Fernando deve · devolver para o Itaú da Leticia</span></div>
-  <div class="tile"><b class="${C.L.ab>0?"neg":""}">${fmtMoney(C.L.ab)}</b><span>Leticia deve · devolver para a C6</span></div>
+  <div class="tiles"><div class="tile"><b class="${C.F.ab>0?"neg":""}">${fmtMoney(C.F.ab)}</b><span>Fernando deve</span></div>
+  <div class="tile"><b class="${C.L.ab>0?"neg":""}">${fmtMoney(C.L.ab)}</b><span>Leticia deve</span></div>
   <div class="tile"><b>${fmtMoney(Math.abs(liq))}</b><span>Saldo compensado · ${liq>=0?"Fernando deve à Leticia":"Leticia deve ao Fernando"}</span></div></div>
   `;
   const head=`<thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Total do item</th><th>Devolvido</th><th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
-  [[true,"Fernando deve · devolver para o Itaú da Leticia",C.F],[false,"Leticia deve · devolver para a C6",C.L]].forEach(([f,lbl,S])=>{
+  [[true,"Fernando deve",C.F],[false,"Leticia deve",C.L]].forEach(([f,lbl,S])=>{
     const all=items.filter(r=>encF(r)===f),done=all.filter(encDone),nDone=done.length;
     const rows=all.filter(r=>!encDone(r)).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
     const tm=Array(13).fill(0);
