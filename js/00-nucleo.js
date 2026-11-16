@@ -45,7 +45,7 @@ const IC={
 const NAV=[
   {id:'capa',l:'Capa'},
   {sep:true},
-  {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=5'},
+  {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=6'},
   {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=356'},
   {id:'dp',l:'DP',native:true},
   {id:'fac',l:'Facilities',native:true},
