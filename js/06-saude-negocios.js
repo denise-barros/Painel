@@ -366,20 +366,24 @@ function phase3Pulse(){
 
 
 /* certificados digitais: cadastro (representante e vencimento) editável no card; a demanda nasce 30 dias antes */
-document.addEventListener('change',async e=>{
-  const el=e.target;if(!el||!el.dataset||(el.dataset.certRep==null&&el.dataset.certDue==null))return;
+/* a data só é salva ao sair do campo (ou Enter): salvar a cada dígito redesenhava a tabela no meio da digitação do ano */
+const certValid=v=>/^(19|20)\d\d-\d\d-\d\d$/.test(v||'');
+async function certSave(el){
   const id=el.dataset.certRep||el.dataset.certDue;const emp=empById(id);if(!emp||!S.db)return;
   const isRep=el.dataset.certRep!=null;const v=el.value;
   if(isRep?v===certRepOf(emp):v===(emp.certVenc||''))return;
-  if(!isRep&&!v){toast('O vencimento não pode ficar vazio.');renderNeg();return;}
+  if(!isRep&&!certValid(v)){toast(v?'Data inválida: confira o ano.':'O vencimento não pode ficar vazio.');renderNeg();return;}
   try{await S.db.collection('cad-empresas').doc(id).update(isRep?{certRep:v}:{certVenc:v});toast('Certificado atualizado');}catch(err){toast('Não foi possível salvar agora.');renderNeg();}
-});
+}
+document.addEventListener('change',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.certRep!=null)certSave(el);});
+document.addEventListener('focusout',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.certDue!=null)certSave(el);});
+document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el&&el.dataset&&el.dataset.certDue!=null){e.preventDefault();el.blur();}});
 const certMade=new Set();
 function certAuto(){
   if(!S.db||!S.loaded||!(S.cad.empresas||[]).length)return;
   const lim=addDays(todayISO(),30);const now=new Date().toISOString();
   S.cad.empresas.forEach(e=>{
-    if(!e.certVenc||e.certVenc>lim)return;const id='cert-'+e.id+'-'+e.certVenc;
+    if(!certValid(e.certVenc)||e.certVenc>lim)return;const id='cert-'+e.id+'-'+e.certVenc;
     if(S.tasks.has(id)||certMade.has(id))return;certMade.add(id);
     const num=Math.max(0,...[...S.tasks.values()].map(t=>+t.num||0))+1;const rep=certRepOf(e);const ex=rep==='outro'?(e.executivo||'ambos'):rep;
     S.db.collection('tasks').doc(id).set({num,title:'Renovar certificado digital · '+e.nome,kind:'certificado',status:'nova',sphere:'corporativo',categoryId:'c-'+e.id,executive:ex,priority:null,due:e.certVenc,assignees:[],attachments:[],checklist:[],
