@@ -164,7 +164,7 @@ function autoDriveSync(){
   autoSyncT=setTimeout(async()=>{
     if(syncing||!S.db)return;let m=null;try{m=await getMcp();}catch(e){}if(!m)return;
     syncing=true;let n=0;
-    const lists=[['pessoas',S.cad.pessoas],['ativos',S.cad.ativos],['empresas',S.cad.empresas],['brd',recs('brd')],['via',recs('via')]];
+    const lists=[['pessoas',S.cad.pessoas],['ativos',S.cad.ativos],['empresas',S.cad.empresas],['brd',recs('brd')],['via',recs('via')],['pets',recs('fam-pet')]];
     try{for(const[kind,rows]of lists){for(const r of (rows||[])){const t=driveTargets(kind,r);if(!t.some(x=>!(r.drive&&r.drive[x.key])))continue;const k=kind+':'+r.id;if(autoTried.has(k))continue;autoTried.add(k);try{n+=await syncDrive(kind,r.id,r,null);}catch(e){if(e&&e.code&&e.code!=='bad_request')throw e;}}}}
     catch(e){}
     syncing=false;if(n)toast(n+(n===1?' pasta criada':' pastas criadas')+' no Drive para cadastros sem pasta');
@@ -173,7 +173,7 @@ function autoDriveSync(){
 async function syncAllDrive(btn){
   if(syncing)return;syncing=true;if(btn){btn.disabled=true;btn.textContent='Sincronizando…';}
   let n=0,err=null;
-  const lists=[['pessoas',S.cad.pessoas],['ativos',S.cad.ativos],['empresas',S.cad.empresas],['brd',recs('brd')],['via',recs('via')]];
+  const lists=[['pessoas',S.cad.pessoas],['ativos',S.cad.ativos],['empresas',S.cad.empresas],['brd',recs('brd')],['via',recs('via')],['pets',recs('fam-pet')]];
   try{for(const[kind,rows]of lists){for(const r of rows){const t=driveTargets(kind,r);if(!t.some(x=>!(r.drive&&r.drive[x.key])))continue;n+=await syncDrive(kind,r.id,r,null);}}}
   catch(e){err=e;}
   syncing=false;if(btn){btn.disabled=false;btn.textContent='Sincronizar com o Drive';}

@@ -117,6 +117,7 @@ async function saveRec(){
     closeDrawer();toast((old?'Alterações salvas':(R.fem?'Registrada':'Registrado')+(wantTask&&obj.taskId?' e enviado à Operação':''))+(subindo?'. O anexo continua subindo e entra no registro sozinho.':''));
     if(dr===null&&R.col==='brd-boards')driveAfterSave('brd',docId,obj,old);
     if(dr===null&&R.col==='via-viagens')driveAfterSave('via',docId,obj,old);
+    if(dr===null&&R.col==='fam-pet')driveAfterSave('pets',docId,obj,old);
   }catch(e){b.disabled=false;b.textContent=old?'Salvar':'Registrar';toast(e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não foi possível salvar agora. Tente de novo em instantes.');}
 }
 async function createTaskFromChamado(c){
