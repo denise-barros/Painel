@@ -357,6 +357,8 @@ small.sub{color:var(--muted);font-size:10.5px}
 .file a{color:inherit;text-decoration:none;overflow:hidden;text-overflow:ellipsis}
 .file .x{border:0;background:none;color:inherit;padding:0 0 0 2px;font-size:13px;line-height:1}
 .file-in{font-size:11px}
+.files .file.up{opacity:.65;font-style:italic;animation:upPulse 1.2s ease-in-out infinite}
+@keyframes upPulse{50%{opacity:.35}}
 .days-pick{display:flex;gap:6px;flex-wrap:wrap}
 .days-pick label{position:relative;cursor:pointer}
 .days-pick input{position:absolute;opacity:0;inset:0}
