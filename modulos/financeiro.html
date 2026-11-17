@@ -524,7 +524,7 @@ const FLUXOS={
 /* Encontro de contas: item × mês (r.m = {"AAAA-MM": valor}) e devoluções em rep-dev */
 const ENC_LADOS=["Fernando deve","Leticia deve"];
 const encF=r=>!String(r.lado||"").startsWith("Leticia");
-const ENC_ST=["Devolver","Cobrança","Devolvido"];const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
+const ENC_ST=["Devolver","Cobrança","Recusado","Devolvido"];const encRec=r=>r.status==="Recusado";const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
 const ENC_REF={k:"ref",l:"Referente a",t:"select",f:true,get opts(){return["Saldo geral",...[...new Set((data["rep-contas"]||[]).filter(r=>!state.encRef||encF(r)===(state.encRef==="F")).map(r=>r.item).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"))]}};
 const TABS=[
  {id:"cronograma",g:"Pagamentos",l:"Cronograma de pagamentos",desc:"Pagamentos recorrentes, vencimentos e acessos, com o valor pago e o status de cada mês.",
@@ -1112,7 +1112,7 @@ document.addEventListener("click",e=>{const gh=e.target.closest("[data-grp]");if
   const g=e.target.closest("[data-fdem-mon]");if(g){const k=g.dataset.fdemMon;const was=k in finDemMon?finDemMon[k]:k===new Date().toISOString().slice(0,7);finDemMon[k]=!was;render();return}
   if(e.target.closest("[data-fdem-new]")){try{window.parent.CE.newDemand(finDemSub||"p-fin")}catch(x){}}});
 document.addEventListener("input",e=>{const S=state.encSel;if(!S)return;if(e.target.id==="enc-sel-data")S.data=e.target.value;if(e.target.id==="enc-sel-obs")S.obs=e.target.value});
-document.addEventListener("change",async e=>{if(e.target.matches&&e.target.matches("[data-encst]")){const[t,id]=e.target.dataset.encst.split("|");const v=e.target.value;try{await updRow(t,id,v==="Devolvido"?{status:v,devolvidoEm:new Date().toISOString().slice(0,10)}:{status:v,devolvidoEm:null});toast(v==="Devolvido"?"Devolvido · foi para o histórico":"Status salvo")}catch(x){toast("Não foi possível salvar. Tente de novo.")}render();return}
+document.addEventListener("change",async e=>{if(e.target.matches&&e.target.matches("[data-encst]")){const[t,id]=e.target.dataset.encst.split("|");const v=e.target.value;try{await updRow(t,id,v==="Devolvido"?{status:v,devolvidoEm:new Date().toISOString().slice(0,10)}:v==="Recusado"?{status:v,recusadoEm:new Date().toISOString().slice(0,10)}:{status:v,devolvidoEm:null,recusadoEm:null});toast(v==="Devolvido"?"Devolvido · foi para o histórico":v==="Recusado"?"Recusado · saiu da soma e foi para Recusado":"Status salvo")}catch(x){toast("Não foi possível salvar. Tente de novo.")}render();return}
   if(e.target.matches&&e.target.matches("[data-fdem-st]")){try{window.parent.CE.setStatus(e.target.dataset.fdemSt,e.target.value)}catch(x){}return}if(e.target.matches&&e.target.matches("[data-fdem-sub]")){finDemSub=e.target.value;finDemAll=false;render();}});
 /* ---------- métricas financeiras: a mesma fonte da Capa e do Report (js/14b-financas.js do Painel) ---------- */
 function finM(mo){try{const P=window.parent;if(P&&P!==window&&P.CEFIN)return P.CEFIN.metrics({ym:mo||state.month,exec:gExec})}catch(e){}return null}
@@ -1341,16 +1341,16 @@ const encCells=r=>Object.keys(r.m||{}).filter(k=>hasV(r.m[k])&&+r.m[k]!==0).sort
 function encCellPaid(r,k,P){if(encDone(r))return true;return(P.M[r.id+"|"+k]||0)>=(+r.m[k]||0)-EPS}
 function encDevItem(r,P){P=P||encPaidMap();if(encDone(r))return encTotal(r);return encCells(r).reduce((a,k)=>a+Math.min(P.M[r.id+"|"+k]||0,+r.m[k]||0),0)}
 /* quitado: marcado à mão (legado) ou todas as células pagas. Fixo nunca é quitado: fica "em dia". */
-function encQuit(r,P){if(encDone(r))return true;if(r.tipo==="Fixo")return false;P=P||encPaidMap();const cs=encCells(r);return cs.length>0&&cs.every(k=>encCellPaid(r,k,P))}
+function encQuit(r,P){if(encRec(r))return false;if(encDone(r))return true;if(r.tipo==="Fixo")return false;P=P||encPaidMap();const cs=encCells(r);return cs.length>0&&cs.every(k=>encCellPaid(r,k,P))}
 function encQuitEm(r,P){if(r.devolvidoEm)return r.devolvidoEm;P=P||encPaidMap();return encCells(r).map(k=>P.D[r.id+"|"+k]||"").sort().pop()||""}
 function encCalc(){
   const items=data["rep-contas"]||[],dev=data["rep-dev"]||[],P=encPaidMap();
-  const side=f=>{const its=items.filter(r=>encF(r)===f&&!encQuit(r,P));const tot=its.reduce((a,r)=>a+encTotal(r),0);
+  const side=f=>{const its=items.filter(r=>encF(r)===f&&!encRec(r)&&!encQuit(r,P));const tot=its.reduce((a,r)=>a+encTotal(r),0);
     const dv=its.reduce((a,r)=>a+encDevItem(r,P),0)+dev.filter(d=>!(d.cob&&d.cob.length)&&(d.quem!=="Leticia")===f).reduce((a,d)=>a+(+d.valor||0),0);
     return{tot,dv,ab:tot-dv}};
   return{F:side(true),L:side(false),P};
 }
-const encV=p=>(state.encV||{})[p]==="dev"?"dev":"deve";
+const encV=p=>{const v=(state.encV||{})[p];return v==="dev"||v==="rec"?v:"deve"};
 /* descreve o que uma devolução pagou: "DAE (jun./2026, jul./2026) · Camarote (total)" */
 function encCobTxt(d){const items=data["rep-contas"]||[],by={};(d.cob||[]).forEach(c=>{(by[c.id]=by[c.id]||{item:c.item,ms:[]}).ms.push(c.m)});
   const parts=Object.keys(by).map(id=>{const r=items.find(x=>x.id===id),b=by[id],ms=b.ms.sort();const nome=(r&&r.item)||b.item||"Item excluído";
@@ -1368,11 +1368,11 @@ function encontroHTML(tb){
   <div class="tile"><b>${fmtMoney(Math.abs(liq))}</b><span>Saldo compensado · ${liq>=0?"Fernando deve à Leticia":"Leticia deve ao Fernando"}</span></div></div></section>`;
   const per=r=>{const ks=encCells(r);return ks.length?(ks.length>1?fmtMonth(ks[0])+" a "+fmtMonth(ks[ks.length-1]):fmtMonth(ks[0])):"—"};
   [["F",true,"Fernando",C.F],["L",false,"Leticia",C.L]].forEach(([p,f,nome,S])=>{
-    const all=items.filter(r=>encF(r)===f),done=all.filter(r=>encQuit(r,P));
-    const rows=all.filter(r=>!encQuit(r,P)).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
+    const all=items.filter(r=>encF(r)===f),rec=all.filter(encRec),done=all.filter(r=>encQuit(r,P));
+    const rows=all.filter(r=>!encRec(r)&&!encQuit(r,P)).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
     const devs=(data["rep-dev"]||[]).filter(execOk).filter(d=>(d.quem!=="Leticia")===f).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
-    const sel=SEL&&SEL.p===p,v=sel?"deve":encV(p);
-    h+=`<section class="tbl enc-side"><div class="enc-side-h"><h3>${nome}</h3><div class="seg" role="tablist" aria-label="${nome}">${[["deve","Deve",rows.length],["dev","Devolveu",devs.length]].map(([k,l,n])=>`<button role="tab" data-encv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</b></span><span class="grow"></span>${sel?"":`<button class="btn sm primary" data-encsel="${p}">Registrar devolução</button>`}</div>`;
+    const sel=SEL&&SEL.p===p,v=sel?"deve":encV(p);const recT=rec.reduce((a,r)=>a+encTotal(r)-encDevItem(r,P),0);
+    h+=`<section class="tbl enc-side"><div class="enc-side-h"><h3>${nome}</h3><div class="seg" role="tablist" aria-label="${nome}">${[["deve","Deve",rows.length],["dev","Devolveu",devs.length],["rec","Recusado",rec.length]].map(([k,l,n])=>`<button role="tab" data-encv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</b></span><span class="grow"></span>${sel?"":`<button class="btn sm primary" data-encsel="${p}">Registrar devolução</button>`}</div>`;
     if(sel){const s=encSelSum();
       h+=`<div class="enc-selbar"><div class="enc-selbar-t"><b>Clique nas células que ${nome} pagou</b><span>${s.n?`${s.n} ${s.n===1?"célula":"células"} · <b>${fmtMoney(s.v)}</b> · ${esc(s.txt)}`:"Use “todas” para marcar o item inteiro. Células verdes já estão pagas."}</span></div>
       <div class="enc-selbar-f"><label for="enc-sel-data">Data</label><input class="sel" type="date" id="enc-sel-data" value="${esc(SEL.data)}"><label class="sr" for="enc-sel-obs">Observação</label><input class="sel" type="text" id="enc-sel-obs" placeholder="Observação (opcional)" value="${esc(SEL.obs||"")}"><button class="btn sm" data-encselno>Cancelar</button><button class="btn sm primary" data-encselgo ${s.n?"":"disabled"}>Salvar devolução${s.n?" de "+fmtMoney(s.v):""}</button></div></div>`}
@@ -1393,6 +1393,10 @@ function encontroHTML(tb){
       const ty=tm.reduce((a,b)=>a+b,0);
       h+=`<tr class="sub"><td><span class="cell">Total do mês</span></td><td></td>${tm.slice(1).map(x=>`<td class="ro"><span class="cell">${x?fmtMoney(x):""}</span></td>`).join("")}<td class="ro"><span class="cell" title="Total de ${y}">${fmtMoney(ty)}</span></td><td class="ro"><span class="cell pos">${S.dv?fmtMoney(S.dv):""}</span></td><td class="ro"><span class="cell ${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</span></td><td></td><td></td></tr></tbody></table></div>
       <div class="foot"><span>Valores de ${y} (troque o ano no topo para ver outros meses) · <span class="enc-lg"></span> pago</span><span>Clique no valor para editar · no item para mudar nome, tipo e status. Item com todas as células pagas vai para Devolveu › Itens quitados (fixos ficam “em dia”).</span></div>`}
+    else if(v==="rec"){
+      h+=`<h4 class="enc-h">Recusados <span>${rec.length}${rec.length?" · "+fmtMoney(recT)+" fora da soma":""}</span></h4>`;
+      h+=rec.length?`<div class="wrap enc-wrap enc-wrap-h"><table class="grid enc"><thead><tr><th>Item</th><th>Tipo</th><th>Período</th><th>Total do item</th><th>Já devolvido</th><th>Não devolvido</th><th>Recusado em</th><th>Observação</th><th aria-label="Ações"></th></tr></thead><tbody>${rec.map(r=>{const dv=encDevItem(r,P);
+        return `<tr><td><span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}</span></td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td><td class="ro"><span class="cell">${esc(per(r))}</span></td><td class="ro"><span class="cell">${fmtMoney(encTotal(r))}</span></td><td class="ro"><span class="cell ${dv?"pos":""}">${dv?fmtMoney(dv):"—"}</span></td><td class="ro"><span class="cell">${fmtMoney(encTotal(r)-dv)}</span></td><td class="ro"><span class="cell">${r.recusadoEm?fmtDate(r.recusadoEm):"—"}</span></td><td class="ro"><span class="cell enc-cob" title="${esc(r.obs||"")}">${esc(r.obs||"")}</span></td><td class="ro"><button class="btn sm" data-encreopen="${r.id}" title="Volta para Deve e entra na soma de novo">Reabrir</button></td></tr>`}).join("")}</tbody></table></div><div class="foot"><span>Itens recusados não entram na soma do que ${nome} deve.</span><span>Para registrar o motivo, clique no item e use Observações.</span></div>`:`<div class="empty-big">Nenhum item recusado. Para recusar, mude o status do item para “Recusado” em Deve.</div>`}
     else{
       h+=`<h4 class="enc-h">Devoluções <span>${devs.length} · ${fmtMoney(devs.reduce((a,d)=>a+(+d.valor||0),0))}</span></h4>`;
       h+=devs.length?`<div class="wrap enc-wrap enc-wrap-h"><table class="grid enc enc-devt"><thead><tr><th>Data</th><th>O que foi pago</th><th>Valor devolvido</th><th>Observação</th><th aria-label="Ações"></th></tr></thead><tbody>${devs.map(d=>`<tr><td class="ro"><span class="cell">${d.data?fmtDate(d.data):"—"}</span></td><td class="ro"><span class="cell enc-cob" title="${esc(encCobTxt(d))}">${esc(encCobTxt(d))}</span></td><td class="ro"><span class="cell pos">${hasV(d.valor)?fmtMoney(d.valor):""}</span></td><td class="ro"><span class="cell" title="${esc(d.obs||"")}">${esc(d.obs||"")}</span></td><td class="ro">${state.confirm==="rep-dev|"+d.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="rep-dev|${d.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir devolução" title="Excluir: as células voltam a ficar em aberto" data-del="rep-dev|${d.id}">✕</button>`}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty-big">Nenhuma devolução registrada. Clique em “Registrar devolução” e marque as células pagas.</div>`;
@@ -1411,7 +1415,7 @@ async function encSelSave(){const S=state.encSel;if(!S||!S.cells.size)return;con
   const valor=Math.round(cob.reduce((a,c)=>a+c.v,0)*100)/100;
   try{await addRow("rep-dev",{data:dt,quem:S.p==="F"?"Fernando":"Leticia",valor,obs,cob,criado:new Date().toISOString()});state.encSel=null;toast("Devolução de "+fmtMoney(valor)+" registrada")}catch(e){toast("Não foi possível salvar a devolução. Tente de novo.")}
   render()}
-async function encReabrir(id){try{await updRow("rep-contas",id,{status:"Devolver",devolvidoEm:null});toast("Item reaberto")}catch(e){toast("Não foi possível reabrir. Tente de novo.")}render()}
+async function encReabrir(id){try{await updRow("rep-contas",id,{status:"Devolver",devolvidoEm:null,recusadoEm:null});toast("Item reaberto")}catch(e){toast("Não foi possível reabrir. Tente de novo.")}render()}
 function startEncEdit(el){
   const[tid,id,k]=el.dataset.eedit.split("|");const r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;const v=(r.m||{})[k];
   const td=el.parentElement;const inp=document.createElement("input");inp.type="text";inp.inputMode="decimal";inp.dataset.money="";
