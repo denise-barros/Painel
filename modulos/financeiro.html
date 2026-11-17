@@ -521,7 +521,7 @@ const FLUXOS={
   "fdc-criancas":{l:"Crianças",desc:"Visão geral dos gastos do mês de Anna e Spike. Enviar para Andrew mensalmente.",src:[["Kids accounts","https://drive.google.com/file/d/1VQgdEuQFpic1xu0gY9M_CVCBs25bF8Vv/view"]],
     groups:[{k:"andrew",l:"Pago por Andrew",s:0},{k:"leticia",l:"Pago por Leticia",s:0},{k:"comp",l:"Despesas compartilhadas",s:0}]}
 };
-/* Encontro de contas: item × mês (r.m = {"AAAA-MM": valor}) e devoluções em rep-dev */
+/* Fernando x Leticia (antigo encontro de contas): item × mês (r.m = {"AAAA-MM": valor}) e devoluções em rep-dev */
 const ENC_LADOS=["Fernando deve","Leticia deve"];
 const encF=r=>!String(r.lado||"").startsWith("Leticia");
 const ENC_ST=["Devolver","Cobrança","Recusado","Devolvido"];const encRec=r=>r.status==="Recusado";const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
@@ -572,15 +572,15 @@ const TABS=[
     SE("pessoa","Quem deve",["Leticia","Fernando"]),TX("credor","A quem devolver",{w:170,f:true}),TX("descr","Descrição",{w:200}),DT("data","Data da despesa"),M("valor","Valor"),
     DT("venc","Prazo para devolver"),SE("status","Status",["A pagar","Pago","Cancelado"]),DT("datapag","Data do pagamento"),TX("comp","Comprovante",{w:150}),LG("obs","Observações",{w:200})],
     kpis:rows=>{const t0=new Date().toISOString().slice(0,10);let v=0,n=0,vv=0;rows.forEach(r=>{if(r.status==="Pago"||r.status==="Cancelado")return;v+=+r.valor||0;n++;if(r.venc&&r.venc<t0)vv+=+r.valor||0});return[{l:"A pagar",v:fmtMoney(v),c:v?"neg":""},{l:"Itens em aberto",v:String(n)},{l:"Vencidos",v:fmtMoney(vv),c:vv?"neg":""}]}}]},
- {id:"repasses",g:"Controles",l:"Repasses entre sócios",desc:"Repasses entre Fernando e Leticia: fechamento do mês, transferências recebidas e encontro de contas.",
+ {id:"repasses",g:"Controles",l:"Repasses entre sócios",desc:"Repasses entre Fernando e Leticia: fechamento do mês x transferências recebidas e o que um deve ao outro.",
   src:[["Repasses",DRIVE+"1kKXNKCe7tUGCTU_IYH6U2EsL3wli3Mle24ilGNUx7tE/edit"]],
   overview:true,
-  subtabs:[{k:"fech",l:"Fechamento do mês x transferências recebidas",tables:["rep-fech","rep-transf"],overview:true},{k:"enc",l:"Encontro de contas",tables:["rep-contas"]}],
+  subtabs:[{k:"fech",l:"Fechamento x Transferências",tables:["rep-fech","rep-transf"],overview:true},{k:"enc",l:"Fernando x Leticia",tables:["rep-contas"]}],
   tables:[
    {id:"rep-fech",title:"Fechamentos do mês",sort:"mes",cols:[{k:"mes",l:"Mês de competência",t:"month"},M("valor","Valor do fechamento"),LG("obs","Observação",{w:260})]},
    {id:"rep-transf",title:"Transferências recebidas",sort:"data",cols:[{k:"mes",l:"Mês de competência",t:"month"},DT("data","Data da transferência"),SE("rem","Remetente",["Fernando Shayer","SERENGETTI Chase Participações Ltda","Savia Learning Participações Ltda"]),M("valor","Valor recebido"),LG("obs","Observação",{w:240})]},
-   {id:"rep-contas",title:"Encontro de contas",encontro:true,cols:[SE("lado","Pendência de",ENC_LADOS),TX("item","Item",{w:220}),SE("tipo","Tipo",["Fixo","Parcelado","Avulso"]),SE("status","Status",ENC_ST),LG("obs","Observações",{w:200})]},
-   {id:"rep-dev",title:"Devoluções do encontro de contas",sort:"data",cols:[DT("data","Data da devolução"),SE("quem","Quem devolveu",["Fernando","Leticia"]),ENC_REF,M("valor","Valor devolvido"),LG("obs","Observações",{w:220})],
+   {id:"rep-contas",title:"Fernando x Leticia",encontro:true,cols:[SE("lado","Pendência de",ENC_LADOS),TX("item","Item",{w:220}),SE("tipo","Tipo",["Fixo","Parcelado","Avulso"]),SE("status","Status",ENC_ST),LG("obs","Observações",{w:200})]},
+   {id:"rep-dev",title:"Devoluções Fernando x Leticia",sort:"data",cols:[DT("data","Data da devolução"),SE("quem","Quem devolveu",["Fernando","Leticia"]),ENC_REF,M("valor","Valor devolvido"),LG("obs","Observações",{w:220})],
     kpis:rows=>{let f=0,l=0;rows.forEach(r=>{if(r.quem==="Leticia")l+=+r.valor||0;else f+=+r.valor||0});return[{l:"Devolvido pelo Fernando",v:fmtMoney(f),c:"pos"},{l:"Devolvido pela Leticia",v:fmtMoney(l),c:"pos"}]}}]},
  {id:"parcelas",g:"Controles",l:"Cartão de crédito",desc:"Fatura de cada cartão e parcelas em andamento. A pasta do mês, em 02 Financeiro › Cartão de crédito, guarda a planilha de parcelas e as faturas.",
   src:[["Cartão de crédito · pasta do mês",CC_MESES[ccMes()].pasta],["Planilha de parcelas",PARC_SHEET],["Parcelas de viagens - C6",DRIVE+"1ng6LipVuruC2SMdu_MYMGGgaRt6khrvImv_pj0HVIyo/edit"]],
@@ -1177,7 +1177,7 @@ function finHomeHTML(F){
     E.has?["A receber no fim do mês anterior (estimado)",fmtMoney(E.ant.receber)]:null,
     RP.has?["Repasses de "+mon+": fechamento · recebido",mv(RP.fech)+" · "+mv(RP.rec)]:["Repasses entre sócios","Sem registros"],
     RP.has?["Repasses: diferença acumulada",mv(RP.acumulado),RP.acumulado<0?"neg":""]:null,
-    RP.pendN?["Encontro de contas em aberto · Fernando / Leticia",fmtMoney(RP.pendShayer)+" / "+fmtMoney(RP.pendLeticia)]:null]},
+    RP.pendN?["Fernando x Leticia · em aberto Fernando / Leticia",fmtMoney(RP.pendShayer)+" / "+fmtMoney(RP.pendLeticia)]:null]},
    {k:"cred",tab:"parcelas",l:"Cartão de crédito",d:"Fatura da competência e parcelas que vêm depois dela, sem repetir valores.",t:"t-rose",rows:[
     ["Faturas de "+mon,K.has?fmtMoney(K.total):"Sem fatura registrada"],
     K.has?["Pagas",fmtMoney(K.pago),"pos"]:null,

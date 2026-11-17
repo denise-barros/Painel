@@ -108,11 +108,13 @@ function finRepasses(ym){
   const has=f.length+t.length+c.length>0;
   const sm=(l,p)=>l.filter(p).reduce((a,r)=>a+(fnum(r.valor)||0),0);
   const fech=sm(f,r=>r.mes===ym),rec=sm(t,r=>r.mes===ym),acc=sm(t,r=>r.mes&&r.mes<=ym)-sm(f,r=>r.mes&&r.mes<=ym);
-  /* encontro de contas: itens com valores por mês (r.m) menos devoluções (rep-dev); itens Quitados saem do saldo */
-  const dv=S.fin['rep-dev']||[],nm=x=>String(x||'').trim().toLowerCase(),isF=r=>!String(r.lado||'').startsWith('Leticia');
-  const tot=r=>Object.values(r.m||{}).reduce((a,v)=>a+(fnum(v)||0),0),done=r=>r.status==='Devolvido'||r.status==='Quitado',quit=new Set(c.filter(done).map(r=>nm(r.item)));
-  const ab=c.filter(r=>!done(r));
-  const pend=f=>Math.max(0,ab.filter(r=>isF(r)===f).reduce((a,r)=>a+tot(r),0)-dv.filter(d=>(d.quem!=='Leticia')===f&&!quit.has(nm(d.ref))).reduce((a,d)=>a+(fnum(d.valor)||0),0));
+  /* Fernando x Leticia: itens com valores por mês (r.m); devoluções (rep-dev) marcam células pagas (d.cob); Devolvido/Quitado e Recusado saem do saldo */
+  const dv=S.fin['rep-dev']||[],isF=r=>!String(r.lado||'').startsWith('Leticia');
+  const paid={};dv.forEach(d=>(d.cob||[]).forEach(x=>{const k=x.id+'|'+x.m;paid[k]=(paid[k]||0)+(fnum(x.v)||0)}));
+  const out=r=>r.status==='Devolvido'||r.status==='Quitado'||r.status==='Recusado';
+  const aberto=r=>Object.keys(r.m||{}).reduce((a,k)=>{const v=fnum(r.m[k])||0;return a+v-Math.min(paid[r.id+'|'+k]||0,v)},0);
+  const ab=c.filter(r=>!out(r)&&aberto(r)>0.005);
+  const pend=f=>Math.max(0,ab.filter(r=>isF(r)===f).reduce((a,r)=>a+aberto(r),0)-dv.filter(d=>!(d.cob&&d.cob.length)&&(d.quem!=='Leticia')===f).reduce((a,d)=>a+(fnum(d.valor)||0),0));
   return {has:has||dv.length>0,fech:f.some(r=>r.mes===ym)?fech:null,rec:t.some(r=>r.mes===ym)?rec:null,acumulado:has?acc:null,
     pendShayer:pend(true),pendLeticia:pend(false),pendN:ab.length};}
 
