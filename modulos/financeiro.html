@@ -1389,7 +1389,7 @@ function pendBtns(tb,fl){if(tb.id!=="cronograma")return"";const m=state.month;co
 const encTotal=r=>Object.values(r.m||{}).reduce((a,v)=>a+(+v||0),0);
 /* Devoluções = células (item × mês) marcadas como pagas. rep-dev: {data,quem,valor,obs,cob:[{id,item,m,v}]} */
 const EPS=0.005;
-function encPaidMap(){const M={},D={};(data["rep-dev"]||[]).forEach(d=>(d.cob||[]).forEach(c=>{const k=c.id+"|"+c.m;M[k]=(M[k]||0)+(+c.v||0);if(!D[k]||String(d.data||"")>D[k])D[k]=d.data||""}));return{M,D}}
+function encPaidMap(skip){const M={},D={};(data["rep-dev"]||[]).forEach(d=>{if(skip&&d.id===skip)return;(d.cob||[]).forEach(c=>{const k=c.id+"|"+c.m;M[k]=(M[k]||0)+(+c.v||0);if(!D[k]||String(d.data||"")>D[k])D[k]=d.data||""})});return{M,D}}
 const encCells=r=>Object.keys(r.m||{}).filter(k=>hasV(r.m[k])&&+r.m[k]!==0).sort();
 function encCellPaid(r,k,P){if(encDone(r))return true;return(P.M[r.id+"|"+k]||0)>=(+r.m[k]||0)-EPS}
 function encDevItem(r,P){P=P||encPaidMap();if(encDone(r))return encTotal(r);return encCells(r).reduce((a,k)=>a+Math.min(P.M[r.id+"|"+k]||0,+r.m[k]||0),0)}
@@ -1408,7 +1408,7 @@ const encV=p=>{const v=(state.encV||{})[p];return v==="dev"||v==="rec"?v:"deve"}
 /* descreve o que uma devolução pagou: "DAE (jun./2026, jul./2026) · Camarote (total)" */
 function encCobTxt(d){const items=data["rep-contas"]||[],by={};(d.cob||[]).forEach(c=>{(by[c.id]=by[c.id]||{item:c.item,ms:[]}).ms.push(c.m)});
   const parts=Object.keys(by).map(id=>{const r=items.find(x=>x.id===id),b=by[id],ms=b.ms.sort();const nome=(r&&r.item)||b.item||"Item excluído";
-    const tot=r&&encCells(r).length===ms.length&&encCells(r).every(k=>ms.includes(k));const P=encPaidMap();const quitou=!tot&&r&&encQuit(r,P)&&!encDone(r)&&encQuitEm(r,P)===d.data;return nome+" ("+(tot?"total":ms.map(fmtMonth).join(", ")+(quitou?" · quitou o item":""))+")"});
+    const tot=r&&encCells(r).length===ms.length&&encCells(r).every(k=>ms.includes(k));const quitou=!tot&&r&&!encDone(r)&&encQuit(r,encPaidMap())&&(()=>{const l=(data["rep-dev"]||[]).filter(x=>(x.cob||[]).some(c=>c.id===id)).sort((x,z)=>String(x.data||"").localeCompare(String(z.data||""))||String(x.criado||"").localeCompare(String(z.criado||"")));return l.length&&l[l.length-1].id===d.id})();return nome+" ("+(tot?"total":ms.map(fmtMonth).join(", ")+(quitou?" · quitou o item":""))+")"});
   return parts.length?parts.join(" · "):(d.ref||"Saldo geral")}
 function encSelSum(){const S=state.encSel;if(!S)return{n:0,v:0,txt:""};const items=data["rep-contas"]||[];let v=0;const by={};
   S.cells.forEach(k=>{const[id,m]=k.split("|");const r=items.find(x=>x.id===id);if(!r)return;v+=(+r.m[m]||0)-Math.min((encPaidMap().M[k]||0),+r.m[m]||0);(by[id]=by[id]||{n:r.item,ms:[]}).ms.push(m)});
@@ -1431,21 +1431,23 @@ function encontroHTML(tb){
       h+=`<div class="enc-selbar"><div class="enc-selbar-t"><b>Clique nas células que ${nome} pagou</b><span>${s.n?`${s.n} ${s.n===1?"célula":"células"} · <b>${fmtMoney(s.v)}</b> · ${esc(s.txt)}`:"Use “todas” para marcar o item inteiro. Células verdes já estão pagas."}</span></div>
       <div class="enc-selbar-f"><label for="enc-sel-data">Data</label><input class="sel" type="date" id="enc-sel-data" value="${esc(SEL.data)}"><label class="sr" for="enc-sel-obs">Observação</label><input class="sel" type="text" id="enc-sel-obs" placeholder="Observação (opcional)" value="${esc(SEL.obs||"")}"><button class="btn sm" data-encselno>Cancelar</button><button class="btn sm primary" data-encselgo ${s.n?"":"disabled"}>Salvar devolução${s.n?" de "+fmtMoney(s.v):""}</button></div></div>`}
     if(v==="deve"){const grid=(rows,add)=>{let h="";const tm=Array(13).fill(0);const gdv=rows.reduce((a,r)=>a+encDevItem(r,P),0),gab=rows.reduce((a,r)=>a+encTotal(r),0)-gdv;
-      h+=`<div class="wrap enc-wrap"><table class="grid mx enc${sel?" enc-picking":""}"><thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Total do item</th><th>Devolvido</th><th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
+      h+=`<div class="wrap enc-wrap"><table class="grid mx enc${sel?" enc-picking":""}"><thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
       rows.forEach(r=>{const tot=encTotal(r),dv=encDevItem(r,P),ab=tot-dv;
         const fora=encCells(r).filter(k=>!k.startsWith(y+"-"));const foraAb=fora.filter(k=>!encCellPaid(r,k,P));
         const sts=ENC_ST.filter(o=>o!=="Devolvido");const cur=sts.includes(r.status)?r.status:"Devolver";
         const emdia=r.tipo==="Fixo"&&encCells(r).length&&ab<=EPS;
         h+=`<tr><td>${sel&&ab>EPS?`<button class="enc-all" data-encpickrow="${r.id}" title="Marcar todas as células em aberto deste item">todas</button>`:""}<span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}${encNoFech(r)?` <span class="enc-nf" title="Já cobrado no fechamento do Fernando">No fechamento</span>`:""}${emdia?` <span class="enc-ok">em dia</span>`:""}</span>${fora.length?`<small class="enc-fora" title="${esc(fora.map(fmtMonth).join(", "))}">+ ${fora.length} ${fora.length===1?"mês":"meses"} em outro ano${foraAb.length?` (${foraAb.length} em aberto)`:""}</small>`:""}</td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td>`;
-        for(let i=1;i<=12;i++){const k=ym(i),x=(r.m||{})[k],has=hasV(x)&&+x!==0;if(hasV(x))tm[i]+=+x;
-          const pd=has&&encCellPaid(r,k,P),ck=r.id+"|"+k;
-          if(sel)h+=`<td class="${pd?"enc-paid":has?(SEL.cells.has(ck)?"enc-pick on":"enc-pick"):""}">${has&&!pd?`<button class="cell" data-encpick="${ck}" aria-pressed="${SEL.cells.has(ck)}">${fmtMoney(x)}</button>`:`<span class="cell" title="${pd?"Pago em "+esc(fmtDate(P.D[ck]||"")):""}">${has?fmtMoney(x):"&nbsp;"}</span>`}</td>`;
-          else h+=`<td class="${pd?"enc-paid":""}"><span class="cell" tabindex="0" data-eedit="${tid}|${r.id}|${k}" title="${pd?"Pago"+(P.D[ck]?" em "+esc(fmtDate(P.D[ck])):""):""}">${hasV(x)?fmtMoney(x):"&nbsp;"}</span></td>`}
-        h+=`<td class="ro"><span class="cell" style="font-weight:700">${fmtMoney(tot)}</span></td><td class="ro"><span class="cell ${dv?"pos":""}">${dv?fmtMoney(dv):""}</span></td><td class="ro"><span class="cell ${ab>EPS?"neg":""}">${fmtMoney(ab)}</span></td><td class="ro"><label class="sr" for="es-${r.id}">Status de ${esc(r.item||"item")}</label><select id="es-${r.id}" class="enc-st ${cur==="Cobrança"?"warn":""}" data-encst="${tid}|${r.id}">${sts.map(o=>`<option ${o===cur?"selected":""}>${esc(o)}</option>`).join("")}</select></td>
+        for(let i=1;i<=12;i++){const k=ym(i),x=(r.m||{})[k],has=hasV(x)&&+x!==0;
+          const pd=has&&encCellPaid(r,k,P),ck=r.id+"|"+k,ab_=has&&!pd?(+x)-Math.min(P.M[ck]||0,+x):0;if(ab_)tm[i]+=ab_;
+          /* o que já foi devolvido sai da tabela: célula paga fica vazia */
+          if(pd)h+=`<td class="enc-gone"><span class="cell" title="Devolvido${P.D[ck]?" em "+esc(fmtDate(P.D[ck])):""} · veja em Devolveu">&nbsp;</span></td>`;
+          else if(sel)h+=`<td class="${has?(SEL.cells.has(ck)?"enc-pick on":"enc-pick"):""}">${has?`<button class="cell" data-encpick="${ck}" aria-pressed="${SEL.cells.has(ck)}">${fmtMoney(ab_)}</button>`:`<span class="cell">&nbsp;</span>`}</td>`;
+          else h+=`<td><span class="cell" tabindex="0" data-eedit="${tid}|${r.id}|${k}">${hasV(x)?fmtMoney(has?ab_:x):"&nbsp;"}</span></td>`}
+        h+=`<td class="ro"><span class="cell ${ab>EPS?"neg":""}" style="font-weight:700">${fmtMoney(ab)}</span></td><td class="ro"><label class="sr" for="es-${r.id}">Status de ${esc(r.item||"item")}</label><select id="es-${r.id}" class="enc-st ${cur==="Cobrança"?"warn":""}" data-encst="${tid}|${r.id}">${sts.map(o=>`<option ${o===cur?"selected":""}>${esc(o)}</option>`).join("")}</select></td>
         <td class="ro">${sel?"":state.confirm===tid+"|"+r.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir item" data-del="${tid}|${r.id}">✕</button>`}</td></tr>`});
       if(!sel&&add)h+=`<tr><td colspan="19"><button class="addcat" data-addenc="${p}">+ Adicionar item</button></td></tr>`;
       const ty=tm.reduce((a,b)=>a+b,0);
-      h+=`<tr class="sub"><td><span class="cell">Total do mês</span></td><td></td>${tm.slice(1).map(x=>`<td class="ro"><span class="cell">${x?fmtMoney(x):""}</span></td>`).join("")}<td class="ro"><span class="cell" title="Total de ${y}">${fmtMoney(ty)}</span></td><td class="ro"><span class="cell pos">${gdv?fmtMoney(gdv):""}</span></td><td class="ro"><span class="cell ${gab>EPS?"neg":""}">${fmtMoney(gab)}</span></td><td></td><td></td></tr></tbody></table></div>`;return h};
+      h+=`<tr class="sub"><td><span class="cell">Total do mês</span></td><td></td>${tm.slice(1).map(x=>`<td class="ro"><span class="cell">${x?fmtMoney(x):""}</span></td>`).join("")}<td class="ro"><span class="cell ${gab>EPS?"neg":""}" style="font-weight:700" title="Em aberto, todos os anos">${fmtMoney(gab)}</span></td><td></td><td></td></tr></tbody></table></div>`;return h};
       h+=grid(rows,true)}
     else if(v==="rec"){
       h+=`<h4 class="enc-h">Recusados <span>${rec.length}${rec.length?" · "+fmtMoney(recT)+" fora da soma":""}</span></h4>`;
