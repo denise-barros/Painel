@@ -1106,7 +1106,7 @@ function fechHTML(){
       if(x.cred)h+=`<tr class="fx-sub"><td colspan="7" class="fx-tx"><span class="fx-ind pos">${fmtMoney(x.cred)} ficaram de crédito</span></td></tr>`;
       h+=`<tr class="fx-sub fx-add"><td colspan="7"><span class="fx-ind">${x.fl.length?"":`<button class="addcat" data-fxadd="rep-fech|${x.m}">+ Fechamento deste mês</button>`}<button class="addcat" data-fxadd="rep-transf|${x.m}">+ Transferência deste mês</button></span></td></tr>`}});
   const last=Y[Y.length-1];
-  h+=`<tr class="sub"><td><b>Total ${y}</b></td><td class="r"><b>${fmtMoney(fy)}</b></td><td class="r"><b>${fmtMoney(ty)}</b></td><td class="r"><b>${fxSig(ty-fy)}</b></td><td class="r"><b>${fxSig(last.acc)}</b></td><td></td><td></td></tr></tbody></table></div>`;
+  h+=`<tr class="sub"><td><b>Total ${y}</b></td><td class="r"><b>${fmtMoney(fy)}</b></td><td class="r"><b>${fmtMoney(ty)}</b></td><td></td><td class="r"><b>${fxSig(last.acc)}</b></td><td></td><td></td></tr></tbody></table></div>`;
   return h+`</section>`;
 }
 function fxAdd(spec){const[tid,m]=spec.split("|");const pre=tid==="rep-transf"?{data:new Date().toISOString().slice(0,10),rem:"Fernando Shayer"}:{};
