@@ -146,6 +146,7 @@ button{cursor:pointer}
 .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--pill);background:var(--surface);padding:3px;gap:2px}
 .seg button{border:0;background:none;padding:4px 12px;font-size:10px;color:var(--muted);border-radius:var(--pill);font-weight:600}
 .seg button.on{background:#6B7A72;color:#FFFFFF}
+.seg.subtabs{flex-wrap:wrap;border-radius:12px}.seg.subtabs button{font-size:11px;padding:5px 14px;border-radius:10px}
 .sel{border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--pill);padding:5px 10px;font-size:10px;height:30px}
 .content{flex:1;overflow:auto;min-height:0;padding-block:6px 48px;padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px))}
 .banner{background:var(--warn-soft);color:var(--warn);font-size:10px;padding:9px 14px;border-radius:12px;margin-bottom:12px}
@@ -574,6 +575,7 @@ const TABS=[
  {id:"repasses",g:"Controles",l:"Repasses entre sócios",desc:"Repasses entre Fernando e Leticia: fechamento do mês, transferências recebidas e encontro de contas.",
   src:[["Repasses",DRIVE+"1kKXNKCe7tUGCTU_IYH6U2EsL3wli3Mle24ilGNUx7tE/edit"]],
   overview:true,
+  subtabs:[{k:"fech",l:"Fechamento do mês x transferências recebidas",tables:["rep-fech","rep-transf"],overview:true},{k:"enc",l:"Encontro de contas",tables:["rep-contas","rep-dev"]}],
   tables:[
    {id:"rep-fech",title:"Fechamentos do mês",sort:"mes",cols:[{k:"mes",l:"Mês de competência",t:"month"},M("valor","Valor do fechamento"),LG("obs","Observação",{w:260})]},
    {id:"rep-transf",title:"Transferências recebidas",sort:"data",cols:[{k:"mes",l:"Mês de competência",t:"month"},DT("data","Data da transferência"),SE("rem","Remetente",["Fernando Shayer","SERENGETTI Chase Participações Ltda","Savia Learning Participações Ltda"]),M("valor","Valor recebido"),LG("obs","Observação",{w:240})]},
@@ -685,7 +687,7 @@ async function updStamp(tid,id,patch){const r=(data[tid]||[]).find(x=>x.id===id)
 /* ---------- estado ---------- */
 /* mês e ano sempre começam no vigente ao abrir (decidido 27/10) */
 const state={tab:null,month:today(),year:new Date().getFullYear(),
-  cronView:store.get("pgf.view")||"list",cronGroup:"semana",qs:{},filters:{},paste:null,confirm:null,editing:false,banner:null,advance:false};
+  cronView:store.get("pgf.view")||"list",cronGroup:"semana",subs:{},qs:{},filters:{},paste:null,confirm:null,editing:false,banner:null,advance:false};
 const grpOpen={};
 const asnMon=(all,fl)=>{if(fl._mes!==undefined)return fl._mes;return today()};
 let rq=false; function scheduleRender(){if(state.editing)return; if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;render()})}
@@ -1313,6 +1315,7 @@ function topHTML(tab){
   h+=`</div><div class="toolbar">`;
   if(tab.monthly){const f=state.filters.cronograma||{},hj=new Date().getDate(),at=!!f._sem,ho=!at&&+f._dia===hj,mes=state.cronGroup==="mes"&&!at&&!ho,sem=state.cronGroup!=="mes"&&!at&&!ho;h+=`<div class="seg" role="group" aria-label="Período da lista"><button data-cgroup="hoje" class="${ho?"on":""}">Hoje</button><button data-cgroup="atual" class="${at?"on":""}">Esta semana</button><button data-cgroup="semana" class="${!at&&!ho?"on":""}">Mês inteiro</button></div>`}
   if(tab.monthly)h+=`<div class="seg" role="group" aria-label="Visualização"><button data-view="list" class="${state.cronView!=="cal"?"on":""}">Lista</button><button data-view="cal" class="${state.cronView==="cal"?"on":""}">Calendário</button></div>`;
+  if(tab.subtabs){const sk=subOf(tab).k;h+=`<div class="seg subtabs" role="tablist" aria-label="Seções">${tab.subtabs.map(s=>`<button role="tab" data-subtab="${s.k}" aria-selected="${s.k===sk}" class="${s.k===sk?"on":""}">${esc(s.l)}</button>`).join("")}</div>`}
   if(tab.matrix||tab.reports||tab.id==="repasses"){const ys=[...new Set([new Date().getFullYear()-1,new Date().getFullYear(),new Date().getFullYear()+1,state.year])].sort();h+=`<label class="sr" for="fyr">Ano</label><select class="sel" id="fyr" data-year>${ys.map(a=>`<option ${a===state.year?"selected":""}>${a}</option>`).join("")}</select>`}
   const inl=isList&&!multi;if(inl){const fl=state.filters[first.id]||{};const act=Object.keys(fl).some(k=>fl[k]&&k!=="_sem"&&k!=="_pend"&&!(first.id==="assinaturas"&&k==="_mes"));h+=filtersHTML(first)+(act?`<button class="btn sm" data-fclear="${first.id}">Limpar filtros</button>`:"")+pendBtns(first,fl)}
   h+=`<span class="grow"></span>`+srch;
@@ -1383,6 +1386,7 @@ async function addEncItem(side){
   try{const id=await addRow(tid,{lado:ENC_LADOS[f?0:1],item:"Novo item",tipo:"Avulso",status:"Devolver",ordem:n+1,m:{},criado:new Date().toISOString()});setTimeout(()=>openFicha(tid,id),200)}catch(e){toast("Não foi possível criar o item.")}
 }
 
+function subOf(tab){const k=state.subs[tab.id]||store.get("pgf.sub."+tab.id);return tab.subtabs.find(s=>s.k===k)||tab.subtabs[0]}
 function render(){
   if(!state.tab)return;
   const tab=state.tab,ctx=ctxFor();
@@ -1397,9 +1401,10 @@ function render(){
   if(tab.home)h+=homeHTML();
   else if(tab.reports)h+=reportsHTML();
   else if(tab.matrix)h+=matrixHTML(tab);
-  else{if(tab.overview)h+=repassesOverview();
+  else{const sub=tab.subtabs?subOf(tab):null;const tbs=sub?tab.tables.filter(t=>sub.tables.includes(t.id)):tab.tables;
+    if(sub?sub.overview:tab.overview)h+=repassesOverview();
     if(tab.monthly&&state.cronView==="cal")h+=calendarHTML();
-    else tab.tables.forEach(tb=>h+=tb.encontro?encontroHTML(tb):listHTML(tb,ctx,tab.tables.length>1))}
+    else tbs.forEach(tb=>h+=tb.encontro?encontroHTML(tb):listHTML(tb,ctx,tab.tables.length>1))}
   $("#fin-content").innerHTML=h;renderNav();
   if(aid&&!aid.startsWith("fi-")){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
@@ -1444,7 +1449,7 @@ document.addEventListener("click",async e=>{
   const me=e.target.closest("[data-medit]");if(me&&!e.target.closest("input")){startMatrixEdit(me);return}
   const ee=e.target.closest("[data-eedit]");if(ee&&!e.target.closest("input")){startEncEdit(ee);return}
   const ea=e.target.closest("[data-addenc]");if(ea){addEncItem(ea.dataset.addenc);return}
-  const b=e.target.closest("[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
+  const b=e.target.closest("[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
   if(!b)return;const d=b.dataset;
   if(d.navopen!==undefined){$("#app").classList.add("nav-open");return}
   if(d.navclose!==undefined){$("#app").classList.remove("nav-open");return}
@@ -1462,6 +1467,7 @@ document.addEventListener("click",async e=>{
     if(a.kind==="file"&&assetsNs){try{await assetsNs.delete(a.id)}catch(x){if(x&&x.code==="not_uploader"){toast("Só quem enviou este arquivo, ou quem edita a página, pode removê-lo.");return renderAtt()}}}
     return saveAtt(fAtt.list.filter(x=>x.id!==a.id),"Anexo removido")}
   if(d.kopen){closeFicha();if(window.CS)window.CS.openTask(d.kopen);return}
+  if(d.subtab){state.subs[state.tab.id]=d.subtab;store.set("pgf.sub."+state.tab.id,d.subtab);return render()}
   if(d.view){state.cronView=d.view;store.set("pgf.view",d.view);if(d.view==="list"){const f=state.filters.cronograma;if(f&&f._dia&&+f._dia!==new Date().getDate())delete f._dia;}return render()}
   if(d.cgroup){const f=(state.filters.cronograma=state.filters.cronograma||{});const v=d.cgroup==="mes"?"semana":d.cgroup;f._sem="";if(v==="hoje"){f._dia=String(new Date().getDate())}else{if(+f._dia===new Date().getDate()&&v!=="hoje")f._dia="";if(v==="atual")f._sem="1";else{state.cronGroup=v;store.set("pgf.cgroup",v)}}return render()}
   if(d.open){const[t,id]=d.open.split("|");return openFicha(t,id,false)}
