@@ -112,7 +112,9 @@ function finRepasses(ym){
   const dv=S.fin['rep-dev']||[],isF=r=>!String(r.lado||'').startsWith('Leticia');
   const paid={};dv.forEach(d=>(d.cob||[]).forEach(x=>{const k=x.id+'|'+x.m;paid[k]=(paid[k]||0)+(fnum(x.v)||0)}));
   const out=r=>r.status==='Devolvido'||r.status==='Quitado'||r.status==='Recusado';
-  const aberto=r=>Object.keys(r.m||{}).reduce((a,k)=>{const v=fnum(r.m[k])||0;return a+v-Math.min(paid[r.id+'|'+k]||0,v)},0);
+  /* só conta como dívida até o último mês fechado */
+  const cut=(()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})();
+  const aberto=r=>Object.keys(r.m||{}).filter(k=>k<=cut).reduce((a,k)=>{const v=fnum(r.m[k])||0;return a+v-Math.min(paid[r.id+'|'+k]||0,v)},0);
   const ab=c.filter(r=>!out(r)&&aberto(r)>0.005);
   const pend=f=>Math.max(0,ab.filter(r=>isF(r)===f).reduce((a,r)=>a+aberto(r),0)-dv.filter(d=>!(d.cob&&d.cob.length)&&(d.quem!=='Leticia')===f).reduce((a,d)=>a+(fnum(d.valor)||0),0));
   return {has:has||dv.length>0,fech:f.some(r=>r.mes===ym)?fech:null,rec:t.some(r=>r.mes===ym)?rec:null,acumulado:has?acc:null,
