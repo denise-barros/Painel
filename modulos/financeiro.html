@@ -572,10 +572,10 @@ const TABS=[
     SE("pessoa","Quem deve",["Leticia","Fernando"]),TX("credor","A quem devolver",{w:170,f:true}),TX("descr","Descrição",{w:200}),DT("data","Data da despesa"),M("valor","Valor"),
     DT("venc","Prazo para devolver"),SE("status","Status",["A pagar","Pago","Cancelado"]),DT("datapag","Data do pagamento"),TX("comp","Comprovante",{w:150}),LG("obs","Observações",{w:200})],
     kpis:rows=>{const t0=new Date().toISOString().slice(0,10);let v=0,n=0,vv=0;rows.forEach(r=>{if(r.status==="Pago"||r.status==="Cancelado")return;v+=+r.valor||0;n++;if(r.venc&&r.venc<t0)vv+=+r.valor||0});return[{l:"A pagar",v:fmtMoney(v),c:v?"neg":""},{l:"Itens em aberto",v:String(n)},{l:"Vencidos",v:fmtMoney(vv),c:vv?"neg":""}]}}]},
- {id:"repasses",g:"Controles",l:"Repasses entre sócios",desc:"Repasses entre Fernando e Leticia: fechamento do mês x transferências recebidas e o que um deve ao outro.",
+ {id:"repasses",g:"Controles",l:"Repasses entre sócios",desc:"Repasses entre Fernando e Leticia: fechamentos do Fernando e o que um deve ao outro.",
   src:[["Repasses",DRIVE+"1kKXNKCe7tUGCTU_IYH6U2EsL3wli3Mle24ilGNUx7tE/edit"]],
   overview:true,
-  subtabs:[{k:"fech",l:"Fechamento x Transferências",tables:["rep-fech","rep-transf"],custom:"fech"},{k:"enc",l:"Fernando x Leticia",tables:["rep-contas"]}],
+  subtabs:[{k:"fech",l:"Fechamentos do Fernando",tables:["rep-fech","rep-transf"],custom:"fech"},{k:"enc",l:"Fernando x Leticia",tables:["rep-contas"]}],
   tables:[
    {id:"rep-fech",title:"Fechamentos do mês",sort:"mes",cols:[{k:"mes",l:"Mês de competência",t:"month"},M("valor","Valor do fechamento"),LG("obs","Observação",{w:260})]},
    {id:"rep-transf",title:"Transferências recebidas",sort:"data",cols:[{k:"mes",l:"Mês de competência",t:"month"},DT("data","Data da transferência"),SE("rem","Remetente",["Fernando Shayer","SERENGETTI Chase Participações Ltda","Savia Learning Participações Ltda"]),M("valor","Valor recebido"),LG("obs","Observação",{w:240})]},
@@ -1059,7 +1059,7 @@ function startMatrixEdit(el){
   inp.addEventListener("keydown",e=>{if(e.key==="Escape"){e.preventDefault();fin(false)}else if(e.key==="Enter"){e.preventDefault();fin(true)}});
 }
 
-/* ---------- Fechamento x Transferências: quanto fechou o mês do Fernando e quanto ele devolveu ---------- */
+/* ---------- Fechamentos do Fernando: quanto fechou o mês do Fernando e quanto ele devolveu ---------- */
 /* a sobra de um mês paga primeiro os meses mais antigos em aberto */
 function fxMeses(){
   const F=(data["rep-fech"]||[]).filter(execOk),T=(data["rep-transf"]||[]).filter(execOk);
