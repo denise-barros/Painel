@@ -1071,13 +1071,13 @@ function fxMeses(){
     if(sobra>0.005)x.cred=sobra});
   /* vencimento: dia FX_VENC do mês seguinte; quitação: data da transferência que completou o mês (própria ou sobra de outro mês) */
   const last=x=>x.tl.map(r=>r.data||"").filter(Boolean).sort().pop()||"";
-  A.forEach(x=>{x.venc=addMonths(x.m,1)+"-"+String(FX_VENC).padStart(2,"0");x.quit="";if(x.fe<=0.005||x.fe-x.cob>0.005)return;
-    let c=0,own="";for(const r of x.tl){c+=+r.valor||0;if(c>=x.fe-0.005){own=r.data||"";break}}
+  A.forEach(x=>{x.venc=addMonths(x.m,1)+"-"+String(FX_VENC).padStart(2,"0");x.quit="";if(x.fe<=0.005||x.fe-x.cob>FX_TOL)return;
+    let c=0,own="";for(const r of x.tl){c+=+r.valor||0;if(c>=x.fe-FX_TOL){own=r.data||"";break}}
     if(own){x.quit=own;return}
     const g=x.ganhou[x.ganhou.length-1];const d=g&&A.find(z=>z.m===g[0]);x.quit=[last(x),d?last(d):""].sort().pop()});
   return A;
 }
-const FX_VENC=10;
+const FX_VENC=10,FX_TOL=1; /* diferenças de até R$ 1,00 contam como pagas */
 const fxDias=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
 function fxAtraso(x){if(x.fe<=0.005)return"";const hj=new Date().toISOString().slice(0,10);
   if(x.quit){const d=fxDias(x.venc,x.quit);return d>0?`quitado em ${fmtDate(x.quit)} · ${d} ${d===1?"dia":"dias"} de atraso`:`quitado em ${fmtDate(x.quit)} · em dia`}
@@ -1085,7 +1085,7 @@ function fxAtraso(x){if(x.fe<=0.005)return"";const hj=new Date().toISOString().s
 const fxAb=m=>MES[+m.slice(5,7)-1];
 const fxMesN=m=>{const n=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][+m.slice(5,7)-1];return m.slice(0,4)===String(state.year)?n:n+" de "+m.slice(0,4)};
 function fxSt(x){if(x.fe<=0.005)return x.rec?`<span class="fx-m">Sem fechamento</span>`:"";const a=fxAtraso(x),late=/de atraso/.test(a);
-  return (x.fe-x.cob<=0.005?`<span class="fx-st ok">Pago</span>`:`<span class="fx-st bad">Pendente</span>`)+(a?`<small class="fx-at${late?" late":""}">${a}</small>`:"")}
+  return (x.fe-x.cob<=FX_TOL?`<span class="fx-st ok">Pago</span>`:`<span class="fx-st bad">Pendente</span>`)+(a?`<small class="fx-at${late?" late":""}">${a}</small>`:"")}
 const fxSig=v=>Math.abs(v)<0.005?`<span class="fx-m">0,00</span>`:v<0?`<span class="neg">−${fmtMoney(-v)}</span>`:`<span class="pos">+${fmtMoney(v)}</span>`;
 function fechHTML(){
   const y=state.year,A=fxMeses();let run=0;A.forEach(x=>{run+=x.rec-x.fe;x.acc=run});
