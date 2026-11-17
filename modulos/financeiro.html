@@ -1086,7 +1086,7 @@ function fechHTML(){
   let h=`<section class="tbl fx"><div class="fx-top"><div class="fx-big"><span>${falta>0.005?"Falta receber do Fernando":cred>0.005?"Fernando tem crédito de":"Fernando está em dia"}</span>${falta>0.005||cred>0.005?`<b class="${falta>0.005?"neg":"pos"}">${fmtMoney(falta>0.005?falta-cred:cred)}</b>`:""}<span class="fx-m">· fechou ${fmtMoney(fy)} · recebeu ${fmtMoney(ty)} em ${y}</span></div><span class="grow"></span><button class="btn sm" data-fxadd="rep-fech">+ Fechamento</button><button class="btn sm primary" data-fxadd="rep-transf">+ Transferência</button></div>`;
   if(!Y.length)return h+`<div class="empty-big">Nenhum fechamento ou transferência em ${y}.</div></section>`;
   h+=`<div class="wrap"><table class="grid fx-t"><thead><tr><th>Mês</th><th class="r">Fechamento</th><th class="r">Recebido</th><th class="l">Pago</th><th class="l">Situação</th></tr></thead><tbody>`;
-  Y.slice().reverse().forEach(x=>{const o=!!state.fxOpen[x.m];
+  Y.forEach(x=>{const o=!!state.fxOpen[x.m];
     h+=`<tr class="fx-row${o?" open":""}" data-fxm="${x.m}" tabindex="0" aria-expanded="${o}"><td><span class="fx-car">${o?"▾":"▸"}</span><b>${esc(fxMesN(x.m))}</b></td><td class="r">${x.fe?fmtMoney(x.fe):"—"}</td><td class="r">${x.rec?fmtMoney(x.rec):"—"}</td><td class="fx-pg">${bar(x.cob,x.fe)}</td><td class="fx-sit">${fxSit(x)}</td></tr>`;
     if(o){h+=`<tr class="fx-det"><td colspan="5"><div class="fx-li-w">
       ${x.fl.map(r=>`<div class="fx-li" data-open="rep-fech|${r.id}" tabindex="0"><span class="fx-d">Fechamento</span><span>${esc(r.obs||"Fechamento de "+fmtMonth(x.m))}</span><b>${fmtMoney(r.valor)}</b></div>`).join("")}
