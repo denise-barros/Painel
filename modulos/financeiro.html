@@ -278,7 +278,7 @@ table.grid{border-collapse:collapse;width:100%;font-size:10.5px}
 .grid td input{width:100%;min-width:84px;border:0;outline:2px solid var(--accent);background:var(--surface);padding:6px 9px;text-align:right;border-radius:6px}
 .mx td:first-child,.mx th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);min-width:200px}
 .mx th:first-child{background:var(--sunk);z-index:2}
-.enc-h{margin:14px 0 6px;font-size:13px;font-weight:700;display:flex;gap:8px;align-items:baseline}.enc-h span{font-weight:500;color:var(--muted);font-size:11.5px}.enc-wrap{max-height:62vh;overflow:auto}.enc-wrap .grid th{z-index:2}.enc-wrap .grid th:first-child{z-index:3}.enc-hist{margin:8px 0 4px}.enc-hist summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:6px 2px}.enc-wrap-h{max-height:40vh}.enc-hist .grid td:first-child,.enc-hist .grid th:first-child{text-align:left}.enc-st{font:inherit;font-size:11.5px;padding:3px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.enc-st.ok{background:var(--pos-soft);color:var(--pos);border-color:transparent}.enc-st.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}.enc .enc-fora{display:block;font-size:10px;color:var(--muted);padding:0 8px 4px;white-space:nowrap}.tb-rep-contas>.tiles{margin:6px 0 12px}.enc-side{margin-top:18px}.enc-side-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px}.enc-side-h h3{margin:0;font-size:16px}.enc-side-h .seg .n{opacity:.7;font-weight:500}.enc-side .enc-h{margin:12px 0 6px}.enc-n{font-size:11.5px;color:var(--muted)}.enc-acts{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.enc-h{margin:14px 0 6px;font-size:13px;font-weight:700;display:flex;gap:8px;align-items:baseline}.enc-h span{font-weight:500;color:var(--muted);font-size:11.5px}.enc-wrap{max-height:62vh;overflow:auto}.enc-wrap .grid th{z-index:2}.enc-wrap .grid th:first-child{z-index:3}.enc-hist{margin:8px 0 4px}.enc-hist summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:6px 2px}.enc-wrap-h{max-height:40vh}.enc-hist .grid td:first-child,.enc-hist .grid th:first-child{text-align:left}.enc-st{font:inherit;font-size:11.5px;padding:3px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.enc-st.ok{background:var(--pos-soft);color:var(--pos);border-color:transparent}.enc-st.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}.enc .enc-fora{display:block;font-size:10px;color:var(--muted);padding:0 8px 4px;white-space:nowrap}.tb-rep-contas>.tiles{margin:6px 0 12px}.enc-side{margin-top:18px}.enc td.enc-paid{background:var(--pos-soft)}.enc td.enc-paid .cell{color:var(--pos);font-weight:600}.enc-lg{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--pos-soft);border:1px solid var(--pos);vertical-align:-1px}.enc-picking td.enc-pick button.cell{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:6px 8px;border-radius:6px;border:1px dashed var(--line-strong);text-align:right}.enc-picking td.enc-pick button.cell:hover{border-color:var(--accent)}.enc-picking td.enc-pick.on button.cell{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700}.enc-picking td.enc-pick button.cell:focus-visible{outline:2px solid var(--accent)}.enc-all{font:inherit;font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:0;border-radius:999px;padding:2px 8px;margin:4px 0 0 8px;cursor:pointer}.enc-ok{font-size:10px;font-weight:600;color:var(--pos);background:var(--pos-soft);border-radius:999px;padding:1px 7px;margin-left:4px}.enc-selbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--accent);border-radius:var(--r);padding:10px 14px;margin:0 0 10px;position:sticky;top:0;z-index:5}.enc-selbar-t{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:12px}.enc-selbar-t span{color:var(--muted);font-size:11.5px}.enc-selbar-f{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}.enc-cob{white-space:normal;max-width:520px;display:block}.enc-side-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px}.enc-side-h h3{margin:0;font-size:16px}.enc-side-h .seg .n{opacity:.7;font-weight:500}.enc-side .enc-h{margin:12px 0 6px}.enc-n{font-size:11.5px;color:var(--muted)}.enc-acts{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
 .mx tr.grp td:first-child{background:var(--sunk)} .mx tr.tot td:first-child{background:var(--accent-soft)}
 .addcat{all:unset;cursor:pointer;color:var(--accent);font-size:10px;font-weight:600;padding:6px 10px;display:block}
 .x{background:none;border:0;color:var(--faint);padding:6px 8px;border-radius:6px}
@@ -687,7 +687,7 @@ async function updStamp(tid,id,patch){const r=(data[tid]||[]).find(x=>x.id===id)
 /* ---------- estado ---------- */
 /* mês e ano sempre começam no vigente ao abrir (decidido 27/10) */
 const state={tab:null,month:today(),year:new Date().getFullYear(),
-  cronView:store.get("pgf.view")||"list",cronGroup:"semana",subs:{},encV:{},qs:{},filters:{},paste:null,confirm:null,editing:false,banner:null,advance:false};
+  cronView:store.get("pgf.view")||"list",cronGroup:"semana",subs:{},encV:{},encSel:null,qs:{},filters:{},paste:null,confirm:null,editing:false,banner:null,advance:false};
 const grpOpen={};
 const asnMon=(all,fl)=>{if(fl._mes!==undefined)return fl._mes;return today()};
 let rq=false; function scheduleRender(){if(state.editing)return; if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;render()})}
@@ -1111,6 +1111,7 @@ document.addEventListener("click",e=>{const gh=e.target.closest("[data-grp]");if
   const m=e.target.closest("[data-fdem-mode]");if(m){finDemMode=m.dataset.fdemMode;render();return}
   const g=e.target.closest("[data-fdem-mon]");if(g){const k=g.dataset.fdemMon;const was=k in finDemMon?finDemMon[k]:k===new Date().toISOString().slice(0,7);finDemMon[k]=!was;render();return}
   if(e.target.closest("[data-fdem-new]")){try{window.parent.CE.newDemand(finDemSub||"p-fin")}catch(x){}}});
+document.addEventListener("input",e=>{const S=state.encSel;if(!S)return;if(e.target.id==="enc-sel-data")S.data=e.target.value;if(e.target.id==="enc-sel-obs")S.obs=e.target.value});
 document.addEventListener("change",async e=>{if(e.target.matches&&e.target.matches("[data-encst]")){const[t,id]=e.target.dataset.encst.split("|");const v=e.target.value;try{await updRow(t,id,v==="Devolvido"?{status:v,devolvidoEm:new Date().toISOString().slice(0,10)}:{status:v,devolvidoEm:null});toast(v==="Devolvido"?"Devolvido · foi para o histórico":"Status salvo")}catch(x){toast("Não foi possível salvar. Tente de novo.")}render();return}
   if(e.target.matches&&e.target.matches("[data-fdem-st]")){try{window.parent.CE.setStatus(e.target.dataset.fdemSt,e.target.value)}catch(x){}return}if(e.target.matches&&e.target.matches("[data-fdem-sub]")){finDemSub=e.target.value;finDemAll=false;render();}});
 /* ---------- métricas financeiras: a mesma fonte da Capa e do Report (js/14b-financas.js do Painel) ---------- */
@@ -1333,63 +1334,83 @@ function pendBtns(tb,fl){if(tb.id!=="cronograma")return"";const m=state.month;co
   return `<span class="grow"></span><button class="btn sm ${fl._pend==="1"?"primary":""}" data-pend="1" title="Despesas com meses anteriores (últimos 6) ainda Pendente ou Verificar">Com pendência anterior${n?` (${n})`:""}</button><button class="btn sm ${fl._pend==="0"?"primary":""}" data-pend="0">Tudo em dia</button>`}
 /* ---------- encontro de contas (grade item × mês + devoluções) ---------- */
 const encTotal=r=>Object.values(r.m||{}).reduce((a,v)=>a+(+v||0),0);
-const encNorm=s=>String(s||"").trim().toLowerCase();
-/* devoluções registradas para um item (só as do lado devedor) */
-function encDevItem(r){return(data["rep-dev"]||[]).filter(d=>encNorm(d.ref)===encNorm(r.item)&&((d.quem==="Leticia")===!encF(r))).reduce((a,d)=>a+(+d.valor||0),0)}
-/* quitado: marcado à mão (legado) ou devoluções cobrem o total do item */
-function encQuit(r){if(encDone(r))return true;const t=encTotal(r);return t>0&&encDevItem(r)>=t-0.005}
-function encQuitEm(r){if(r.devolvidoEm)return r.devolvidoEm;const ds=(data["rep-dev"]||[]).filter(d=>encNorm(d.ref)===encNorm(r.item)&&((d.quem==="Leticia")===!encF(r))).map(d=>d.data||"").filter(Boolean).sort();return ds[ds.length-1]||""}
+/* Devoluções = células (item × mês) marcadas como pagas. rep-dev: {data,quem,valor,obs,cob:[{id,item,m,v}]} */
+const EPS=0.005;
+function encPaidMap(){const M={},D={};(data["rep-dev"]||[]).forEach(d=>(d.cob||[]).forEach(c=>{const k=c.id+"|"+c.m;M[k]=(M[k]||0)+(+c.v||0);if(!D[k]||String(d.data||"")>D[k])D[k]=d.data||""}));return{M,D}}
+const encCells=r=>Object.keys(r.m||{}).filter(k=>hasV(r.m[k])&&+r.m[k]!==0).sort();
+function encCellPaid(r,k,P){if(encDone(r))return true;return(P.M[r.id+"|"+k]||0)>=(+r.m[k]||0)-EPS}
+function encDevItem(r,P){P=P||encPaidMap();if(encDone(r))return encTotal(r);return encCells(r).reduce((a,k)=>a+Math.min(P.M[r.id+"|"+k]||0,+r.m[k]||0),0)}
+/* quitado: marcado à mão (legado) ou todas as células pagas. Fixo nunca é quitado: fica "em dia". */
+function encQuit(r,P){if(encDone(r))return true;if(r.tipo==="Fixo")return false;P=P||encPaidMap();const cs=encCells(r);return cs.length>0&&cs.every(k=>encCellPaid(r,k,P))}
+function encQuitEm(r,P){if(r.devolvidoEm)return r.devolvidoEm;P=P||encPaidMap();return encCells(r).map(k=>P.D[r.id+"|"+k]||"").sort().pop()||""}
 function encCalc(){
-  const items=data["rep-contas"]||[],dev=data["rep-dev"]||[];
-  const byItem={};items.forEach(r=>{byItem[encNorm(r.item)]=r});
-  const side=f=>{const its=items.filter(r=>encF(r)===f);const tot=its.filter(r=>!encQuit(r)).reduce((a,r)=>a+encTotal(r),0);
-    const dv=dev.filter(d=>(d.quem!=="Leticia")===f).filter(d=>{return!items.some(it=>encF(it)===f&&encNorm(it.item)===encNorm(d.ref)&&encQuit(it))}).reduce((a,d)=>a+(+d.valor||0),0);
-    return{tot,dv,ab:tot-dv,n:its.length}};
-  return{F:side(true),L:side(false),devItem:encDevItem};
+  const items=data["rep-contas"]||[],dev=data["rep-dev"]||[],P=encPaidMap();
+  const side=f=>{const its=items.filter(r=>encF(r)===f&&!encQuit(r,P));const tot=its.reduce((a,r)=>a+encTotal(r),0);
+    const dv=its.reduce((a,r)=>a+encDevItem(r,P),0)+dev.filter(d=>!(d.cob&&d.cob.length)&&(d.quem!=="Leticia")===f).reduce((a,d)=>a+(+d.valor||0),0);
+    return{tot,dv,ab:tot-dv}};
+  return{F:side(true),L:side(false),P};
 }
 const encV=p=>(state.encV||{})[p]==="dev"?"dev":"deve";
+/* descreve o que uma devolução pagou: "DAE (jun./2026, jul./2026) · Camarote (total)" */
+function encCobTxt(d){const items=data["rep-contas"]||[],by={};(d.cob||[]).forEach(c=>{(by[c.id]=by[c.id]||{item:c.item,ms:[]}).ms.push(c.m)});
+  const parts=Object.keys(by).map(id=>{const r=items.find(x=>x.id===id),b=by[id],ms=b.ms.sort();const nome=(r&&r.item)||b.item||"Item excluído";
+    const tot=r&&encCells(r).length===ms.length&&encCells(r).every(k=>ms.includes(k));const P=encPaidMap();const quitou=!tot&&r&&encQuit(r,P)&&!encDone(r)&&encQuitEm(r,P)===d.data;return nome+" ("+(tot?"total":ms.map(fmtMonth).join(", ")+(quitou?" · quitou o item":""))+")"});
+  return parts.length?parts.join(" · "):(d.ref||"Saldo geral")}
+function encSelSum(){const S=state.encSel;if(!S)return{n:0,v:0,txt:""};const items=data["rep-contas"]||[];let v=0;const by={};
+  S.cells.forEach(k=>{const[id,m]=k.split("|");const r=items.find(x=>x.id===id);if(!r)return;v+=(+r.m[m]||0)-Math.min((encPaidMap().M[k]||0),+r.m[m]||0);(by[id]=by[id]||{n:r.item,ms:[]}).ms.push(m)});
+  return{n:S.cells.size,v:Math.round(v*100)/100,txt:Object.values(by).map(b=>b.n+" ("+b.ms.sort().map(fmtMonth).join(", ")+")").join(" · ")}}
 function encontroHTML(tb){
-  const tid=tb.id,y=state.year,items=data[tid]||[],C=encCalc();const ym=i=>y+"-"+String(i).padStart(2,"0");
-  const liq=C.F.ab-C.L.ab;
+  const tid=tb.id,y=state.year,items=data[tid]||[],C=encCalc(),P=C.P;const ym=i=>y+"-"+String(i).padStart(2,"0");
+  const liq=C.F.ab-C.L.ab,SEL=state.encSel;
   let h=`<section class="tbl tb-${tid}">
   <div class="tiles"><div class="tile"><b class="${C.F.ab>0?"neg":""}">${fmtMoney(C.F.ab)}</b><span>Fernando deve</span></div>
   <div class="tile"><b class="${C.L.ab>0?"neg":""}">${fmtMoney(C.L.ab)}</b><span>Leticia deve</span></div>
   <div class="tile"><b>${fmtMoney(Math.abs(liq))}</b><span>Saldo compensado · ${liq>=0?"Fernando deve à Leticia":"Leticia deve ao Fernando"}</span></div></div></section>`;
-  const per=r=>{const ks=Object.keys(r.m||{}).filter(x=>hasV(r.m[x])).sort();return ks.length?(ks.length>1?fmtMonth(ks[0])+" a "+fmtMonth(ks[ks.length-1]):fmtMonth(ks[0])):"—"};
+  const per=r=>{const ks=encCells(r);return ks.length?(ks.length>1?fmtMonth(ks[0])+" a "+fmtMonth(ks[ks.length-1]):fmtMonth(ks[0])):"—"};
   [["F",true,"Fernando",C.F],["L",false,"Leticia",C.L]].forEach(([p,f,nome,S])=>{
-    const all=items.filter(r=>encF(r)===f),done=all.filter(encQuit);
-    const rows=all.filter(r=>!encQuit(r)).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
+    const all=items.filter(r=>encF(r)===f),done=all.filter(r=>encQuit(r,P));
+    const rows=all.filter(r=>!encQuit(r,P)).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
     const devs=(data["rep-dev"]||[]).filter(execOk).filter(d=>(d.quem!=="Leticia")===f).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
-    const v=encV(p);
-    h+=`<section class="tbl enc-side"><div class="enc-side-h"><h3>${nome}</h3><div class="seg" role="tablist" aria-label="${nome}">${[["deve","Deve",rows.length],["dev","Devolveu",devs.length]].map(([k,l,n])=>`<button role="tab" data-encv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</b></span><span class="grow"></span>${v==="deve"?`<span class="hint-k">Clique no valor para editar · no item para mudar nome, tipo e status</span>`:`<button class="btn sm primary" data-encdev="${p}">+ Registrar devolução</button>`}</div>`;
+    const sel=SEL&&SEL.p===p,v=sel?"deve":encV(p);
+    h+=`<section class="tbl enc-side"><div class="enc-side-h"><h3>${nome}</h3><div class="seg" role="tablist" aria-label="${nome}">${[["deve","Deve",rows.length],["dev","Devolveu",devs.length]].map(([k,l,n])=>`<button role="tab" data-encv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</b></span><span class="grow"></span>${sel?"":`<button class="btn sm primary" data-encsel="${p}">Registrar devolução</button>`}</div>`;
+    if(sel){const s=encSelSum();
+      h+=`<div class="enc-selbar"><div class="enc-selbar-t"><b>Clique nas células que ${nome} pagou</b><span>${s.n?`${s.n} ${s.n===1?"célula":"células"} · <b>${fmtMoney(s.v)}</b> · ${esc(s.txt)}`:"Use “todas” para marcar o item inteiro. Células verdes já estão pagas."}</span></div>
+      <div class="enc-selbar-f"><label for="enc-sel-data">Data</label><input class="sel" type="date" id="enc-sel-data" value="${esc(SEL.data)}"><label class="sr" for="enc-sel-obs">Observação</label><input class="sel" type="text" id="enc-sel-obs" placeholder="Observação (opcional)" value="${esc(SEL.obs||"")}"><button class="btn sm" data-encselno>Cancelar</button><button class="btn sm primary" data-encselgo ${s.n?"":"disabled"}>Salvar devolução${s.n?" de "+fmtMoney(s.v):""}</button></div></div>`}
     if(v==="deve"){const tm=Array(13).fill(0);
-      h+=`<div class="wrap enc-wrap"><table class="grid mx enc"><thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Total do item</th><th>Devolvido</th><th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
-      rows.forEach(r=>{const tot=encTotal(r),dv=encDevItem(r);
-        const fora=Object.keys(r.m||{}).filter(k=>!k.startsWith(y+"-")&&hasV(r.m[k])).sort();
+      h+=`<div class="wrap enc-wrap"><table class="grid mx enc${sel?" enc-picking":""}"><thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Total do item</th><th>Devolvido</th><th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
+      rows.forEach(r=>{const tot=encTotal(r),dv=encDevItem(r,P),ab=tot-dv;
+        const fora=encCells(r).filter(k=>!k.startsWith(y+"-"));const foraAb=fora.filter(k=>!encCellPaid(r,k,P));
         const sts=ENC_ST.filter(o=>o!=="Devolvido");const cur=sts.includes(r.status)?r.status:"Devolver";
-        h+=`<tr><td><span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}</span>${fora.length?`<small class="enc-fora" title="${esc(fora.map(fmtMonth).join(", "))}">+ ${fora.length} ${fora.length===1?"mês":"meses"} em outro ano</small>`:""}</td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td>`;
-        for(let i=1;i<=12;i++){const x=(r.m||{})[ym(i)];if(hasV(x))tm[i]+=+x;h+=`<td><span class="cell" tabindex="0" data-eedit="${tid}|${r.id}|${ym(i)}">${hasV(x)?fmtMoney(x):"&nbsp;"}</span></td>`}
-        h+=`<td class="ro"><span class="cell" style="font-weight:700">${fmtMoney(tot)}</span></td><td class="ro"><span class="cell ${dv?"pos":""}">${dv?fmtMoney(dv):""}</span></td><td class="ro"><span class="cell ${tot-dv>0?"neg":""}">${fmtMoney(tot-dv)}</span></td><td class="ro"><label class="sr" for="es-${r.id}">Status de ${esc(r.item||"item")}</label><select id="es-${r.id}" class="enc-st ${cur==="Cobrança"?"warn":""}" data-encst="${tid}|${r.id}">${sts.map(o=>`<option ${o===cur?"selected":""}>${esc(o)}</option>`).join("")}</select></td>
-        <td class="ro"><span class="enc-acts">${tot>0?`<button class="btn sm" data-encquit="${r.id}" title="Registra a devolução de ${esc(fmtMoney(tot-dv))} e move o item para os quitados">Quitar</button>`:""}${state.confirm===tid+"|"+r.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir item" data-del="${tid}|${r.id}">✕</button>`}</span></td></tr>`});
-      h+=`<tr><td colspan="19"><button class="addcat" data-addenc="${p}">+ Adicionar item</button></td></tr>`;
+        const emdia=r.tipo==="Fixo"&&encCells(r).length&&ab<=EPS;
+        h+=`<tr><td>${sel&&ab>EPS?`<button class="enc-all" data-encpickrow="${r.id}" title="Marcar todas as células em aberto deste item">todas</button>`:""}<span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}${emdia?` <span class="enc-ok">em dia</span>`:""}</span>${fora.length?`<small class="enc-fora" title="${esc(fora.map(fmtMonth).join(", "))}">+ ${fora.length} ${fora.length===1?"mês":"meses"} em outro ano${foraAb.length?` (${foraAb.length} em aberto)`:""}</small>`:""}</td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td>`;
+        for(let i=1;i<=12;i++){const k=ym(i),x=(r.m||{})[k],has=hasV(x)&&+x!==0;if(hasV(x))tm[i]+=+x;
+          const pd=has&&encCellPaid(r,k,P),ck=r.id+"|"+k;
+          if(sel)h+=`<td class="${pd?"enc-paid":has?(SEL.cells.has(ck)?"enc-pick on":"enc-pick"):""}">${has&&!pd?`<button class="cell" data-encpick="${ck}" aria-pressed="${SEL.cells.has(ck)}">${fmtMoney(x)}</button>`:`<span class="cell" title="${pd?"Pago em "+esc(fmtDate(P.D[ck]||"")):""}">${has?fmtMoney(x):"&nbsp;"}</span>`}</td>`;
+          else h+=`<td class="${pd?"enc-paid":""}"><span class="cell" tabindex="0" data-eedit="${tid}|${r.id}|${k}" title="${pd?"Pago"+(P.D[ck]?" em "+esc(fmtDate(P.D[ck])):""):""}">${hasV(x)?fmtMoney(x):"&nbsp;"}</span></td>`}
+        h+=`<td class="ro"><span class="cell" style="font-weight:700">${fmtMoney(tot)}</span></td><td class="ro"><span class="cell ${dv?"pos":""}">${dv?fmtMoney(dv):""}</span></td><td class="ro"><span class="cell ${ab>EPS?"neg":""}">${fmtMoney(ab)}</span></td><td class="ro"><label class="sr" for="es-${r.id}">Status de ${esc(r.item||"item")}</label><select id="es-${r.id}" class="enc-st ${cur==="Cobrança"?"warn":""}" data-encst="${tid}|${r.id}">${sts.map(o=>`<option ${o===cur?"selected":""}>${esc(o)}</option>`).join("")}</select></td>
+        <td class="ro">${sel?"":state.confirm===tid+"|"+r.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir item" data-del="${tid}|${r.id}">✕</button>`}</td></tr>`});
+      if(!sel)h+=`<tr><td colspan="19"><button class="addcat" data-addenc="${p}">+ Adicionar item</button></td></tr>`;
       const ty=tm.reduce((a,b)=>a+b,0);
       h+=`<tr class="sub"><td><span class="cell">Total do mês</span></td><td></td>${tm.slice(1).map(x=>`<td class="ro"><span class="cell">${x?fmtMoney(x):""}</span></td>`).join("")}<td class="ro"><span class="cell" title="Total de ${y}">${fmtMoney(ty)}</span></td><td class="ro"><span class="cell pos">${S.dv?fmtMoney(S.dv):""}</span></td><td class="ro"><span class="cell ${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</span></td><td></td><td></td></tr></tbody></table></div>
-      <div class="foot"><span>Valores de ${y} (troque o ano no topo para ver outros meses)</span><span>Em aberto = total do item − devoluções. Quando as devoluções cobrem o total, o item vai para Devolveu › Itens quitados.</span></div>`}
+      <div class="foot"><span>Valores de ${y} (troque o ano no topo para ver outros meses) · <span class="enc-lg"></span> pago</span><span>Clique no valor para editar · no item para mudar nome, tipo e status. Item com todas as células pagas vai para Devolveu › Itens quitados (fixos ficam “em dia”).</span></div>`}
     else{
       h+=`<h4 class="enc-h">Devoluções <span>${devs.length} · ${fmtMoney(devs.reduce((a,d)=>a+(+d.valor||0),0))}</span></h4>`;
-      h+=devs.length?`<div class="wrap enc-wrap enc-wrap-h"><table class="grid enc"><thead><tr><th>Data</th><th>Referente a</th><th>Valor devolvido</th><th>Observação</th><th aria-label="Ações"></th></tr></thead><tbody>${devs.map(d=>`<tr><td class="ro"><span class="cell">${d.data?fmtDate(d.data):"—"}</span></td><td><span class="cell" tabindex="0" data-open="rep-dev|${d.id}">${esc(d.ref||"—")}</span></td><td class="ro"><span class="cell pos">${hasV(d.valor)?fmtMoney(d.valor):""}</span></td><td class="ro"><span class="cell" title="${esc(d.obs||"")}">${esc(d.obs||"")}</span></td><td class="ro">${state.confirm==="rep-dev|"+d.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="rep-dev|${d.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir devolução" data-del="rep-dev|${d.id}">✕</button>`}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty-big">Nenhuma devolução registrada.</div>`;
+      h+=devs.length?`<div class="wrap enc-wrap enc-wrap-h"><table class="grid enc enc-devt"><thead><tr><th>Data</th><th>O que foi pago</th><th>Valor devolvido</th><th>Observação</th><th aria-label="Ações"></th></tr></thead><tbody>${devs.map(d=>`<tr><td class="ro"><span class="cell">${d.data?fmtDate(d.data):"—"}</span></td><td class="ro"><span class="cell enc-cob" title="${esc(encCobTxt(d))}">${esc(encCobTxt(d))}</span></td><td class="ro"><span class="cell pos">${hasV(d.valor)?fmtMoney(d.valor):""}</span></td><td class="ro"><span class="cell" title="${esc(d.obs||"")}">${esc(d.obs||"")}</span></td><td class="ro">${state.confirm==="rep-dev|"+d.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="rep-dev|${d.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir devolução" title="Excluir: as células voltam a ficar em aberto" data-del="rep-dev|${d.id}">✕</button>`}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty-big">Nenhuma devolução registrada. Clique em “Registrar devolução” e marque as células pagas.</div>`;
       h+=`<h4 class="enc-h">Itens quitados <span>${done.length}${done.length?" · "+fmtMoney(done.reduce((a,r)=>a+encTotal(r),0)):""}</span></h4>`;
-      h+=done.length?`<div class="wrap enc-wrap enc-wrap-h"><table class="grid enc"><thead><tr><th>Item</th><th>Tipo</th><th>Período</th><th>Total do item</th><th>Devolvido</th><th>Quitado em</th><th aria-label="Ações"></th></tr></thead><tbody>${done.slice().sort((a,b)=>String(encQuitEm(b)).localeCompare(String(encQuitEm(a)))).map(r=>{const dv=encDevItem(r),man=encDone(r)&&dv<encTotal(r)-0.005;
-        return `<tr><td><span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}</span></td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td><td class="ro"><span class="cell">${esc(per(r))}</span></td><td class="ro"><span class="cell">${fmtMoney(encTotal(r))}</span></td><td class="ro"><span class="cell pos">${dv?fmtMoney(dv):"—"}</span></td><td class="ro"><span class="cell">${encQuitEm(r)?fmtDate(encQuitEm(r)):"—"}</span></td><td class="ro">${man?`<button class="btn sm" data-encreopen="${r.id}">Reabrir</button>`:`<span class="cell" title="Para reabrir, exclua a devolução correspondente">Quitado</span>`}</td></tr>`}).join("")}</tbody></table></div>`:`<div class="empty-big">Nenhum item quitado ainda. Use “Quitar” em Deve ou registre devoluções que cubram o total do item.</div>`}
+      h+=done.length?`<div class="wrap enc-wrap enc-wrap-h"><table class="grid enc"><thead><tr><th>Item</th><th>Tipo</th><th>Período</th><th>Total do item</th><th>Quitado em</th><th aria-label="Ações"></th></tr></thead><tbody>${done.slice().sort((a,b)=>String(encQuitEm(b,P)).localeCompare(String(encQuitEm(a,P)))).map(r=>{const man=encDone(r);const q=encQuitEm(r,P);
+        return `<tr><td><span class="cell" tabindex="0" data-open="${tid}|${r.id}" title="${esc(r.obs||"")}">${esc(r.item||"Sem nome")}</span></td><td class="ro"><span class="cell">${esc(r.tipo||"")}</span></td><td class="ro"><span class="cell">${esc(per(r))}</span></td><td class="ro"><span class="cell">${fmtMoney(encTotal(r))}</span></td><td class="ro"><span class="cell">${q?fmtDate(q):"—"}</span></td><td class="ro">${man?`<button class="btn sm" data-encreopen="${r.id}" title="Marcado como devolvido antes do registro de devoluções">Reabrir</button>`:`<span class="cell" title="Para reabrir, exclua a devolução correspondente">Quitado</span>`}</td></tr>`}).join("")}</tbody></table></div>`:`<div class="empty-big">Nenhum item quitado ainda.</div>`}
     h+=`</section>`});
   return h;
 }
-async function encQuitar(id){
-  const r=(data["rep-contas"]||[]).find(x=>x.id===id);if(!r)return;const f=encF(r),falta=Math.round((encTotal(r)-encDevItem(r))*100)/100,hj=new Date().toISOString().slice(0,10);
-  try{if(falta>0)await addRow("rep-dev",{data:hj,quem:f?"Fernando":"Leticia",ref:r.item||"",valor:falta,obs:"Quitação do item"});
-    await updRow("rep-contas",id,{status:"Devolvido",devolvidoEm:hj});toast("Item quitado"+(falta>0?" · devolução de "+fmtMoney(falta)+" registrada":""))}catch(e){toast("Não foi possível quitar. Tente de novo.")}
-  render();
-}
+function encSelStart(p,rowId){const hj=new Date().toISOString().slice(0,10);state.encSel={p,cells:new Set(),data:hj,obs:""};if(rowId)encPickRow(rowId);render()}
+function encPickRow(id){const S=state.encSel;const r=(data["rep-contas"]||[]).find(x=>x.id===id);if(!S||!r)return;const P=encPaidMap();
+  const open=encCells(r).filter(k=>!encCellPaid(r,k,P)).map(k=>r.id+"|"+k);const allOn=open.every(k=>S.cells.has(k));open.forEach(k=>allOn?S.cells.delete(k):S.cells.add(k))}
+async function encSelSave(){const S=state.encSel;if(!S||!S.cells.size)return;const items=data["rep-contas"]||[],P=encPaidMap();
+  const dt=($("#enc-sel-data")||{}).value||S.data,obs=(($("#enc-sel-obs")||{}).value||"").trim();
+  const cob=[...S.cells].map(k=>{const[id,m]=k.split("|");const r=items.find(x=>x.id===id);if(!r)return null;const v=Math.round(((+r.m[m]||0)-Math.min(P.M[k]||0,+r.m[m]||0))*100)/100;return{id,item:r.item||"",m,v}}).filter(Boolean);
+  const valor=Math.round(cob.reduce((a,c)=>a+c.v,0)*100)/100;
+  try{await addRow("rep-dev",{data:dt,quem:S.p==="F"?"Fernando":"Leticia",valor,obs,cob,criado:new Date().toISOString()});state.encSel=null;toast("Devolução de "+fmtMoney(valor)+" registrada")}catch(e){toast("Não foi possível salvar a devolução. Tente de novo.")}
+  render()}
 async function encReabrir(id){try{await updRow("rep-contas",id,{status:"Devolver",devolvidoEm:null});toast("Item reaberto")}catch(e){toast("Não foi possível reabrir. Tente de novo.")}render()}
 function startEncEdit(el){
   const[tid,id,k]=el.dataset.eedit.split("|");const r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;const v=(r.m||{})[k];
@@ -1469,10 +1490,12 @@ document.addEventListener("click",async e=>{
   const me=e.target.closest("[data-medit]");if(me&&!e.target.closest("input")){startMatrixEdit(me);return}
   const ee=e.target.closest("[data-eedit]");if(ee&&!e.target.closest("input")){startEncEdit(ee);return}
   const ea=e.target.closest("[data-addenc]");if(ea){addEncItem(ea.dataset.addenc);return}
-  const ev=e.target.closest("[data-encv]");if(ev){const[p,v]=ev.dataset.encv.split("|");state.encV[p]=v;render();return}
-  const ed=e.target.closest("[data-encdev]");if(ed){const p=ed.dataset.encdev;state.encRef=p;state.filters["rep-dev"]={quem:p==="F"?"Fernando":"Leticia",data:new Date().toISOString().slice(0,10)};openFicha("rep-dev",null);delete state.filters["rep-dev"];return}
-  const eo=e.target.closest('[data-open^="rep-dev|"]');if(eo){const d=(data["rep-dev"]||[]).find(x=>"rep-dev|"+x.id===eo.dataset.open);state.encRef=d&&d.quem==="Leticia"?"L":"F"}
-  const eq=e.target.closest("[data-encquit]");if(eq){eq.disabled=true;encQuitar(eq.dataset.encquit);return}
+  const ev=e.target.closest("[data-encv]");if(ev){const[p,v]=ev.dataset.encv.split("|");state.encV[p]=v;if(state.encSel&&state.encSel.p===p)state.encSel=null;render();return}
+  const es=e.target.closest("[data-encsel]");if(es){encSelStart(es.dataset.encsel);return}
+  if(e.target.closest("[data-encselno]")){state.encSel=null;render();return}
+  const eg=e.target.closest("[data-encselgo]");if(eg){eg.disabled=true;encSelSave();return}
+  const pk=e.target.closest("[data-encpick]");if(pk&&state.encSel){const k=pk.dataset.encpick,S=state.encSel.cells;S.has(k)?S.delete(k):S.add(k);render();return}
+  const pr=e.target.closest("[data-encpickrow]");if(pr&&state.encSel){encPickRow(pr.dataset.encpickrow);render();return}
   const er=e.target.closest("[data-encreopen]");if(er){encReabrir(er.dataset.encreopen);return}
   const b=e.target.closest("[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
   if(!b)return;const d=b.dataset;
