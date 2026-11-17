@@ -1077,7 +1077,7 @@ function fxMeses(){
     const g=x.ganhou[x.ganhou.length-1];const d=g&&A.find(z=>z.m===g[0]);x.quit=[last(x),d?last(d):""].sort().pop()});
   return A;
 }
-const FX_VENC=10,FX_TOL=1; /* diferenças de até R$ 1,00 contam como pagas */
+const FX_VENC=5,FX_TOL=1; /* diferenças de até R$ 1,00 contam como pagas */
 const fxDias=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
 function fxAtraso(x){if(x.fe<=0.005)return"";const hj=new Date().toISOString().slice(0,10);
   if(x.quit){const d=fxDias(x.venc,x.quit);return d>0?`quitado em ${fmtDate(x.quit)} · ${d} ${d===1?"dia":"dias"} de atraso`:`quitado em ${fmtDate(x.quit)} · em dia`}
@@ -1094,7 +1094,7 @@ function fechHTML(){
   const fy=Y.reduce((a,x)=>a+x.fe,0),ty=Y.reduce((a,x)=>a+x.rec,0);
   let h=`<section class="tbl fx"><div class="fx-top"><div class="fx-big"><span>${falta>0.005?"Falta receber do Fernando":cred>0.005?"Fernando tem crédito de":"Fernando está em dia"}</span>${falta>0.005||cred>0.005?`<b class="${falta>0.005?"neg":"pos"}">${fmtMoney(falta>0.005?falta-cred:cred)}</b>`:""}<span class="fx-m">· fechou ${fmtMoney(fy)} · recebeu ${fmtMoney(ty)} em ${y}</span></div><span class="grow"></span><button class="btn sm" data-fxadd="rep-fech">+ Fechamento</button><button class="btn sm primary" data-fxadd="rep-transf">+ Transferência</button></div>`;
   if(!Y.length)return h+`<div class="empty-big">Nenhum fechamento ou transferência em ${y}.</div></section>`;
-  h+=`<div class="wrap"><table class="grid fx-t"><thead><tr><th>Mês</th><th class="r">Fechamento</th><th class="r">Recebido</th><th class="r">Diferença do mês</th><th class="r" title="Saldo total depois deste mês">Acumulado</th><th class="l" title="Vencimento considerado: dia 10 do mês seguinte">Status</th></tr></thead><tbody>`;
+  h+=`<div class="wrap"><table class="grid fx-t"><thead><tr><th>Mês</th><th class="r">Fechamento</th><th class="r">Recebido</th><th class="r">Diferença do mês</th><th class="r" title="Saldo total depois deste mês">Acumulado</th><th class="l" title="Vencimento: dia 5 do mês seguinte">Status</th></tr></thead><tbody>`;
   Y.forEach(x=>{const o=!!state.fxOpen[x.m];
     h+=`<tr class="fx-row${o?" open":""}" data-fxm="${x.m}" tabindex="0" aria-expanded="${o}"><td><span class="fx-car">${o?"▾":"▸"}</span><b>${esc(fxMesN(x.m))}</b></td><td class="r">${x.fe?fmtMoney(x.fe):"—"}</td><td class="r">${x.rec?fmtMoney(x.rec):"—"}</td><td class="r">${fxSig(x.rec-x.fe)}</td><td class="r"><b>${fxSig(x.acc)}</b></td><td class="fx-tx">${fxSt(x)}</td></tr>`;
     if(o){
