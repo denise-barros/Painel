@@ -103,7 +103,7 @@ function renderSau(){
   else if(S.sauTab==='med')h+=sauMedicos();
   else h+=sauReemb();
   const t1=todayISO();
-  const items=[['agenda','Visão geral',MIC.geral],['hist','Histórico',MIC.hist],['med','Profissionais de Saúde',MIC.steth],['reemb','Reembolsos',MIC.money]].map(([k,l,ic])=>({l,nav:'sau|'+k+'|',on:S.sauTab===k,ic}));
+  const items=[['agenda','Visão geral',MIC.geral],['hist','Histórico',MIC.hist],['med','Profissionais de saúde',MIC.steth],['reemb','Reembolsos',MIC.money]].map(([k,l,ic])=>({l,nav:'sau|'+k+'|',on:S.sauTab===k,ic}));
   const famV=fam.filter(p=>!S.exec||ownerOk(p.executivo)||p.id===S.sauP);
   if(famV.length){items.push({l:'Pessoas',nav:'sau|pessoa|'+(S.sauP||famV[0].id),on:S.sauTab==='pessoa',ic:MIC.reun});
     famV.forEach(p=>{const rep=recs('sau-med').filter(m=>m.pessoa===p.id&&medRepor(m)).length;const n=recs('sau-ev').filter(e=>e.pessoa===p.id&&evUpcoming(e)&&e.data<=addDays(t1,30)).length;items.push({l:p.nome.split(' ')[0]+(p.nome.split(' ').length>1?' '+p.nome.split(' ').slice(-1)[0]:''),nav:'sau|pessoa|'+p.id,on:S.sauTab==='pessoa'&&S.sauP===p.id,child:true,cnt:rep||n||'',alert:!!rep});});}
@@ -206,7 +206,7 @@ function negMenu(emps){
   const root=e=>'<button class="nm-item nm-g'+(S.negE===e.id?' on':'')+'" data-neg-e="'+esc(e.id)+'"><span class="nm-chip">'+IC.neg+'</span><b class="lbl">'+esc(e.nome)+'</b>'+info(e)+'</button>';
   const child=e=>'<button class="nm-item nm-c'+(S.negE===e.id?' on':'')+'" data-neg-e="'+esc(e.id)+'"><span class="lbl">'+esc(e.nome)+'</span>'+info(e)+'</button>';
   return '<nav class="neg-menu" aria-label="Empresas"><div class="nm-head"><div class="nm-mark">NE</div><div><b>Negócios</b><small>Empresas e unidades</small></div></div><div class="nm-list">'+
-    '<button class="nm-item nm-g'+(!S.negE?' on':'')+'" data-neg-e=""><span class="nm-chip">'+GRID+'</span><b class="lbl">Todas as empresas</b></button>'+
+    '<button class="nm-item nm-g'+(!S.negE?' on':'')+'" data-neg-e=""><span class="nm-chip">'+GRID+'</span><b class="lbl">Visão geral</b></button>'+
     emps.filter(e=>!e.pai||!emps.some(x=>x.id===e.pai)).map(r=>'<div class="nm-grp">'+root(r)+emps.filter(c=>c.pai===r.id).map(child).join('')+'</div>').join('')+
     '<button class="nm-item nm-c add" data-add="empresas"><span class="lbl">+ Adicionar empresa</span></button></div></nav>';
 }
