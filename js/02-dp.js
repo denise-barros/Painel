@@ -78,6 +78,8 @@ function dpPag(people){
   }
   const rows=recs('dp-pag').filter(x=>x.competencia===ym&&ids.has(x.pessoa)).sort((a,b)=>refName('equipe',a.pessoa).localeCompare(refName('equipe',b.pessoa),'pt')||String(a.tipo).localeCompare(String(b.tipo)));
   const pago=rows.filter(x=>x.status==='Pago').reduce((a,x)=>a+(+x.valor||0),0),prev=rows.filter(x=>x.status!=='Pago').reduce((a,x)=>a+(+x.valor||0),0);
+  {const ou={};recs('dp-pag').filter(x=>x.status!=='Pago'&&x.competencia<ym&&ids.has(x.pessoa)).forEach(x=>{ou[x.competencia]=(ou[x.competencia]||0)+1;});const ks=Object.keys(ou).sort();
+   if(ks.length)h+='<div class="dp-av"><div class="bad"><b>Atenção</b><span>Ainda há pagamentos como Previsto em meses anteriores: '+ks.map(k=>'<button class="lnk" data-dp-month="'+esc(k)+'">'+esc(fmtYm(k))+' ('+ou[k]+')</button>').join(', ')+'.</span></div></div>';}
   h+='<div class="sumline"><span>Total do mês <b>'+fmtMoney(pago+prev)+'</b></span><span>Pago <b class="pos">'+fmtMoney(pago)+'</b></span><span>A pagar <b class="'+(prev?'warn':'')+'">'+fmtMoney(prev)+'</b></span></div>';
   if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhum pagamento em '+esc(fmtYm(ym))+'</b>Use “Gerar folha” para criar os pagamentos previstos de quem tem valor cadastrado, ou lance um pagamento avulso.</div></li></ul>'+dpPres(people,ym)+dpExtras(people,ym);
   h+='<ul class="list">'+rows.map(r=>{const late=r.status!=='Pago'&&r.dataPag&&r.dataPag<todayISO();
@@ -243,7 +245,7 @@ function fichaHtml(pid){
   let h='<div class="wrap"><div class="back-row"><button class="back-home" data-person="">‹ Voltar para a equipe</button></div>';
   h+='<div class="plan-hero"><div style="display:flex;gap:14px;align-items:center"><span class="avatar lg">'+esc(initials(p.nome))+'</span><div><h2>'+esc(p.nome)+'</h2><p>'+esc([p.relacao,p.vinculo,p.local?refName('casas',p.local):'',p.executivo?'Ligado(a) a '+EXEC[p.executivo]:'',p.esocial?'eSocial em nome de '+EXEC[p.esocial]:'',p.vt==='Sim'?'VT'+(+p.vtValor?' '+fmtMoney(p.vtValor)+'/mês':''):''].filter(Boolean).join(' · ')||'Complete o cadastro')+([p.telefone,p.email].filter(Boolean).map(x=>' · '+esc(x)).join(''))+'</p></div></div>'+
     '<div class="acts">'+subDrive(p,'dp')+'<button class="btn" data-edit="pessoas:'+esc(pid)+'">Editar cadastro</button><button class="btn primary" data-new-rec="dp-pag" data-pre-pessoa="'+esc(pid)+'">Lançar pagamento</button></div></div>';
-  h+='<div class="kpis">'+kpi(remLabel(p),sal!=null?fmtMoney(sal):'—','',hist.length>1?'desde '+fmtDateFull(hist.filter(m=>m.data<=t0).slice(-1)[0].data):'')+kpi('Admissão',admissao(pid)?fmtDateFull(admissao(pid)):semAdmissao(pid)?'Não informada':'—')+kpi('Pago em '+ano,fmtMoney(pagoAno),'pos')+kpi('Hoje',s?s.l:(isActive(pid)?'—':'Desligado(a)'))+kpi('Ocorrências em '+ano,String(ocs.filter(o=>String(o.data||'').startsWith(ano)).length),'',ocs.filter(o=>String(o.data||'').slice(0,7)===ymOf(t0)).length+' neste mês')+'</div>';
+  h+='<div class="kpis">'+kpi(remLabel(p),sal!=null?fmtMoney(sal):'—','',(()=>{const hv=hist.filter(m=>m.data<=t0);return hist.length>1&&hv.length?'desde '+fmtDateFull(hv[hv.length-1].data):'';})())+kpi('Admissão',admissao(pid)?fmtDateFull(admissao(pid)):semAdmissao(pid)?'Não informada':'—')+kpi('Pago em '+ano,fmtMoney(pagoAno),'pos')+kpi('Hoje',s?s.l:(isActive(pid)?'—':'Desligado(a)'))+kpi('Ocorrências em '+ano,String(ocs.filter(o=>String(o.data||'').startsWith(ano)).length),'',ocs.filter(o=>String(o.data||'').slice(0,7)===ymOf(t0)).length+' neste mês')+'</div>';
   h+='<div class="grid2"><div style="display:flex;flex-direction:column;gap:22px">';
   h+='<div><div class="sec-h"><h3>Pagamentos</h3><span class="cnt">'+pags.length+'</span></div>'+(pags.length?'<ul class="list">'+pags.slice(0,24).map(r=>rowBtn('dp-pag',r,'<span style="min-width:0"><span class="tt">'+esc(fmtYm(r.competencia))+' · '+esc(r.tipo||'Pagamento')+'</span><span class="mm"><span class="tag '+(ST_TONE[r.status]||'')+'">'+esc(r.status||'Previsto')+'</span>'+(r.dataPag?'<span class="tag">'+esc(fmtDateFull(r.dataPag))+'</span>':'')+filesHtml(r.anexos)+'</span></span><span class="rr"><b>'+fmtMoney(r.valor)+'</b></span>',r.status==='Pago'?'ok':'warn')).join('')+'</ul>':'<ul class="list"><li><div class="empty">Nenhum pagamento lançado.</div></li></ul>')+'</div>';
   h+='<div><div class="sec-h"><h3>Ocorrências e atestados</h3><span class="cnt">'+ocs.length+'</span><span class="act"><button class="btn sm ghost" data-new-rec="dp-oc" data-pre-pessoa="'+esc(pid)+'">Registrar</button></span></div>'+(ocs.length?byYear(ocs,o=>rowBtn('dp-oc',o,'<span style="min-width:0"><span class="tt">'+esc(o.tipo)+' · '+esc(fmtDateFull(o.data))+'</span><span class="mm">'+(+o.dias?'<span class="tag warn">'+esc(o.dias)+' dia(s)</span>':'')+filesHtml(o.anexos)+'</span>'+(o.descricao?'<span class="desc-line">'+esc(String(o.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>','warn')):'<ul class="list"><li><div class="empty">Nenhuma ocorrência.</div></li></ul>')+'</div>';
@@ -351,8 +353,19 @@ function dpAvisos(){const t0=todayISO();const y=+t0.slice(0,4);const av=[];const
   equipe().forEach(p=>{const f=feriasInfo(p);if(f&&f.venc&&f.venc.falta>0&&dDiff(t0,f.venc.lim)<=60)av.push({d:f.venc.lim,bad:true,t:nm(p)+' tem '+f.venc.falta+' dia(s) de férias sem data e precisa tirar até '+fmtDateFull(f.venc.lim)+'. Depois disso, paga em dobro.'});});
   const dc=decimo(y);if(dc.length){[[y+'-11-30','1ª parcela do 13º',dc.reduce((a,r)=>a+r.p1,0)],[y+'-12-20','2ª parcela do 13º',dc.reduce((a,r)=>a+r.p2,0)]].forEach(([d,t,v])=>{const e=dDiff(t0,d);if(e>=0&&e<=30)av.push({d,bad:e<=7,t:t+' vence em '+fmtDateFull(d)+' (em '+e+' dia'+(e===1?'':'s')+') para '+dc.length+' pessoa(s).'});});}
   dpEventos().filter(e=>e.mov&&dDiff(t0,e.d)<=30).forEach(e=>av.push({d:e.d,bad:false,t:e.t+' em '+fmtDateFull(e.d)+'.'}));
+  dpPagPend().forEach(g=>av.push(g));
   return av.sort((a,b)=>a.d.localeCompare(b.d));}
-function dpAvisosHtml(){const av=dpAvisos();if(!av.length)return '';return '<div class="dp-av">'+av.map(a=>'<div class="'+(a.bad?'bad':'')+'"><b>'+(a.bad?'Atenção':'Aviso')+'</b><span>'+esc(a.t)+'</span></div>').join('')+'</div>';}
+/* Pagamentos previstos que já venceram, vencem em até 7 dias ou são de meses passados sem data: agrupados por tipo, competência e data. */
+function dpPagPend(){const t0=todayISO();const ym=ymOf(t0);const eq=new Set(equipe().map(p=>p.id));const g={};
+  recs('dp-pag').filter(x=>x.status!=='Pago'&&eq.has(x.pessoa)).forEach(x=>{const dp=x.dataPag||'';let st;
+    if(dp&&dp<t0)st='late';else if(dp&&dDiff(t0,dp)<=7)st='soon';else if(!dp&&String(x.competencia||'')<ym)st='nodate';else return;
+    const k=st+'|'+(x.tipo||'Pagamento')+'|'+x.competencia+'|'+dp;(g[k]=g[k]||{st,tipo:x.tipo||'Pagamento',ym:x.competencia,dp,v:0,n:[]});g[k].v+=(+x.valor||0);g[k].n.push(fnm(x.pessoa));});
+  return Object.values(g).map(o=>{const q=o.n.length;const qual=o.tipo+' de '+fmtYm(o.ym)+' ('+o.n.join(', ')+', '+fmtMoney(o.v)+')';const e=o.dp?dDiff(t0,o.dp):0;
+    const t=o.st==='late'?qual+(q>1?' venceram':' venceu')+' em '+fmtDateFull(o.dp)+' e '+(q>1?'continuam':'continua')+' como Previsto. Pague ou marque como pago.'
+      :o.st==='soon'?qual+(q>1?' vencem':' vence')+(e===0?' hoje':e===1?' amanhã':' em '+fmtDateFull(o.dp)+' (em '+e+' dias)')+'.'
+      :qual+(q>1?' ainda estão':' ainda está')+' como Previsto, sem data de pagamento. Marque como pago ou informe a data.';
+    return {d:o.dp||t0,bad:o.st!=='soon'||e<=2,t,ym:o.ym};});}
+function dpAvisosHtml(){const av=dpAvisos();if(!av.length)return '';return '<div class="dp-av">'+av.map(a=>'<div class="'+(a.bad?'bad':'')+'"><b>'+(a.bad?'Atenção':'Aviso')+'</b><span>'+esc(a.t)+(a.ym?' <button class="lnk" data-dp-month="'+esc(a.ym)+'">Ver pagamentos de '+esc(fmtYm(a.ym))+' ›</button>':'')+'</span></div>').join('')+'</div>';}
 function dpIndKpis(active,foraL){const t0=todayISO();const y=t0.slice(0,4);
   const oc=ocResumo(y+'-01-01',t0);const fd=oc.reduce((a,r)=>a+r.fd,0),ad=oc.reduce((a,r)=>a+r.ad,0);
   const dc=decimo(+y);const d1=dc.reduce((a,r)=>a+r.p1,0),d2=dc.reduce((a,r)=>a+r.p2,0);
@@ -390,8 +403,14 @@ document.addEventListener('change',async e=>{const el=e.target.closest&&e.target
 function diasNoMes(pid,ym){const [y,m]=ym.split('-').map(Number);const n=new Date(y,m,0).getDate();let c=0;for(let d=1;d<=n;d++){const ds=ym+'-'+pad2(d);if(worksOn(escalaOf(pid,ds),ds)===true)c++;}return c;}
 async function gerarFolha(){
   if(!S.db)return;const ym=S.dpMonth;const ids=new Set(dpFiltered().map(p=>p.id));const now=new Date().toISOString();
-  const items=[],semEsc=[];
+  const items=[],semEsc=[],semVT=[];
+  {const y=+ym.slice(0,4),mo=ym.slice(5,7);if(mo==='11'||mo==='12')decimo(y).filter(r=>ids.has(r.p.id)).forEach(r=>{
+    if(recs('dp-pag').some(x=>x.pessoa===r.p.id&&x.competencia===ym&&x.tipo==='13º salário'))return;
+    const antes=recs('dp-pag').filter(x=>x.pessoa===r.p.id&&x.tipo==='13º salário'&&String(x.competencia||'').startsWith(String(y))&&x.competencia<ym).reduce((a,x)=>a+(+x.valor||0),0);
+    const valor=mo==='11'?r.p1:Math.round(Math.max(0,r.tot-antes)*100)/100;if(!valor)return;
+    items.push({pessoa:r.p.id,competencia:ym,tipo:'13º salário',valor,status:'Previsto',dataPag:y+(mo==='11'?'-11-30':'-12-20'),forma:'',obs:(mo==='11'?'1ª parcela do 13º (adiantamento, sem descontos)':'2ª parcela do 13º, valor bruto: descontar INSS e IR')+' · '+r.av+'/12 avos sobre '+fmtMoney(salarioAtual(r.p.id))+'.',anexos:[],criadoEm:now,atualizadoEm:now});});}
   equipe().filter(p=>ids.has(p.id)&&isActive(p.id)).forEach(p=>{
+    if(p.vt==='Sim'&&!+p.vtValor)semVT.push(String(p.nome||'').split(' ')[0]);
     if(p.vt==='Sim'&&+p.vtValor&&!recs('dp-pag').some(x=>x.pessoa===p.id&&x.competencia===ym&&x.tipo==='Vale-transporte'))items.push({pessoa:p.id,competencia:ym,tipo:'Vale-transporte',valor:+p.vtValor,status:'Previsto',dataPag:'',forma:'',obs:'Valor do cadastro',anexos:[],criadoEm:now,atualizadoEm:now});
     const v=salarioAtual(p.id);if(v==null)return;const rm=p.remun||'Salário mensal';if(rm==='Por diária')return;const tipo=FOLHA_T[rm]||'Salário';
     if(recs('dp-pag').some(x=>x.pessoa===p.id&&x.competencia===ym&&x.tipo===tipo))return;
@@ -399,9 +418,10 @@ async function gerarFolha(){
     if(rm==='Por sessão'||rm==='Por diária'){const n=diasNoMes(p.id,ym);if(!n){semEsc.push(String(p.nome||'').split(' ')[0]);return;}
       valor=Math.round(n*v*100)/100;diasTrab=presDias(p,ym);obs=n+(rm==='Por sessão'?(n>1?' sessões':' sessão'):(n>1?' diárias':' diária'))+' × '+fmtMoney(v)+', pela escala. Ajuste se houve falta ou dia a mais.';}
     const it={pessoa:p.id,competencia:ym,tipo,valor,status:'Previsto',dataPag:'',forma:'',obs,anexos:[],criadoEm:now,atualizadoEm:now};if(diasTrab)it.diasTrab=diasTrab;items.push(it);});
-  if(!items.length){toast(semEsc.length?'Sem escala no mês para '+semEsc.join(', ')+'.':'Nada a gerar: todos já têm a remuneração lançada em '+fmtYm(ym)+' ou não têm valor cadastrado.');return;}
+  const vtMsg=semVT.length?' · VT sem valor no cadastro: '+semVT.join(', '):'';
+  if(!items.length){toast((semEsc.length?'Sem escala no mês para '+semEsc.join(', ')+'.':'Nada a gerar: todos já têm a remuneração lançada em '+fmtYm(ym)+' ou não têm valor cadastrado.')+vtMsg);return;}
   try{for(const it of items)await S.db.collection('dp-pag').doc(uid('pag')).set(it);
-    toast(items.length+' pagamento(s) previsto(s) em '+fmtYm(ym)+(semEsc.length?' · sem escala: '+semEsc.join(', '):''));}
+    toast(items.length+' pagamento(s) previsto(s) em '+fmtYm(ym)+(semEsc.length?' · sem escala: '+semEsc.join(', '):'')+vtMsg);}
   catch(e){toast('Não foi possível gerar agora. Tente de novo em instantes.');}
 }
 
