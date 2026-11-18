@@ -693,7 +693,7 @@ function openCad(c,id,pre){
     if(f.opts)return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><select id="'+fid+'">'+f.opts.map(o=>'<option value="'+esc(o)+'"'+((v||'')===o?' selected':'')+'>'+esc(f.lab?(o?f.lab(o):'—'):(o||'—'))+'</option>').join('')+'</select></div>';
     if(f.long)return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><textarea id="'+fid+'">'+esc(v||'')+'</textarea></div>';
     if(f.t==='money')return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><input id="'+fid+'" inputmode="decimal" data-money value="'+esc(moneyFmtInput(v))+'" placeholder="0,00" autocomplete="off"></div>';
-    return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><input id="'+fid+'" value="'+esc(v||'')+'" placeholder="'+esc(f.ph||'')+'" autocomplete="off"></div>';}).join('');
+    return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><input id="'+fid+'"'+(f.t==='tel'?' type="tel" inputmode="tel"':f.t==='email'?' type="email" inputmode="email"':'')+' value="'+esc(v||'')+'" placeholder="'+esc(f.ph||'')+'" autocomplete="off"></div>';}).join('');
   drawerShell(r?r.nome:'Adicionar '+C.one,body,
     (r?'<button class="btn danger" id="cf-del">Excluir</button>':'')+'<span class="grow"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="cf-save">'+(r?'Salvar':'Adicionar')+'</button>',!!r);
 }
