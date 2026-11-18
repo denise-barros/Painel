@@ -289,11 +289,11 @@ function feriasInfo(p){
   let k=0;while(addYears(adm,k+1)<=t0)k++;
   const curIni=addYears(adm,k);const proxDireito=addYears(adm,k+1);
   const fer=movsOf(p.id).filter(m=>m.tipo==='Férias');
-  const dias=m=>m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;
+  const dias=ferDias;
   let venc=null;
   if(k>=1){const ini=curIni,lim=addDays(addYears(curIni,1),-1);const fs=fer.filter(m=>m.data>=ini&&m.data<=lim);
     const usados=fs.filter(m=>m.data<=t0).reduce((a,m)=>a+dias(m),0),agend=fs.filter(m=>m.data>t0).reduce((a,m)=>a+dias(m),0);
-    venc={per:addYears(adm,k-1).slice(0,4)+'/'+curIni.slice(2,4),usados:Math.min(30,usados),agend:Math.min(30-Math.min(30,usados),agend),falta:Math.max(0,30-usados-agend),lim,ult:fs.filter(m=>m.data<=t0).map(m=>m.data).pop()||'',progd:fs.filter(m=>m.data>t0).map(m=>m.data)[0]||''};}
+    venc={per:addYears(adm,k-1).slice(0,4)+'/'+curIni.slice(2,4),usados:Math.min(30,usados),agend:Math.min(30-Math.min(30,usados),agend),falta:Math.max(0,30-usados-agend),lim,semFim:fs.filter(m=>!(m.dataFim&&m.dataFim>=m.data)).map(m=>m.data),ult:fs.filter(m=>m.data<=t0).map(m=>m.data).pop()||'',progd:fs.filter(m=>m.data>t0).map(m=>m.data)[0]||''};}
   const prox=fer.filter(m=>m.data>t0).sort((a,b)=>a.data.localeCompare(b.data));
   return {adm,curIni,proxDireito,venc,prox,sal:salarioAtual(p.id)};
 }
@@ -330,14 +330,14 @@ document.addEventListener('click',async e=>{const add=e.target.closest&&e.target
   if(!(q>0)){toast('Informe quantas diárias usou.');return;}
   list.push({id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),data:d,qtd:q,obs:o,criadoEm:new Date().toISOString()});
   await pacUsoSave(p,list,q+(q>1?' diárias debitadas':' diária debitada')+' em '+fmtDateFull(d));});
-function feriasProx(){const t0=todayISO();const out=[];equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;f.prox.forEach(m=>{const dias=m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;out.push({p,m,dias,em:dDiff(t0,m.data),pagar:addDays(m.data,-2),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null});});});return out.sort((a,b)=>a.m.data.localeCompare(b.m.data));}
+function feriasProx(){const t0=todayISO();const out=[];equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;f.prox.forEach(m=>{const dias=ferDias(m);out.push({p,m,dias,em:dDiff(t0,m.data),pagar:addDays(m.data,-2),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null});});});return out.sort((a,b)=>a.m.data.localeCompare(b.m.data));}
 function dpEventos(){const t0=todayISO();const y=+t0.slice(0,4);
   const ev=[];const dc=decimo(y);
   if(dc.length&&t0<=y+'-12-20'){
     if(t0<=y+'-11-30')ev.push({pay:1,d:y+'-11-30',t:'13º salário · 1ª parcela',v:dc.reduce((a,r)=>a+r.p1,0),s:dc.map(r=>String(r.p.nome).split(' ')[0]+(r.av<12?' ('+r.av+'/12)':'')).join(', ')+'.'});
     ev.push({pay:1,d:y+'-12-20',t:'13º salário · 2ª parcela',v:dc.reduce((a,r)=>a+r.p2,0),s:'INSS e IR são descontados nesta parcela.'});}
   equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;const nm=String(p.nome).split(' ')[0];
-    f.prox.forEach(m=>{const dias=m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;ev.push({p,pay:1,d:m.data,t:'Férias '+nm+' · '+fmtDateFull(m.data)+(m.dataFim?' a '+fmtDateFull(m.dataFim):''),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null,s:dias+' dias. Pagar até '+fmtDateFull(addDays(m.data,-2))+'.'});});
+    f.prox.forEach(m=>{const dias=ferDias(m);ev.push({p,pay:1,d:m.data,t:'Férias '+nm+' · '+fmtDateFull(m.data)+(m.dataFim?' a '+fmtDateFull(m.dataFim):''),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null,s:dias+' dias. Pagar até '+fmtDateFull(addDays(m.data,-2))+'.'});});
     if(f.venc&&f.venc.falta>0)ev.push({p,d:f.venc.lim,t:'Limite das férias de '+nm+' ('+f.venc.per+')',v:null,s:f.venc.falta+' dia(s) ainda sem data. Depois desse dia, as férias são pagas em dobro.',bad:dDiff(t0,f.venc.lim)<=90});
   });
   const MV={'Reajuste salarial':'Reajuste','Dissídio':'Dissídio','Alteração contratual':'Alteração contratual','Mudança de função':'Mudança de função','Afastamento':'Afastamento','Desligamento':'Desligamento','Admissão':'Admissão','Outro':'Movimentação'};
@@ -404,11 +404,6 @@ function diasNoMes(pid,ym){const [y,m]=ym.split('-').map(Number);const n=new Dat
 async function gerarFolha(){
   if(!S.db)return;const ym=S.dpMonth;const ids=new Set(dpFiltered().map(p=>p.id));const now=new Date().toISOString();
   const items=[],semEsc=[],semVT=[];
-  {const y=+ym.slice(0,4),mo=ym.slice(5,7);if(mo==='11'||mo==='12')decimo(y).filter(r=>ids.has(r.p.id)).forEach(r=>{
-    if(recs('dp-pag').some(x=>x.pessoa===r.p.id&&x.competencia===ym&&x.tipo==='13º salário'))return;
-    const antes=recs('dp-pag').filter(x=>x.pessoa===r.p.id&&x.tipo==='13º salário'&&String(x.competencia||'').startsWith(String(y))&&x.competencia<ym).reduce((a,x)=>a+(+x.valor||0),0);
-    const valor=mo==='11'?r.p1:Math.round(Math.max(0,r.tot-antes)*100)/100;if(!valor)return;
-    items.push({pessoa:r.p.id,competencia:ym,tipo:'13º salário',valor,status:'Previsto',dataPag:y+(mo==='11'?'-11-30':'-12-20'),forma:'',obs:(mo==='11'?'1ª parcela do 13º (adiantamento, sem descontos)':'2ª parcela do 13º, valor bruto: descontar INSS e IR')+' · '+r.av+'/12 avos sobre '+fmtMoney(salarioAtual(r.p.id))+'.',anexos:[],criadoEm:now,atualizadoEm:now});});}
   equipe().filter(p=>ids.has(p.id)&&isActive(p.id)).forEach(p=>{
     if(p.vt==='Sim'&&!+p.vtValor)semVT.push(String(p.nome||'').split(' ')[0]);
     if(p.vt==='Sim'&&+p.vtValor&&!recs('dp-pag').some(x=>x.pessoa===p.id&&x.competencia===ym&&x.tipo==='Vale-transporte'))items.push({pessoa:p.id,competencia:ym,tipo:'Vale-transporte',valor:+p.vtValor,status:'Previsto',dataPag:'',forma:'',obs:'Valor do cadastro',anexos:[],criadoEm:now,atualizadoEm:now});
@@ -427,8 +422,9 @@ async function gerarFolha(){
 
 
 /* ---------- Aba Férias ---------- */
-const ferDias=m=>m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;
-const ferFim=m=>m.dataFim&&m.dataFim>m.data?m.dataFim:addDays(m.data,29);
+/* Férias sem data de volta (ex.: vindas do eSocial, que só informa o início) contam 30 dias, mas são sinalizadas para conferir. */
+const ferDias=m=>m.dataFim&&m.dataFim>=m.data?dDiff(m.data,m.dataFim)+1:30;
+const ferFim=m=>m.dataFim&&m.dataFim>=m.data?m.dataFim:addDays(m.data,29);
 const fnm=pid=>{const p=personById(pid);return p?String(p.nome).split(' ')[0]:String(pid||'');};
 const COV_COMO={extra:'extra pago à parte',pacote:'do pacote de diárias',diaria:'diária avulsa',troca:'sem custo / troca de folga'};
 function covNome(c){return c.pessoa?fnm(c.pessoa):(c.nome||'?');}
@@ -450,9 +446,9 @@ function dpFer(){const t0=todayISO();const rows=ferRows();
   if(!rows.length)return '<ul class="list"><li><div class="empty"><b>Nenhuma funcionária CLT ativa com data de admissão</b>A admissão vem da movimentação "Admissão" ou "Registro inicial".</div></li></ul>';
   let h='<div class="panel"><div class="sec-h"><h3>Férias por funcionária CLT</h3><span class="cnt">'+rows.length+'</span></div><div class="fer-tw"><table class="pac fer-t"><thead><tr><th>Pessoa</th><th>Situação</th><th>Férias a tirar</th><th>Tirar até</th><th>Próximas férias</th><th>Cobertura</th><th>Período atual</th></tr></thead><tbody>'+
   rows.map(({p,f,v,prox,meses,st})=>{
-    const tirar=v?esc(v.per)+' · '+(v.falta?'<b class="warn">'+v.falta+' sem data</b>':'')+(v.usados?(v.falta?', ':'')+v.usados+' tirados':'')+(v.agend?((v.falta||v.usados)?', ':'')+v.agend+' programados':'')+ferBar(v):'<span class="sub">ainda não tem</span>';
+    const tirar=v?esc(v.per)+' · '+(v.falta?'<b class="warn">'+v.falta+' sem data</b>':'')+(v.usados?(v.falta?', ':'')+v.usados+' tirados':'')+(v.agend?((v.falta||v.usados)?', ':'')+v.agend+' programados':'')+(v.semFim.length?'<br><small class="warn-t">sem data de volta'+(v.semFim.length>1?' (várias)':' ('+esc(fmtDateFull(v.semFim[0]))+')')+': contando 30 dias</small>':'')+ferBar(v):'<span class="sub">ainda não tem</span>';
     const ate=v?(v.falta?'<b>'+esc(fmtDateFull(v.lim))+'</b>':'<span class="sub">em dia</span>'):'<span class="sub">—</span>';
-    const px=prox.length?prox.map(m=>'<div class="fer-px"><b>'+esc(fmtDateFull(m.data))+' a '+esc(fmtDateFull(ferFim(m)))+'</b><br><small class="sub">'+ferDias(m)+' dias · volta '+esc(fmtDateFull(addDays(ferFim(m),1)))+(m.data>t0?' · pagar até '+esc(fmtDateFull(addDays(m.data,-2))):' · em andamento')+'</small></div>').join(''):'<span class="sub">nada marcado</span>';
+    const px=prox.length?prox.map(m=>'<div class="fer-px"><b>'+esc(fmtDateFull(m.data))+' a '+esc(fmtDateFull(ferFim(m)))+(m.dataFim?'':' ?')+'</b><br><small class="sub">'+ferDias(m)+' dias · volta '+esc(fmtDateFull(addDays(ferFim(m),1)))+(m.data>t0?' · pagar até '+esc(fmtDateFull(addDays(m.data,-2))):' · em andamento')+'</small></div>').join(''):'<span class="sub">nada marcado</span>';
     const cv=prox.length?prox.map(m=>{const cs=Array.isArray(m.cobertura)?m.cobertura:[];
       return '<div class="fer-cv">'+cs.map(c=>'<span class="fer-chip"><span class="tag '+(c.como==='pacote'?'pess':'info')+'" title="'+esc(COV_COMO[c.como]||'')+(c.obs?' · '+esc(c.obs):'')+'">'+esc(covNome(c))+'</span> <small class="sub">'+esc(fmtDateFull(c.de).slice(0,5))+'–'+esc(fmtDateFull(c.ate).slice(0,5))+'</small><button class="x" data-fcov-del="'+esc(m.id)+'" data-fcov-id="'+esc(c.id)+'" title="Remover cobertura" aria-label="Remover cobertura">×</button></span>').join('')+
         (cs.length?'':'<small class="sub warn-t">sem cobertura</small> ')+'<button class="btn sm ghost" data-fcov-new="'+esc(m.id)+'">+ Cobertura</button></div>';}).join(''):'<span class="sub">—</span>';
@@ -518,6 +514,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.c
 function ferResumoHtml(){const t0=todayISO();const rows=ferRows();if(!rows.length)return '';const it=[];
   rows.forEach(({p,f,v,prox})=>{const nm=String(p.nome).split(' ')[0];
     if(v&&v.falta>0)it.push({bad:dDiff(t0,v.lim)<=90,t:nm+': '+v.falta+' dia(s) de férias sem data, tirar até '+fmtDateFull(v.lim)});
+    if(v)v.semFim.forEach(d=>it.push({t:nm+': férias de '+fmtDateFull(d)+' sem data de volta (contando 30 dias). Se foram 15, preencha o "Até" na movimentação para o saldo ficar certo.'}));
     prox.filter(m=>dDiff(t0,m.data)<=60).forEach(m=>{const sc=!(Array.isArray(m.cobertura)&&m.cobertura.length);it.push({bad:sc&&dDiff(t0,m.data)<=15,t:nm+(m.data>t0?' sai em '+fmtDateFull(m.data)+' e volta '+fmtDateFull(addDays(ferFim(m),1))+' · pagar até '+fmtDateFull(addDays(m.data,-2)):' está de férias até '+fmtDateFull(ferFim(m)))+(sc?' · sem cobertura':'')});});
     if(dDiff(t0,f.proxDireito)<=60)it.push({t:nm+(v?' ganha mais 30 dias':' ganha as primeiras férias')+' em '+fmtDateFull(f.proxDireito)});});
   return '<div class="panel"><div class="sec-h"><h3>Férias: o que pede ação</h3><span class="act"><button class="btn sm ghost" data-dp-tab="fer">Ver férias ›</button></span></div>'+

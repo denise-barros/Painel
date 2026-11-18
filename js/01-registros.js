@@ -133,7 +133,7 @@ function worksOn(e,date){
   return true;
 }
 function dayStatus(pid,date){
-  const ab=movsOf(pid).find(m=>(m.tipo==='Férias'||m.tipo==='Afastamento')&&m.data<=date&&(m.dataFim||m.data)>=date);
+  const ab=movsOf(pid).find(m=>(m.tipo==='Férias'||m.tipo==='Afastamento')&&m.data<=date&&(m.dataFim||(m.tipo==='Férias'?addDays(m.data,29):m.data))>=date);
   if(ab)return {k:ab.tipo==='Férias'?'ferias':'afast',l:ab.tipo==='Férias'?'Férias':'Afastado'};
   const oc=recs('dp-oc').find(o=>o.pessoa===pid&&o.tipo==='Atestado'&&o.data<=date&&addDays(o.data,Math.max(1,+o.dias||1)-1)>=date);
   if(oc)return {k:'atest',l:'Atestado'};
