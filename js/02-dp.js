@@ -78,7 +78,7 @@ function dpPag(people){
   }
   const rows=recs('dp-pag').filter(x=>x.competencia===ym&&ids.has(x.pessoa)).sort((a,b)=>refName('equipe',a.pessoa).localeCompare(refName('equipe',b.pessoa),'pt')||String(a.tipo).localeCompare(String(b.tipo)));
   const pago=rows.filter(x=>x.status==='Pago').reduce((a,x)=>a+(+x.valor||0),0),prev=rows.filter(x=>x.status!=='Pago').reduce((a,x)=>a+(+x.valor||0),0);
-  {const ou={};recs('dp-pag').filter(x=>x.status!=='Pago'&&x.competencia<ym&&ids.has(x.pessoa)).forEach(x=>{ou[x.competencia]=(ou[x.competencia]||0)+1;});const ks=Object.keys(ou).sort();
+  {const ou={};recs('dp-pag').filter(x=>x.status!=='Pago'&&x.competencia<ym&&x.competencia>=DP_PAG_INICIO&&ids.has(x.pessoa)).forEach(x=>{ou[x.competencia]=(ou[x.competencia]||0)+1;});const ks=Object.keys(ou).sort();
    if(ks.length)h+='<div class="dp-av"><div class="bad"><b>Atenção</b><span>Ainda há pagamentos como Previsto em meses anteriores: '+ks.map(k=>'<button class="lnk" data-dp-month="'+esc(k)+'">'+esc(fmtYm(k))+' ('+ou[k]+')</button>').join(', ')+'.</span></div></div>';}
   h+='<div class="sumline"><span>Total do mês <b>'+fmtMoney(pago+prev)+'</b></span><span>Pago <b class="pos">'+fmtMoney(pago)+'</b></span><span>A pagar <b class="'+(prev?'warn':'')+'">'+fmtMoney(prev)+'</b></span></div>';
   if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhum pagamento em '+esc(fmtYm(ym))+'</b>Use “Gerar folha” para criar os pagamentos previstos de quem tem valor cadastrado, ou lance um pagamento avulso.</div></li></ul>'+dpPres(people,ym)+dpExtras(people,ym);
@@ -356,8 +356,10 @@ function dpAvisos(){const t0=todayISO();const y=+t0.slice(0,4);const av=[];const
   dpPagPend().forEach(g=>av.push(g));
   return av.sort((a,b)=>a.d.localeCompare(b.d));}
 /* Pagamentos previstos que já venceram, vencem em até 7 dias ou são de meses passados sem data: agrupados por tipo, competência e data. */
+/* Início do uso do Painel para pagamentos: lançamentos de competências anteriores são histórico/testes e não geram aviso. */
+const DP_PAG_INICIO='2026-12';
 function dpPagPend(){const t0=todayISO();const ym=ymOf(t0);const eq=new Set(equipe().map(p=>p.id));const g={};
-  recs('dp-pag').filter(x=>x.status!=='Pago'&&eq.has(x.pessoa)).forEach(x=>{const dp=x.dataPag||'';let st;
+  recs('dp-pag').filter(x=>x.status!=='Pago'&&eq.has(x.pessoa)&&String(x.competencia||'')>=DP_PAG_INICIO).forEach(x=>{const dp=x.dataPag||'';let st;
     if(dp&&dp<t0)st='late';else if(dp&&dDiff(t0,dp)<=7)st='soon';else if(!dp&&String(x.competencia||'')<ym)st='nodate';else return;
     const k=st+'|'+(x.tipo||'Pagamento')+'|'+x.competencia+'|'+dp;(g[k]=g[k]||{st,tipo:x.tipo||'Pagamento',ym:x.competencia,dp,v:0,n:[]});g[k].v+=(+x.valor||0);g[k].n.push(fnm(x.pessoa));});
   return Object.values(g).map(o=>{const q=o.n.length;const qual=o.tipo+' de '+fmtYm(o.ym)+' ('+o.n.join(', ')+', '+fmtMoney(o.v)+')';const e=o.dp?dDiff(t0,o.dp):0;
