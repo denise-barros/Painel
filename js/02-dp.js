@@ -45,7 +45,7 @@ function dpMenu(){
     fer:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     oc:'<path d="M12 4 3 19h18zM12 10v4M12 17v.5"/>',
     emp:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.5 9.5c-.6-.8-1.5-1.2-2.5-1.2-1.4 0-2.5.8-2.5 1.9 0 2.6 5 1.2 5 3.8 0 1.1-1.1 1.9-2.5 1.9-1.1 0-2-.5-2.6-1.3"/>'};
-  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['mov','Movimentações'],['pag','Pagamentos'],['oc','Ocorrências'],['emp','Empréstimos']];
+  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['oc','Ocorrências'],['mov','Movimentações'],['pag','Pagamentos'],['emp','Empréstimos']];
   return '<nav class="neg-menu" aria-label="Departamento pessoal"><div class="nm-head"><div class="nm-mark">DP</div><div><b>Departamento pessoal</b><small>Funcionários e prestadores</small></div></div><div class="nm-list">'+
     L.map(([k,l])=>'<div class="nm-grp"><button class="nm-item nm-g'+on(k)+'" data-dp-tab="'+k+'">'+I(IC_[k])+'<b class="lbl">'+l+'</b></button></div>').join('')+'</div></nav>';
 }

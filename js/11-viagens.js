@@ -188,9 +188,9 @@ function viaMenu(){
     '<button class="nm-item nm-g'+on('ger')+'" data-via-tab="ger"><span class="nm-chip">'+CHK+'</span><b class="lbl">Visão geral</b>'+cnt(nd)+'</button>'+
     '<div class="nm-grp"><button class="nm-item nm-g'+on('viagens')+'" data-via-tab="viagens"><span class="nm-chip">'+IC.via+'</span><b class="lbl">Executivos e família</b>'+cnt(n1)+'</button></div>'+
     '<div class="nm-grp"><button class="nm-item nm-g'+on('vis')+'" data-via-tab="vis"><span class="nm-chip">'+PERS+'</span><b class="lbl">Visitantes</b>'+cnt(n3)+'</button></div>'+
+    '<div class="nm-grp"><button class="nm-item nm-g'+on('cred')+'" data-via-tab="cred"><span class="nm-chip">'+TICKET+'</span><b class="lbl">Créditos e estornos</b>'+cnt(n2)+'</button></div>'+
     '<div class="nm-grp"><button class="nm-item nm-g'+on('pts')+'" data-via-tab="pts"><span class="nm-chip">'+STAR+'</span><b class="lbl">Programas de pontos</b>'+cnt(recs('via-pts').filter(r=>ptsExecOk(r)&&r.venc&&r.venc<=addDays(t0,30)&&!ptsCiente(r)).length)+'</button></div>'+
-    '<div class="nm-grp"><button class="nm-item nm-g'+on('hot')+'" data-via-tab="hot"><span class="nm-chip">'+BED+'</span><b class="lbl">Preferência de hotéis</b></button></div>'+
-    '<div class="nm-grp"><button class="nm-item nm-g'+on('cred')+'" data-via-tab="cred"><span class="nm-chip">'+TICKET+'</span><b class="lbl">Créditos e estornos</b>'+cnt(n2)+'</button></div></div></nav>';
+    '<div class="nm-grp"><button class="nm-item nm-g'+on('hot')+'" data-via-tab="hot"><span class="nm-chip">'+BED+'</span><b class="lbl">Preferência de hotéis</b></button></div></div></nav>';
 }
 function renderVia(){
   const el=$('#v-via');
