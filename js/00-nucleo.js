@@ -45,7 +45,7 @@ const IC={
 const NAV=[
   {id:'capa',l:'Capa'},
   {sep:true},
-  {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=6'},
+  {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=7'},
   {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=394'},
   {id:'dp',l:'DP',native:true},
   {id:'fac',l:'Facilities',native:true},
@@ -91,9 +91,10 @@ const CAD={
     {k:'vt',l:'Vale-transporte',opts:['','Não','Sim']},
     {k:'vtValor',l:'Valor mensal do VT',t:'money'},
     {k:'recebe13',l:'Recebe 13º',opts:['','Sim','Não'],hint:'CLT recebe por lei. Marque Sim para prestadores que também recebem.'},
-    {k:'contato',l:'Contato',ph:'Telefone ou e-mail'},
+    {k:'telefone',l:'Telefone',t:'tel',ph:'(11) 99999-9999'},
+    {k:'email',l:'E-mail',t:'email',ph:'nome@exemplo.com'},
     {k:'obs',l:'Observações',long:true}],
-    cols:['nome','grupo','relacao','vinculo','local','executivo','contato','obs']},
+    cols:['nome','grupo','relacao','vinculo','local','executivo','telefone','email','obs']},
   ativos:{l:'Casas, carros, escritórios e serviços',one:'ativo',col:'cad-ativos',fields:[
     {k:'nome',l:'Nome',req:true,ph:'Ex.: Casa de Camburi, Volvo XC60, Sala do Fernando'},
     {k:'tipo',l:'Tipo',opts:['Casa','Carro','Escritório','Serviço','Outro']},
@@ -152,8 +153,8 @@ const showVal=(c,k,v)=>{const f=fieldOf(c,k);if(f&&f.t==='money')return v===''||
 const S={view:'capa',exec:'',cadTab:'pessoas',tasks:new Map(),cats:[],staleDays:3,
   fin:{cronograma:[],solicitacoes:[],'reemb-corp':[],'reemb-med':[],'reemb-pagar':[],parcelas:[],faturas:[],emprestimos:[],assinaturas:[],'rep-fech':[],'rep-transf':[],'rep-contas':[],'rep-dev':[],'fdc-leticia':[],'fdc-luciano':[],'fdc-fernando':[],'fdc-camburi':[],'fdc-criancas':[]},
   finOk:{},finErr:{},cad:{pessoas:[],ativos:[],empresas:[],fornecedores:[],prestadores:[],medicos:[]},loaded:false,db:null,dbState:'loading',assets:null,
-  rec:{'dp-pag':[],'dp-mov':[],'dp-esc':[],'dp-oc':[],'fac-ch':[],'fac-rec':[]},
-  dpTab:'ind',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''},dpMonth:ymOf(todayISO()),dpWeek:'',dpPagView:'mes',dpOcTipo:'',dpPerson:null,
+  rec:{'dp-pag':[],'dp-mov':[],'dp-esc':[],'dp-oc':[],'dp-emp':[],'fac-ch':[],'fac-rec':[]},
+  dpTab:'ind',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''},dpMonth:ymOf(todayISO()),dpWeek:'',dpPagView:'mes',dpOcTipo:'',dpEmpSt:'',dpPerson:null,
   facTab:'venc',facF:{ativo:'',exec:'',tipo:'',status:'abertos',forn:'',tipoAtivo:'',q:''}};
 try{const s=JSON.parse(localStorage.getItem('ce-ui')||'{}');if(s.exec)S.exec=s.exec;if(s.cadTab&&(CAD[s.cadTab]||s.cadTab==='funcionarios'||s.cadTab==='pets'))S.cadTab=s.cadTab;if(s.view)S.view=s.view;if(s.dpTab&&s.dpV===2)S.dpTab=s.dpTab;if(s.facTab)S.facTab=s.facTab;if(s.dpPagView)S.dpPagView=s.dpPagView;}catch(e){}
 function saveUi(){try{localStorage.setItem('ce-ui',JSON.stringify({exec:S.exec,cadTab:S.cadTab,view:S.view,dpTab:S.dpTab,dpV:2,facTab:S.facTab,dpPagView:S.dpPagView,sauTab:S.sauTab,negTab:S.negTab,brdTab:S.brdTab,famTab:S.famTab,viaTab:S.viaTab,ageTab:S.ageTab}));}catch(e){}}
@@ -203,8 +204,10 @@ async function boot(){
   getMcp().then(()=>schedule()).catch(()=>{});
   /* textos antigos: "pedir reembolso" passou a ser "com reembolso" */
   const legado=o=>{if(o.reembolso==='Pedir reembolso')o.reembolso='Com reembolso';if(o.convenio==='Particular (pedir reembolso)')o.convenio='Particular (com reembolso)';return o;};
+  /* pessoas: o antigo campo único "contato" virou telefone + e-mail */
+  const legadoPessoa=o=>{if(o.contato&&!o.telefone&&!o.email){const v=String(o.contato).trim();if(/@/.test(v))o.email=v;else o.telefone=v;}delete o.contato;return o;};
   Object.keys(S.rec).forEach(t=>db.collection(REC[t].col).onSnapshot(s=>{S.rec[t]=s.docs.map(d=>legado({id:d.id,...d.data()}));schedule();},()=>{}));
-  Object.keys(CAD).forEach(c=>db.collection(CAD[c].col).onSnapshot(s=>{S.cad[c]=s.docs.map(d=>legado({id:d.id,...d.data()})).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt'));schedule();autoDriveSync();},()=>{}));
+  Object.keys(CAD).forEach(c=>db.collection(CAD[c].col).onSnapshot(s=>{S.cad[c]=s.docs.map(d=>{const o=legado({id:d.id,...d.data()});return c==='pessoas'?legadoPessoa(o):o;}).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt'));schedule();autoDriveSync();},()=>{}));
 }
 
 /* ---------- filtros por executivo ---------- */
@@ -375,8 +378,8 @@ function renderArea(k){
 /* ---------- render: cadastros ---------- */
 const isFunc=r=>r.grupo==='Funcionário(a)'||r.grupo==='Prestador(a)';
 const CAD_TABS=[
-  {k:'pessoas',l:'Núcleo',c:'pessoas',f:r=>!isFunc(r),one:'pessoa',cols:['nome','grupo','relacao','executivo','contato','obs']},
-  {k:'funcionarios',l:'Funcionários',c:'pessoas',f:isFunc,one:'funcionário',pre:{grupo:'Funcionário(a)'},cols:['nome','relacao','vinculo','remun','local','executivo','esocial','contato','obs']},
+  {k:'pessoas',l:'Núcleo',c:'pessoas',f:r=>!isFunc(r),one:'pessoa',cols:['nome','grupo','relacao','executivo','telefone','email','obs']},
+  {k:'funcionarios',l:'Funcionários',c:'pessoas',f:isFunc,one:'funcionário',pre:{grupo:'Funcionário(a)'},cols:['nome','relacao','vinculo','remun','local','executivo','esocial','telefone','email','obs']},
   {k:'ativos',l:'Casas, carros, escritórios e serviços',c:'ativos'},{k:'pets',l:'Pets',rec:'fam-pet',one:'pet'},{k:'empresas',l:'Empresas',c:'empresas'},{k:'prestadores',l:'Prestadores sob demanda',c:'prestadores'},{k:'fornecedores',l:'Fornecedores',c:'fornecedores'},{k:'medicos',l:'Profissionais de Saúde',c:'medicos'}];
 const cadTab=k=>CAD_TABS.find(t=>t.k===k)||CAD_TABS[0];
 const cadRows=t=>t.rec?recs(t.rec):S.cad[t.c].filter(t.f||(()=>true));

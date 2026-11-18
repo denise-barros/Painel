@@ -11,14 +11,14 @@ function renderDP(){
   const prevMes=pagMes.filter(p=>p.status!=='Pago').reduce((a,p)=>a+(+p.valor||0),0);
   const ocMes=recs('dp-oc').filter(o=>String(o.data||'').slice(0,7)===ym&&ids.has(o.pessoa)).length;
   const foraL=active.map(p=>({p,s:dayStatus(p.id,t0)})).filter(x=>x.s&&(x.s.k==='ferias'||x.s.k==='afast'||x.s.k==='atest'));const fora=foraL.length;
-  const TAB=['ind','equipe','pag','mov','esc','fer','oc'].includes(S.dpTab)?S.dpTab:'ind';
-  const HERO={ind:['Departamento pessoal','Indicadores, avisos, demandas e o que vem pela frente.'],equipe:['Equipe','Funcionários e prestadores.'],pag:['Pagamentos','Salários, extras, 13º, férias e guias, mês a mês.'],mov:['Movimentações','O que já aconteceu: admissões, reajustes, férias e desligamentos. O que ainda vem fica em Visão geral › Pela frente.'],esc:['Escalas','Escalas de trabalho da equipe.'],fer:['Férias','Férias das funcionárias CLT: o que falta tirar, prazos, próximas saídas e quem cobre.'],oc:['Ocorrências','Faltas, atestados e outras ocorrências.']};
+  const TAB=['ind','equipe','pag','mov','esc','fer','oc','emp'].includes(S.dpTab)?S.dpTab:'ind';
+  const HERO={ind:['Departamento pessoal','Indicadores, avisos, demandas e o que vem pela frente.'],equipe:['Equipe','Funcionários e prestadores.'],pag:['Pagamentos','Salários, extras, 13º, férias e guias, mês a mês.'],mov:['Movimentações','O que já aconteceu: admissões, reajustes, férias e desligamentos. O que ainda vem fica em Visão geral › Pela frente.'],esc:['Escalas','Escalas de trabalho da equipe.'],fer:['Férias','Férias das funcionárias CLT: o que falta tirar, prazos, próximas saídas e quem cobre.'],oc:['Ocorrências','Faltas, atestados e outras ocorrências.'],emp:['Empréstimos','Dinheiro emprestado à equipe: valor, parcelas, o que já foi devolvido e o saldo.']};
   const wrapDp=b=>'<div class="wrap"><div class="side-layout">'+dpMenu()+'<div class="side-main">'+b+'</div></div></div>';
   let h='<div class="plan-hero"><div><h2>'+HERO[TAB][0]+'</h2><p>'+HERO[TAB][1]+'</p></div>'+
-    '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button></div></details>')+'</div></div>';
+    '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',emp:'<button class="btn primary" data-new-rec="dp-emp">Novo empréstimo</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',emp:'<button class="btn primary" data-new-rec="dp-emp">Novo empréstimo</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button><button class="btn" data-new-rec="dp-emp">Empréstimo</button></div></details>')+'</div></div>';
   if(TAB==='ind'){h+=dpIndKpis(active,foraL)+dpAvisosHtml()+demBlock('p-dp')+(equipe().length?dpInd():'');el.innerHTML=wrapDp(h);return;}
   if(TAB==='fer'){h+=equipe().length?dpFer():'';el.innerHTML=wrapDp(h);return;}
-  const SLIM=TAB==='mov'||TAB==='oc';
+  const SLIM=TAB==='mov'||TAB==='oc'||TAB==='emp';
   const SEARCH='<input class="sel qsearch" id="dpf-q" type="search" placeholder="Buscar pessoa" value="'+esc(S.dpF.q||'')+'" aria-label="Buscar pessoa">';
   if(!SLIM)h+='<div class="filters">'+(selHtml('dpf-vinculo',S.dpF.vinculo,[['','Todos os vínculos'],['CLT','CLT'],['CLT doméstica','CLT doméstica'],['PJ','PJ'],['MEI','MEI'],['Autônomo(a)','Autônomo(a)']],'Vínculo')+
     
@@ -30,6 +30,7 @@ function renderDP(){
   else if(TAB==='pag')h+=dpPag(people);
   else if(TAB==='mov')h+=dpMov(ids,SEARCH);
   else if(TAB==='esc')h+=dpEsc(people);
+  else if(TAB==='emp')h+=dpEmp(ids,SEARCH);
   else h+=dpOc(ids,SEARCH);
   el.innerHTML=wrapDp(h);
 }
@@ -42,8 +43,9 @@ function dpMenu(){
     mov:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
     esc:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
     fer:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    oc:'<path d="M12 4 3 19h18zM12 10v4M12 17v.5"/>'};
-  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['mov','Movimentações'],['pag','Pagamentos'],['oc','Ocorrências']];
+    oc:'<path d="M12 4 3 19h18zM12 10v4M12 17v.5"/>',
+    emp:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.5 9.5c-.6-.8-1.5-1.2-2.5-1.2-1.4 0-2.5.8-2.5 1.9 0 2.6 5 1.2 5 3.8 0 1.1-1.1 1.9-2.5 1.9-1.1 0-2-.5-2.6-1.3"/>'};
+  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['oc','Ocorrências'],['mov','Movimentações'],['pag','Pagamentos'],['emp','Empréstimos']];
   return '<nav class="neg-menu" aria-label="Departamento pessoal"><div class="nm-head"><div class="nm-mark">DP</div><div><b>Departamento pessoal</b><small>Funcionários e prestadores</small></div></div><div class="nm-list">'+
     L.map(([k,l])=>'<div class="nm-grp"><button class="nm-item nm-g'+on(k)+'" data-dp-tab="'+k+'">'+I(IC_[k])+'<b class="lbl">'+l+'</b></button></div>').join('')+'</div></nav>';
 }
@@ -76,6 +78,8 @@ function dpPag(people){
   }
   const rows=recs('dp-pag').filter(x=>x.competencia===ym&&ids.has(x.pessoa)).sort((a,b)=>refName('equipe',a.pessoa).localeCompare(refName('equipe',b.pessoa),'pt')||String(a.tipo).localeCompare(String(b.tipo)));
   const pago=rows.filter(x=>x.status==='Pago').reduce((a,x)=>a+(+x.valor||0),0),prev=rows.filter(x=>x.status!=='Pago').reduce((a,x)=>a+(+x.valor||0),0);
+  {const ou={};recs('dp-pag').filter(x=>x.status!=='Pago'&&x.competencia<ym&&x.competencia>=DP_PAG_INICIO&&ids.has(x.pessoa)).forEach(x=>{ou[x.competencia]=(ou[x.competencia]||0)+1;});const ks=Object.keys(ou).sort();
+   if(ks.length)h+='<div class="dp-av"><div class="bad"><b>Atenção</b><span>Ainda há pagamentos como Previsto em meses anteriores: '+ks.map(k=>'<button class="lnk" data-dp-month="'+esc(k)+'">'+esc(fmtYm(k))+' ('+ou[k]+')</button>').join(', ')+'.</span></div></div>';}
   h+='<div class="sumline"><span>Total do mês <b>'+fmtMoney(pago+prev)+'</b></span><span>Pago <b class="pos">'+fmtMoney(pago)+'</b></span><span>A pagar <b class="'+(prev?'warn':'')+'">'+fmtMoney(prev)+'</b></span></div>';
   if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhum pagamento em '+esc(fmtYm(ym))+'</b>Use “Gerar folha” para criar os pagamentos previstos de quem tem valor cadastrado, ou lance um pagamento avulso.</div></li></ul>'+dpPres(people,ym)+dpExtras(people,ym);
   h+='<ul class="list">'+rows.map(r=>{const late=r.status!=='Pago'&&r.dataPag&&r.dataPag<todayISO();
@@ -215,6 +219,20 @@ function dpOc(ids,SEARCH){
   if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhuma ocorrência</b>Atestados, faltas, atrasos e advertências aparecem aqui.</div></li></ul>';
   return h+'<ul class="list">'+rows.map(o=>rowBtn('dp-oc',o,'<span style="min-width:0"><span class="tt">'+esc(refName('equipe',o.pessoa))+' · '+esc(o.tipo)+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(o.data))+'</span>'+(+o.dias?'<span class="tag warn">'+esc(o.dias)+' dia'+(+o.dias>1?'s':'')+'</span>':'')+filesHtml(o.anexos)+'</span>'+(o.descricao?'<span class="desc-line">'+esc(String(o.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>',o.tipo==='Advertência'||o.tipo==='Falta'?'bad':o.tipo==='Elogio'?'ok':'warn')).join('')+'</ul>';
 }
+function dpEmpSaldo(r){return Math.max(0,(+r.valor||0)-(+r.pago||0));}
+function dpEmpAberto(r){return r.status!=='Quitado'&&dpEmpSaldo(r)>0;}
+function dpEmpRow(r,nome){const sal=dpEmpSaldo(r);const ab=dpEmpAberto(r);
+  return rowBtn('dp-emp',r,'<span style="min-width:0"><span class="tt">'+(nome?esc(refName('equipe',r.pessoa))+' · ':'')+esc(fmtMoney(r.valor))+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(r.data))+'</span>'+(+r.parcelas?'<span class="tag">'+esc(r.parcelas)+'x'+(+r.valorParcela?' de '+esc(fmtMoney(r.valorParcela)):'')+'</span>':'')+(ab?'<span class="tag warn">Saldo '+esc(fmtMoney(sal))+'</span>':'<span class="tag ok">Quitado</span>')+filesHtml(r.anexos)+'</span>'+(r.descricao?'<span class="desc-line">'+esc(String(r.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>',ab?'warn':'ok');}
+function dpEmp(ids,SEARCH){
+  const f=S.dpEmpSt;
+  const base=recs('dp-emp').filter(r=>ids.has(r.pessoa)&&(!S.dpFp||r.pessoa===S.dpFp));
+  const rows=base.filter(r=>!f||(f==='aberto'?dpEmpAberto(r):!dpEmpAberto(r))).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  const tot=base.filter(dpEmpAberto).reduce((a,r)=>a+dpEmpSaldo(r),0);
+  const tb='<div class="toolbar">'+dpPessoaSel(ids)+selHtml('dp-emp-st',f,[['','Todos'],['aberto','Em aberto'],['quitado','Quitados']],'Situação')+'<span class="hint" style="margin-left:6px">'+rows.length+' empréstimo'+(rows.length===1?'':'s')+' · saldo a receber <b>'+esc(fmtMoney(tot))+'</b></span>'+(SEARCH||'')+'</div>';
+  if(!rows.length)return tb+'<ul class="list"><li><div class="empty"><b>Nenhum empréstimo</b>Os empréstimos feitos à equipe aparecem aqui, com o saldo a receber.</div></li></ul>';
+  const bar=r=>{const v=+r.valor||0,pg=Math.min(+r.pago||0,v),pc=v?Math.round(pg/v*100):0;return '<div style="min-width:130px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span>'+esc(fmtMoney(pg))+'</span><b>'+pc+'%</b></div><div style="height:7px;border-radius:99px;background:rgba(128,128,128,.2);overflow:hidden;margin-top:3px"><div style="height:100%;width:'+pc+'%;background:var(--ok,#2e9d5b)"></div></div></div>';};
+  return tb+'<div class="tbl-wrap" style="overflow:auto"><table class="pac"><thead><tr><th>Pessoa</th><th>Data</th><th class="c">Valor</th><th class="c">Parcelas</th><th>Devolvido</th><th class="c">Saldo</th><th>Situação</th></tr></thead><tbody>'+rows.map(r=>'<tr data-rec="dp-emp:'+esc(r.id)+'" tabindex="0" style="cursor:pointer"><td>'+esc(refName('equipe',r.pessoa))+'</td><td>'+esc(fmtDateFull(r.data))+'</td><td class="c">'+esc(fmtMoney(r.valor))+'</td><td class="c">'+(+r.parcelas?esc(r.parcelas)+'x'+(+r.valorParcela?' '+esc(fmtMoney(r.valorParcela)):''):'—')+'</td><td>'+bar(r)+'</td><td class="c"><b>'+esc(fmtMoney(dpEmpSaldo(r)))+'</b></td><td><span class="tag '+(dpEmpAberto(r)?'warn':'ok')+'">'+(dpEmpAberto(r)?'Em aberto':'Quitado')+'</span></td></tr>').join('')+'</tbody><tfoot><tr><td colspan="5" style="text-align:right">Total a receber</td><td class="c"><b>'+esc(fmtMoney(tot))+'</b></td><td></td></tr></tfoot></table></div>';
+}
 function fichaHtml(pid){
   const p=personById(pid);const t0=todayISO();const sal=salarioAtual(pid);const hist=salaryHist(pid);
   const pags=recs('dp-pag').filter(x=>x.pessoa===pid).sort((a,b)=>String(b.competencia).localeCompare(String(a.competencia))||String(a.tipo).localeCompare(String(b.tipo)));
@@ -225,12 +243,14 @@ function fichaHtml(pid){
   const eNext=e?null:recs('dp-esc').filter(x=>x.pessoa===pid&&x.inicio&&x.inicio>t0).sort((a,b)=>String(a.inicio).localeCompare(String(b.inicio)))[0];
   const escNote=e&&e.inicio&&e.inicio>week[0]?' · vale a partir de '+fmtDateFull(e.inicio):eNext?' · escala cadastrada começa em '+fmtDateFull(eNext.inicio):'';
   let h='<div class="wrap"><div class="back-row"><button class="back-home" data-person="">‹ Voltar para a equipe</button></div>';
-  h+='<div class="plan-hero"><div style="display:flex;gap:14px;align-items:center"><span class="avatar lg">'+esc(initials(p.nome))+'</span><div><h2>'+esc(p.nome)+'</h2><p>'+esc([p.relacao,p.vinculo,p.local?refName('casas',p.local):'',p.executivo?'Ligado(a) a '+EXEC[p.executivo]:'',p.esocial?'eSocial em nome de '+EXEC[p.esocial]:'',p.vt==='Sim'?'VT'+(+p.vtValor?' '+fmtMoney(p.vtValor)+'/mês':''):''].filter(Boolean).join(' · ')||'Complete o cadastro')+(p.contato?' · '+esc(p.contato):'')+'</p></div></div>'+
+  h+='<div class="plan-hero"><div style="display:flex;gap:14px;align-items:center"><span class="avatar lg">'+esc(initials(p.nome))+'</span><div><h2>'+esc(p.nome)+'</h2><p>'+esc([p.relacao,p.vinculo,p.local?refName('casas',p.local):'',p.executivo?'Ligado(a) a '+EXEC[p.executivo]:'',p.esocial?'eSocial em nome de '+EXEC[p.esocial]:'',p.vt==='Sim'?'VT'+(+p.vtValor?' '+fmtMoney(p.vtValor)+'/mês':''):''].filter(Boolean).join(' · ')||'Complete o cadastro')+([p.telefone,p.email].filter(Boolean).map(x=>' · '+esc(x)).join(''))+'</p></div></div>'+
     '<div class="acts">'+subDrive(p,'dp')+'<button class="btn" data-edit="pessoas:'+esc(pid)+'">Editar cadastro</button><button class="btn primary" data-new-rec="dp-pag" data-pre-pessoa="'+esc(pid)+'">Lançar pagamento</button></div></div>';
-  h+='<div class="kpis">'+kpi(remLabel(p),sal!=null?fmtMoney(sal):'—','',hist.length>1?'desde '+fmtDateFull(hist.filter(m=>m.data<=t0).slice(-1)[0].data):'')+kpi('Admissão',admissao(pid)?fmtDateFull(admissao(pid)):semAdmissao(pid)?'Não informada':'—')+kpi('Pago em '+ano,fmtMoney(pagoAno),'pos')+kpi('Hoje',s?s.l:(isActive(pid)?'—':'Desligado(a)'))+kpi('Ocorrências em '+ano,String(ocs.filter(o=>String(o.data||'').startsWith(ano)).length),'',ocs.filter(o=>String(o.data||'').slice(0,7)===ymOf(t0)).length+' neste mês')+'</div>';
+  h+='<div class="kpis">'+kpi(remLabel(p),sal!=null?fmtMoney(sal):'—','',(()=>{const hv=hist.filter(m=>m.data<=t0);return hist.length>1&&hv.length?'desde '+fmtDateFull(hv[hv.length-1].data):'';})())+kpi('Admissão',admissao(pid)?fmtDateFull(admissao(pid)):semAdmissao(pid)?'Não informada':'—')+kpi('Pago em '+ano,fmtMoney(pagoAno),'pos')+kpi('Hoje',s?s.l:(isActive(pid)?'—':'Desligado(a)'))+kpi('Ocorrências em '+ano,String(ocs.filter(o=>String(o.data||'').startsWith(ano)).length),'',ocs.filter(o=>String(o.data||'').slice(0,7)===ymOf(t0)).length+' neste mês')+'</div>';
   h+='<div class="grid2"><div style="display:flex;flex-direction:column;gap:22px">';
   h+='<div><div class="sec-h"><h3>Pagamentos</h3><span class="cnt">'+pags.length+'</span></div>'+(pags.length?'<ul class="list">'+pags.slice(0,24).map(r=>rowBtn('dp-pag',r,'<span style="min-width:0"><span class="tt">'+esc(fmtYm(r.competencia))+' · '+esc(r.tipo||'Pagamento')+'</span><span class="mm"><span class="tag '+(ST_TONE[r.status]||'')+'">'+esc(r.status||'Previsto')+'</span>'+(r.dataPag?'<span class="tag">'+esc(fmtDateFull(r.dataPag))+'</span>':'')+filesHtml(r.anexos)+'</span></span><span class="rr"><b>'+fmtMoney(r.valor)+'</b></span>',r.status==='Pago'?'ok':'warn')).join('')+'</ul>':'<ul class="list"><li><div class="empty">Nenhum pagamento lançado.</div></li></ul>')+'</div>';
   h+='<div><div class="sec-h"><h3>Ocorrências e atestados</h3><span class="cnt">'+ocs.length+'</span><span class="act"><button class="btn sm ghost" data-new-rec="dp-oc" data-pre-pessoa="'+esc(pid)+'">Registrar</button></span></div>'+(ocs.length?byYear(ocs,o=>rowBtn('dp-oc',o,'<span style="min-width:0"><span class="tt">'+esc(o.tipo)+' · '+esc(fmtDateFull(o.data))+'</span><span class="mm">'+(+o.dias?'<span class="tag warn">'+esc(o.dias)+' dia(s)</span>':'')+filesHtml(o.anexos)+'</span>'+(o.descricao?'<span class="desc-line">'+esc(String(o.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>','warn')):'<ul class="list"><li><div class="empty">Nenhuma ocorrência.</div></li></ul>')+'</div>';
+  {const emps=recs('dp-emp').filter(x=>x.pessoa===pid).sort((a,b)=>String(b.data).localeCompare(String(a.data)));const sd=emps.filter(dpEmpAberto).reduce((a,r)=>a+dpEmpSaldo(r),0);
+   h+='<div><div class="sec-h"><h3>Empréstimos</h3><span class="cnt">'+emps.length+'</span>'+(sd?'<span class="hint" style="margin-left:8px">saldo '+esc(fmtMoney(sd))+'</span>':'')+'<span class="act"><button class="btn sm ghost" data-new-rec="dp-emp" data-pre-pessoa="'+esc(pid)+'">Registrar</button></span></div>'+(emps.length?'<ul class="list">'+emps.map(r=>dpEmpRow(r,false)).join('')+'</ul>':'<ul class="list"><li><div class="empty">Nenhum empréstimo.</div></li></ul>')+'</div>';}
   h+='</div><div style="display:flex;flex-direction:column;gap:22px">';
   h+='<div class="panel"><div class="sec-h"><h3>Escala</h3><span class="act"><button class="btn sm ghost" data-'+(e?'rec="dp-esc:'+esc(e.id)+'"':'new-rec="dp-esc" data-pre-pessoa="'+esc(pid)+'"')+'>'+(e?'Editar':'Cadastrar')+'</button></span></div><p class="hint" style="margin:0 0 10px">'+esc(escalaText(e)+escNote)+'</p>'+(escLink(e)?'<p style="margin:0 0 10px">'+escLink(e)+'</p>':'')+
      '<div class="mini-week">'+week.map(d=>{const st=dayStatus(pid,d);const dt=new Date(d+'T12:00:00');return '<div class="'+(d===t0?'today':'')+'"><span>'+DOW[dt.getDay()]+'</span>'+(st?'<i class="st-'+st.k+'" title="'+esc(st.l)+'"></i>':'<i></i>')+'</div>';}).join('')+'</div></div>';
@@ -269,11 +289,11 @@ function feriasInfo(p){
   let k=0;while(addYears(adm,k+1)<=t0)k++;
   const curIni=addYears(adm,k);const proxDireito=addYears(adm,k+1);
   const fer=movsOf(p.id).filter(m=>m.tipo==='Férias');
-  const dias=m=>m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;
+  const dias=ferDias;
   let venc=null;
   if(k>=1){const ini=curIni,lim=addDays(addYears(curIni,1),-1);const fs=fer.filter(m=>m.data>=ini&&m.data<=lim);
     const usados=fs.filter(m=>m.data<=t0).reduce((a,m)=>a+dias(m),0),agend=fs.filter(m=>m.data>t0).reduce((a,m)=>a+dias(m),0);
-    venc={per:addYears(adm,k-1).slice(0,4)+'/'+curIni.slice(2,4),usados:Math.min(30,usados),agend:Math.min(30-Math.min(30,usados),agend),falta:Math.max(0,30-usados-agend),lim,ult:fs.filter(m=>m.data<=t0).map(m=>m.data).pop()||'',progd:fs.filter(m=>m.data>t0).map(m=>m.data)[0]||''};}
+    venc={per:addYears(adm,k-1).slice(0,4)+'/'+curIni.slice(2,4),usados:Math.min(30,usados),agend:Math.min(30-Math.min(30,usados),agend),falta:Math.max(0,30-usados-agend),lim,semFim:fs.filter(m=>!(m.dataFim&&m.dataFim>=m.data)).map(m=>m.data),ult:fs.filter(m=>m.data<=t0).map(m=>m.data).pop()||'',progd:fs.filter(m=>m.data>t0).map(m=>m.data)[0]||''};}
   const prox=fer.filter(m=>m.data>t0).sort((a,b)=>a.data.localeCompare(b.data));
   return {adm,curIni,proxDireito,venc,prox,sal:salarioAtual(p.id)};
 }
@@ -310,14 +330,14 @@ document.addEventListener('click',async e=>{const add=e.target.closest&&e.target
   if(!(q>0)){toast('Informe quantas diárias usou.');return;}
   list.push({id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),data:d,qtd:q,obs:o,criadoEm:new Date().toISOString()});
   await pacUsoSave(p,list,q+(q>1?' diárias debitadas':' diária debitada')+' em '+fmtDateFull(d));});
-function feriasProx(){const t0=todayISO();const out=[];equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;f.prox.forEach(m=>{const dias=m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;out.push({p,m,dias,em:dDiff(t0,m.data),pagar:addDays(m.data,-2),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null});});});return out.sort((a,b)=>a.m.data.localeCompare(b.m.data));}
+function feriasProx(){const t0=todayISO();const out=[];equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;f.prox.forEach(m=>{const dias=ferDias(m);out.push({p,m,dias,em:dDiff(t0,m.data),pagar:addDays(m.data,-2),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null});});});return out.sort((a,b)=>a.m.data.localeCompare(b.m.data));}
 function dpEventos(){const t0=todayISO();const y=+t0.slice(0,4);
   const ev=[];const dc=decimo(y);
   if(dc.length&&t0<=y+'-12-20'){
     if(t0<=y+'-11-30')ev.push({pay:1,d:y+'-11-30',t:'13º salário · 1ª parcela',v:dc.reduce((a,r)=>a+r.p1,0),s:dc.map(r=>String(r.p.nome).split(' ')[0]+(r.av<12?' ('+r.av+'/12)':'')).join(', ')+'.'});
     ev.push({pay:1,d:y+'-12-20',t:'13º salário · 2ª parcela',v:dc.reduce((a,r)=>a+r.p2,0),s:'INSS e IR são descontados nesta parcela.'});}
   equipe().forEach(p=>{const f=feriasInfo(p);if(!f)return;const nm=String(p.nome).split(' ')[0];
-    f.prox.forEach(m=>{const dias=m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;ev.push({p,pay:1,d:m.data,t:'Férias '+nm+' · '+fmtDateFull(m.data)+(m.dataFim?' a '+fmtDateFull(m.dataFim):''),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null,s:dias+' dias. Pagar até '+fmtDateFull(addDays(m.data,-2))+'.'});});
+    f.prox.forEach(m=>{const dias=ferDias(m);ev.push({p,pay:1,d:m.data,t:'Férias '+nm+' · '+fmtDateFull(m.data)+(m.dataFim?' a '+fmtDateFull(m.dataFim):''),v:f.sal?Math.round(f.sal*dias/30*4/3*100)/100:null,s:dias+' dias. Pagar até '+fmtDateFull(addDays(m.data,-2))+'.'});});
     if(f.venc&&f.venc.falta>0)ev.push({p,d:f.venc.lim,t:'Limite das férias de '+nm+' ('+f.venc.per+')',v:null,s:f.venc.falta+' dia(s) ainda sem data. Depois desse dia, as férias são pagas em dobro.',bad:dDiff(t0,f.venc.lim)<=90});
   });
   const MV={'Reajuste salarial':'Reajuste','Dissídio':'Dissídio','Alteração contratual':'Alteração contratual','Mudança de função':'Mudança de função','Afastamento':'Afastamento','Desligamento':'Desligamento','Admissão':'Admissão','Outro':'Movimentação'};
@@ -333,8 +353,21 @@ function dpAvisos(){const t0=todayISO();const y=+t0.slice(0,4);const av=[];const
   equipe().forEach(p=>{const f=feriasInfo(p);if(f&&f.venc&&f.venc.falta>0&&dDiff(t0,f.venc.lim)<=60)av.push({d:f.venc.lim,bad:true,t:nm(p)+' tem '+f.venc.falta+' dia(s) de férias sem data e precisa tirar até '+fmtDateFull(f.venc.lim)+'. Depois disso, paga em dobro.'});});
   const dc=decimo(y);if(dc.length){[[y+'-11-30','1ª parcela do 13º',dc.reduce((a,r)=>a+r.p1,0)],[y+'-12-20','2ª parcela do 13º',dc.reduce((a,r)=>a+r.p2,0)]].forEach(([d,t,v])=>{const e=dDiff(t0,d);if(e>=0&&e<=30)av.push({d,bad:e<=7,t:t+' vence em '+fmtDateFull(d)+' (em '+e+' dia'+(e===1?'':'s')+') para '+dc.length+' pessoa(s).'});});}
   dpEventos().filter(e=>e.mov&&dDiff(t0,e.d)<=30).forEach(e=>av.push({d:e.d,bad:false,t:e.t+' em '+fmtDateFull(e.d)+'.'}));
+  dpPagPend().forEach(g=>av.push(g));
   return av.sort((a,b)=>a.d.localeCompare(b.d));}
-function dpAvisosHtml(){const av=dpAvisos();if(!av.length)return '';return '<div class="dp-av">'+av.map(a=>'<div class="'+(a.bad?'bad':'')+'"><b>'+(a.bad?'Atenção':'Aviso')+'</b><span>'+esc(a.t)+'</span></div>').join('')+'</div>';}
+/* Pagamentos previstos que já venceram, vencem em até 7 dias ou são de meses passados sem data: agrupados por tipo, competência e data. */
+/* Início do uso do Painel para pagamentos: lançamentos de competências anteriores são histórico/testes e não geram aviso. */
+const DP_PAG_INICIO='2026-12';
+function dpPagPend(){const t0=todayISO();const ym=ymOf(t0);const eq=new Set(equipe().map(p=>p.id));const g={};
+  recs('dp-pag').filter(x=>x.status!=='Pago'&&eq.has(x.pessoa)&&String(x.competencia||'')>=DP_PAG_INICIO).forEach(x=>{const dp=x.dataPag||'';let st;
+    if(dp&&dp<t0)st='late';else if(dp&&dDiff(t0,dp)<=7)st='soon';else if(!dp&&String(x.competencia||'')<ym)st='nodate';else return;
+    const k=st+'|'+(x.tipo||'Pagamento')+'|'+x.competencia+'|'+dp;(g[k]=g[k]||{st,tipo:x.tipo||'Pagamento',ym:x.competencia,dp,v:0,n:[]});g[k].v+=(+x.valor||0);g[k].n.push(fnm(x.pessoa));});
+  return Object.values(g).map(o=>{const q=o.n.length;const qual=o.tipo+' de '+fmtYm(o.ym)+' ('+o.n.join(', ')+', '+fmtMoney(o.v)+')';const e=o.dp?dDiff(t0,o.dp):0;
+    const t=o.st==='late'?qual+(q>1?' venceram':' venceu')+' em '+fmtDateFull(o.dp)+' e '+(q>1?'continuam':'continua')+' como Previsto. Pague ou marque como pago.'
+      :o.st==='soon'?qual+(q>1?' vencem':' vence')+(e===0?' hoje':e===1?' amanhã':' em '+fmtDateFull(o.dp)+' (em '+e+' dias)')+'.'
+      :qual+(q>1?' ainda estão':' ainda está')+' como Previsto, sem data de pagamento. Marque como pago ou informe a data.';
+    return {d:o.dp||t0,bad:o.st!=='soon'||e<=2,t,ym:o.ym};});}
+function dpAvisosHtml(){const av=dpAvisos();if(!av.length)return '';return '<div class="dp-av">'+av.map(a=>'<div class="'+(a.bad?'bad':'')+'"><b>'+(a.bad?'Atenção':'Aviso')+'</b><span>'+esc(a.t)+(a.ym?' <button class="lnk" data-dp-month="'+esc(a.ym)+'">Ver pagamentos de '+esc(fmtYm(a.ym))+' ›</button>':'')+'</span></div>').join('')+'</div>';}
 function dpIndKpis(active,foraL){const t0=todayISO();const y=t0.slice(0,4);
   const oc=ocResumo(y+'-01-01',t0);const fd=oc.reduce((a,r)=>a+r.fd,0),ad=oc.reduce((a,r)=>a+r.ad,0);
   const dc=decimo(+y);const d1=dc.reduce((a,r)=>a+r.p1,0),d2=dc.reduce((a,r)=>a+r.p2,0);
@@ -372,8 +405,9 @@ document.addEventListener('change',async e=>{const el=e.target.closest&&e.target
 function diasNoMes(pid,ym){const [y,m]=ym.split('-').map(Number);const n=new Date(y,m,0).getDate();let c=0;for(let d=1;d<=n;d++){const ds=ym+'-'+pad2(d);if(worksOn(escalaOf(pid,ds),ds)===true)c++;}return c;}
 async function gerarFolha(){
   if(!S.db)return;const ym=S.dpMonth;const ids=new Set(dpFiltered().map(p=>p.id));const now=new Date().toISOString();
-  const items=[],semEsc=[];
+  const items=[],semEsc=[],semVT=[];
   equipe().filter(p=>ids.has(p.id)&&isActive(p.id)).forEach(p=>{
+    if(p.vt==='Sim'&&!+p.vtValor)semVT.push(String(p.nome||'').split(' ')[0]);
     if(p.vt==='Sim'&&+p.vtValor&&!recs('dp-pag').some(x=>x.pessoa===p.id&&x.competencia===ym&&x.tipo==='Vale-transporte'))items.push({pessoa:p.id,competencia:ym,tipo:'Vale-transporte',valor:+p.vtValor,status:'Previsto',dataPag:'',forma:'',obs:'Valor do cadastro',anexos:[],criadoEm:now,atualizadoEm:now});
     const v=salarioAtual(p.id);if(v==null)return;const rm=p.remun||'Salário mensal';if(rm==='Por diária')return;const tipo=FOLHA_T[rm]||'Salário';
     if(recs('dp-pag').some(x=>x.pessoa===p.id&&x.competencia===ym&&x.tipo===tipo))return;
@@ -381,16 +415,18 @@ async function gerarFolha(){
     if(rm==='Por sessão'||rm==='Por diária'){const n=diasNoMes(p.id,ym);if(!n){semEsc.push(String(p.nome||'').split(' ')[0]);return;}
       valor=Math.round(n*v*100)/100;diasTrab=presDias(p,ym);obs=n+(rm==='Por sessão'?(n>1?' sessões':' sessão'):(n>1?' diárias':' diária'))+' × '+fmtMoney(v)+', pela escala. Ajuste se houve falta ou dia a mais.';}
     const it={pessoa:p.id,competencia:ym,tipo,valor,status:'Previsto',dataPag:'',forma:'',obs,anexos:[],criadoEm:now,atualizadoEm:now};if(diasTrab)it.diasTrab=diasTrab;items.push(it);});
-  if(!items.length){toast(semEsc.length?'Sem escala no mês para '+semEsc.join(', ')+'.':'Nada a gerar: todos já têm a remuneração lançada em '+fmtYm(ym)+' ou não têm valor cadastrado.');return;}
+  const vtMsg=semVT.length?' · VT sem valor no cadastro: '+semVT.join(', '):'';
+  if(!items.length){toast((semEsc.length?'Sem escala no mês para '+semEsc.join(', ')+'.':'Nada a gerar: todos já têm a remuneração lançada em '+fmtYm(ym)+' ou não têm valor cadastrado.')+vtMsg);return;}
   try{for(const it of items)await S.db.collection('dp-pag').doc(uid('pag')).set(it);
-    toast(items.length+' pagamento(s) previsto(s) em '+fmtYm(ym)+(semEsc.length?' · sem escala: '+semEsc.join(', '):''));}
+    toast(items.length+' pagamento(s) previsto(s) em '+fmtYm(ym)+(semEsc.length?' · sem escala: '+semEsc.join(', '):'')+vtMsg);}
   catch(e){toast('Não foi possível gerar agora. Tente de novo em instantes.');}
 }
 
 
 /* ---------- Aba Férias ---------- */
-const ferDias=m=>m.dataFim&&m.dataFim>m.data?dDiff(m.data,m.dataFim)+1:30;
-const ferFim=m=>m.dataFim&&m.dataFim>m.data?m.dataFim:addDays(m.data,29);
+/* Férias sem data de volta (ex.: vindas do eSocial, que só informa o início) contam 30 dias, mas são sinalizadas para conferir. */
+const ferDias=m=>m.dataFim&&m.dataFim>=m.data?dDiff(m.data,m.dataFim)+1:30;
+const ferFim=m=>m.dataFim&&m.dataFim>=m.data?m.dataFim:addDays(m.data,29);
 const fnm=pid=>{const p=personById(pid);return p?String(p.nome).split(' ')[0]:String(pid||'');};
 const COV_COMO={extra:'extra pago à parte',pacote:'do pacote de diárias',diaria:'diária avulsa',troca:'sem custo / troca de folga'};
 function covNome(c){return c.pessoa?fnm(c.pessoa):(c.nome||'?');}
@@ -412,9 +448,9 @@ function dpFer(){const t0=todayISO();const rows=ferRows();
   if(!rows.length)return '<ul class="list"><li><div class="empty"><b>Nenhuma funcionária CLT ativa com data de admissão</b>A admissão vem da movimentação "Admissão" ou "Registro inicial".</div></li></ul>';
   let h='<div class="panel"><div class="sec-h"><h3>Férias por funcionária CLT</h3><span class="cnt">'+rows.length+'</span></div><div class="fer-tw"><table class="pac fer-t"><thead><tr><th>Pessoa</th><th>Situação</th><th>Férias a tirar</th><th>Tirar até</th><th>Próximas férias</th><th>Cobertura</th><th>Período atual</th></tr></thead><tbody>'+
   rows.map(({p,f,v,prox,meses,st})=>{
-    const tirar=v?esc(v.per)+' · '+(v.falta?'<b class="warn">'+v.falta+' sem data</b>':'')+(v.usados?(v.falta?', ':'')+v.usados+' tirados':'')+(v.agend?((v.falta||v.usados)?', ':'')+v.agend+' programados':'')+ferBar(v):'<span class="sub">ainda não tem</span>';
+    const tirar=v?esc(v.per)+' · '+(v.falta?'<b class="warn">'+v.falta+' sem data</b>':'')+(v.usados?(v.falta?', ':'')+v.usados+' tirados':'')+(v.agend?((v.falta||v.usados)?', ':'')+v.agend+' programados':'')+(v.semFim.length?'<br><small class="warn-t">sem data de volta'+(v.semFim.length>1?' (várias)':' ('+esc(fmtDateFull(v.semFim[0]))+')')+': contando 30 dias</small>':'')+ferBar(v):'<span class="sub">ainda não tem</span>';
     const ate=v?(v.falta?'<b>'+esc(fmtDateFull(v.lim))+'</b>':'<span class="sub">em dia</span>'):'<span class="sub">—</span>';
-    const px=prox.length?prox.map(m=>'<div class="fer-px"><b>'+esc(fmtDateFull(m.data))+' a '+esc(fmtDateFull(ferFim(m)))+'</b><br><small class="sub">'+ferDias(m)+' dias · volta '+esc(fmtDateFull(addDays(ferFim(m),1)))+(m.data>t0?' · pagar até '+esc(fmtDateFull(addDays(m.data,-2))):' · em andamento')+'</small></div>').join(''):'<span class="sub">nada marcado</span>';
+    const px=prox.length?prox.map(m=>'<div class="fer-px"><b>'+esc(fmtDateFull(m.data))+' a '+esc(fmtDateFull(ferFim(m)))+(m.dataFim?'':' ?')+'</b><br><small class="sub">'+ferDias(m)+' dias · volta '+esc(fmtDateFull(addDays(ferFim(m),1)))+(m.data>t0?' · pagar até '+esc(fmtDateFull(addDays(m.data,-2))):' · em andamento')+'</small></div>').join(''):'<span class="sub">nada marcado</span>';
     const cv=prox.length?prox.map(m=>{const cs=Array.isArray(m.cobertura)?m.cobertura:[];
       return '<div class="fer-cv">'+cs.map(c=>'<span class="fer-chip"><span class="tag '+(c.como==='pacote'?'pess':'info')+'" title="'+esc(COV_COMO[c.como]||'')+(c.obs?' · '+esc(c.obs):'')+'">'+esc(covNome(c))+'</span> <small class="sub">'+esc(fmtDateFull(c.de).slice(0,5))+'–'+esc(fmtDateFull(c.ate).slice(0,5))+'</small><button class="x" data-fcov-del="'+esc(m.id)+'" data-fcov-id="'+esc(c.id)+'" title="Remover cobertura" aria-label="Remover cobertura">×</button></span>').join('')+
         (cs.length?'':'<small class="sub warn-t">sem cobertura</small> ')+'<button class="btn sm ghost" data-fcov-new="'+esc(m.id)+'">+ Cobertura</button></div>';}).join(''):'<span class="sub">—</span>';
@@ -480,6 +516,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.c
 function ferResumoHtml(){const t0=todayISO();const rows=ferRows();if(!rows.length)return '';const it=[];
   rows.forEach(({p,f,v,prox})=>{const nm=String(p.nome).split(' ')[0];
     if(v&&v.falta>0)it.push({bad:dDiff(t0,v.lim)<=90,t:nm+': '+v.falta+' dia(s) de férias sem data, tirar até '+fmtDateFull(v.lim)});
+    if(v)v.semFim.forEach(d=>it.push({t:nm+': férias de '+fmtDateFull(d)+' sem data de volta (contando 30 dias). Se foram 15, preencha o "Até" na movimentação para o saldo ficar certo.'}));
     prox.filter(m=>dDiff(t0,m.data)<=60).forEach(m=>{const sc=!(Array.isArray(m.cobertura)&&m.cobertura.length);it.push({bad:sc&&dDiff(t0,m.data)<=15,t:nm+(m.data>t0?' sai em '+fmtDateFull(m.data)+' e volta '+fmtDateFull(addDays(ferFim(m),1))+' · pagar até '+fmtDateFull(addDays(m.data,-2)):' está de férias até '+fmtDateFull(ferFim(m)))+(sc?' · sem cobertura':'')});});
     if(dDiff(t0,f.proxDireito)<=60)it.push({t:nm+(v?' ganha mais 30 dias':' ganha as primeiras férias')+' em '+fmtDateFull(f.proxDireito)});});
   return '<div class="panel"><div class="sec-h"><h3>Férias: lembretes</h3><span class="act"><button class="btn sm ghost" data-dp-tab="fer">Ver férias ›</button></span></div>'+

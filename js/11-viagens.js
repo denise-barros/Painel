@@ -188,9 +188,9 @@ function viaMenu(){
     '<button class="nm-item nm-g'+on('ger')+'" data-via-tab="ger"><span class="nm-chip">'+CHK+'</span><b class="lbl">Visão geral</b>'+cnt(nd)+'</button>'+
     '<div class="nm-grp"><button class="nm-item nm-g'+on('viagens')+'" data-via-tab="viagens"><span class="nm-chip">'+IC.via+'</span><b class="lbl">Executivos e família</b>'+cnt(n1)+'</button></div>'+
     '<div class="nm-grp"><button class="nm-item nm-g'+on('vis')+'" data-via-tab="vis"><span class="nm-chip">'+PERS+'</span><b class="lbl">Visitantes</b>'+cnt(n3)+'</button></div>'+
+    '<div class="nm-grp"><button class="nm-item nm-g'+on('cred')+'" data-via-tab="cred"><span class="nm-chip">'+TICKET+'</span><b class="lbl">Créditos e estornos</b>'+cnt(n2)+'</button></div>'+
     '<div class="nm-grp"><button class="nm-item nm-g'+on('pts')+'" data-via-tab="pts"><span class="nm-chip">'+STAR+'</span><b class="lbl">Programas de pontos</b>'+cnt(recs('via-pts').filter(r=>ptsExecOk(r)&&r.venc&&r.venc<=addDays(t0,30)&&!ptsCiente(r)).length)+'</button></div>'+
-    '<div class="nm-grp"><button class="nm-item nm-g'+on('hot')+'" data-via-tab="hot"><span class="nm-chip">'+BED+'</span><b class="lbl">Preferência de hotéis</b></button></div>'+
-    '<div class="nm-grp"><button class="nm-item nm-g'+on('cred')+'" data-via-tab="cred"><span class="nm-chip">'+TICKET+'</span><b class="lbl">Créditos e estornos</b>'+cnt(n2)+'</button></div></div></nav>';
+    '<div class="nm-grp"><button class="nm-item nm-g'+on('hot')+'" data-via-tab="hot"><span class="nm-chip">'+BED+'</span><b class="lbl">Preferência de hotéis</b></button></div></div></nav>';
 }
 function renderVia(){
   const el=$('#v-via');
@@ -693,7 +693,7 @@ function openCad(c,id,pre){
     if(f.opts)return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><select id="'+fid+'">'+f.opts.map(o=>'<option value="'+esc(o)+'"'+((v||'')===o?' selected':'')+'>'+esc(f.lab?(o?f.lab(o):'—'):(o||'—'))+'</option>').join('')+'</select></div>';
     if(f.long)return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><textarea id="'+fid+'">'+esc(v||'')+'</textarea></div>';
     if(f.t==='money')return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><input id="'+fid+'" inputmode="decimal" data-money value="'+esc(moneyFmtInput(v))+'" placeholder="0,00" autocomplete="off"></div>';
-    return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><input id="'+fid+'" value="'+esc(v||'')+'" placeholder="'+esc(f.ph||'')+'" autocomplete="off"></div>';}).join('');
+    return '<div class="fld"><label for="'+fid+'">'+esc(f.l)+'</label><input id="'+fid+'"'+(f.t==='tel'?' type="tel" inputmode="tel"':f.t==='email'?' type="email" inputmode="email"':'')+' value="'+esc(v||'')+'" placeholder="'+esc(f.ph||'')+'" autocomplete="off"></div>';}).join('');
   drawerShell(r?r.nome:'Adicionar '+C.one,body,
     (r?'<button class="btn danger" id="cf-del">Excluir</button>':'')+'<span class="grow"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="cf-save">'+(r?'Salvar':'Adicionar')+'</button>',!!r);
 }
@@ -718,7 +718,7 @@ async function delCad(){
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   if(e.target.closest('a[href]'))return;
-  const t=e.target.closest('[data-ov-tick],[data-neg-new],[data-via-pais-ck],[data-via-sel],[data-via-exec],[data-via-tab],[data-via-hsub],[data-via-cid-clear],[data-via-fav],[data-via-favf],[data-via-pts-ok],[data-via-pts-ciente],[data-via-par-clear],[data-via-reemb],[data-via-reemb-vis],[data-via-reemb-all],[data-via-ckdel],[data-via-ckadd],[data-fam-p],[data-fam-tab],[data-brd-exec],[data-brd-b],[data-brd-tab],[data-sau-p],[data-sau-tab],[data-neg-e],[data-neg-tab],[data-retorno],[data-comprou],[data-lancar-reemb],[data-obr-done],[data-fin-reemb],[data-task],[data-unfile],#syncDrive,[data-done],[data-rec],[data-new-rec],[data-person],[data-dp-tab],[data-dp-month],[data-dp-pagview],[data-dp-week],[data-fac-tab],[data-fac-ativo],#dp-gerar,#rf-save,#rf-del,[data-nav],[data-go],[data-exec],[data-cad-tab],[data-edit],[data-add],[data-new-cat],[data-close],[data-hit],#newTask,#nt-save,#nt-newsub-ok,#cf-save,#cf-del');
+  const t=e.target.closest('[data-ov-tick],[data-neg-new],[data-via-pais-ck],[data-via-sel],[data-via-exec],[data-via-tab],[data-via-hsub],[data-via-cid-clear],[data-via-fav],[data-via-favf],[data-via-pts-ok],[data-via-pts-ciente],[data-via-par-clear],[data-via-reemb],[data-via-reemb-vis],[data-via-reemb-all],[data-via-ckdel],[data-via-ckadd],[data-fam-p],[data-fam-tab],[data-brd-exec],[data-brd-b],[data-brd-tab],[data-sau-p],[data-sau-tab],[data-neg-e],[data-neg-tab],[data-retorno],[data-comprou],[data-lancar-reemb],[data-obr-done],[data-fin-reemb],[data-task],[data-unfile],#syncDrive,[data-done],[data-rec],[data-new-rec],[data-person],[data-dp-tab],[data-dp-month],[data-dp-pagview],[data-dp-empview],[data-dp-week],[data-fac-tab],[data-fac-ativo],#dp-gerar,#rf-save,#rf-del,[data-nav],[data-go],[data-exec],[data-cad-tab],[data-edit],[data-add],[data-new-cat],[data-close],[data-hit],#newTask,#nt-save,#nt-newsub-ok,#cf-save,#cf-del');
   if(!t){if(!e.target.closest('.search'))$('#results').hidden=true;return;}
   if(t.dataset.viaPaisCk!=null){const v=viaById(t.dataset.viaPaisCk);if(!v)return;const ck=viaCheck(v);const add=paisItens(paisById(v.pais)).filter(x=>!ck.some(c=>c.t===x)).map(x=>({t:x,done:false}));return viaCkSave(v,ck.concat(add));}
   if(t.dataset.viaSel!=null){S.viaSel=t.dataset.viaSel||null;if(S.view!=='via')return go('via');renderVia();$('#v-via').scrollTop=0;return;}
@@ -759,7 +759,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.newRec!=null){const pre={};if(t.dataset.newRec==='via-hotel')pre.ambito=S.viaHot==='Internacional'?'Internacional':'Nacional';if(t.dataset.prePessoa)pre.pessoa=t.dataset.prePessoa;else if(S.view==='dp'&&S.dpPerson)pre.pessoa=S.dpPerson;if(t.dataset.newRec.startsWith('fac')&&S.facF.ativo)pre.ativo=S.facF.ativo;if(t.dataset.newRec==='dp-pag')pre.competencia=S.dpMonth;if(t.dataset.preTipo)pre.tipo=t.dataset.preTipo;if(t.dataset.newRec.startsWith('sau')&&S.sauP)pre.pessoa=S.sauP;if(t.dataset.newRec.startsWith('neg')&&S.negE)pre.empresa=S.negE;if(t.dataset.newRec==='brd-reun'&&S.brdB)pre.board=S.brdB;if(t.dataset.newRec==='age-ev'&&S.view==='brd'&&S.brdB){pre.board=S.brdB;const bb=boardById(S.brdB);if(bb&&bb.executivo)pre.executivo=bb.executivo;}if(t.dataset.newRec.startsWith('fam')&&S.famP)pre.pessoa=S.famP;if(t.dataset.preViagem)pre.viagem=t.dataset.preViagem;else if(t.dataset.newRec.startsWith('via-')&&S.viaSel)pre.viagem=S.viaSel;return openRec(t.dataset.newRec,null,pre);}
   if(t.dataset.person!=null){S.dpPerson=t.dataset.person||null;if(S.view!=='dp')return go('dp');renderDP();{const sm=document.querySelector('#v-dp .side-main');if(sm)sm.scrollTop=0;}return;}
   if(t.dataset.dpTab!=null){S.dpTab=t.dataset.dpTab;S.dpPerson=null;saveUi();renderDP();{const sm=document.querySelector('#v-dp .side-main');if(sm)sm.scrollTop=0;}if(t.dataset.dpGo){const g=document.getElementById('dp-'+t.dataset.dpGo);if(g)g.scrollIntoView({block:'start'});}return;}
-  if(t.dataset.dpMonth!=null){S.dpMonth=+t.dataset.dpMonth>0?nextYm(S.dpMonth):prevYm(S.dpMonth);return renderDP();}
+  if(t.dataset.dpMonth!=null){const v=t.dataset.dpMonth;if(/^\d{4}-\d{2}$/.test(v)){S.dpMonth=v;S.dpTab='pag';S.dpPagView='mes';S.dpPerson=null;saveUi();renderDP();const sm=document.querySelector('#v-dp .side-main');if(sm)sm.scrollTop=0;return;}S.dpMonth=+v>0?nextYm(S.dpMonth):prevYm(S.dpMonth);return renderDP();}
   if(t.dataset.dpPagview!=null){S.dpPagView=t.dataset.dpPagview;saveUi();return renderDP();}
   if(t.dataset.dpWeek!=null){const n=+t.dataset.dpWeek;S.dpWeek=n?addDays(S.dpWeek,n):weekStart(todayISO());return renderDP();}
   if(t.dataset.facTab!=null){S.facTab=t.dataset.facTab;saveUi();return renderFac();}
@@ -791,6 +791,7 @@ document.addEventListener('change',e=>{
   if(id==='rf-anexos')uploadFiles(e.target);
   if(id.startsWith('dpf-')&&id!=='dpf-q'){S.dpF[id.slice(4)]=e.target.value;renderDP();}
   if(id.startsWith('facf-')&&id!=='facf-q'){S.facF[id.slice(5)]=e.target.value;if(id==='facf-tipoAtivo'||id==='facf-exec')S.facF.ativo='';renderFac();}
+  if(id==='dp-emp-st'){S.dpEmpSt=e.target.value;renderDP();}
   if(id==='dp-oc-tipo'){S.dpOcTipo=e.target.value;renderDP();}
   if(id==='dp-oc-mes'){S.dpOcMes=e.target.value;renderDP();}
   if(id==='dp-f-pessoa'){S.dpFp=e.target.value;renderDP();}
