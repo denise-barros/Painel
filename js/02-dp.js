@@ -235,16 +235,13 @@ function dpOc(ids,SEARCH){
   const base=recs('dp-oc').filter(o=>ids.has(o.pessoa)&&String(o.data||'').startsWith(y));
   const fit=o=>!f||(f==='_out'?o.tipo!=='Atestado'&&o.tipo!=='Falta':o.tipo===f);
   const rows=base.filter(o=>(!S.dpFp||o.pessoa===S.dpFp)&&fit(o)).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
-  const res={};base.forEach(o=>{const r=res[o.pessoa]||(res[o.pessoa]={f:0,a:0,o:0});const d=+o.dias||1;if(o.tipo==='Falta')r.f+=d;else if(o.tipo==='Atestado')r.a+=d;else r.o++;});
   let h='<div class="toolbar">'+dpSegBtns('dp-ocano',y,anos.map(a=>[a,a]))+dpSegBtns('dp-octipo',f,[['','Todos'],['Atestado','Atestados'],['Falta','Faltas'],['_out','Outras']])+dpPessoaSel(ids)+'<span class="grow"></span>'+(SEARCH||'')+'</div>';
-  const rk=Object.entries(res).sort((a,b)=>(b[1].f+b[1].a)-(a[1].f+a[1].a)||b[1].o-a[1].o);
-  if(rk.length)h+='<div class="oc-res">'+rk.map(([pid,r])=>'<button class="panel oc-card'+(S.dpFp===pid?' on':'')+'" data-dp-fp="'+esc(pid)+'" title="'+(S.dpFp===pid?'Mostrar todas as pessoas':'Ver só as ocorrências de '+esc(fnm(pid)))+'"><b>'+esc(fnm(pid))+'</b><span>'+(r.f?'<i class="f">'+r.f+' falta'+(r.f>1?'s':'')+'</i>':'')+(r.a?'<i class="a">'+r.a+' dia'+(r.a>1?'s':'')+' de atestado</i>':'')+(r.o?'<i>'+r.o+' outra'+(r.o>1?'s':'')+'</i>':'')+'</span></button>').join('')+'</div>';
   if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhuma ocorrência em '+esc(y)+'</b>Atestados, faltas, atrasos e advertências aparecem aqui.</div></li></ul>';
   return h+'<div class="tbl-wrap" style="overflow:auto;min-height:0"><table class="pac esc-t"><thead><tr><th>Data</th><th>Pessoa</th><th>Tipo</th><th class="c">Dias</th><th>Descrição</th><th>Anexos</th></tr></thead><tbody>'+
     rows.map(o=>'<tr data-rec="dp-oc:'+esc(o.id)+'" tabindex="0" style="cursor:pointer"><td>'+esc(fmtDateFull(o.data).slice(0,5))+'</td><td>'+esc(fnm(o.pessoa))+'</td><td><span class="tag '+(DP_OC_TONE[o.tipo]||'')+'">'+esc(o.tipo)+'</span></td><td class="c">'+(+o.dias||'<span class="sub">—</span>')+'</td>'+dpDesc(o.descricao)+'<td>'+dpAnx(o.anexos)+'</td></tr>').join('')+'</tbody></table></div>';
 }
-document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-dp-mvg],[data-dp-ocano],[data-dp-octipo],[data-dp-fp]');if(!t||!document.getElementById('v-dp').contains(t))return;
-  if(t.dataset.dpMvg!=null)S.dpMvG=t.dataset.dpMvg;else if(t.dataset.dpOcano!=null)S.dpOcAno=t.dataset.dpOcano;else if(t.dataset.dpOctipo!=null)S.dpOcTipo=t.dataset.dpOctipo;else S.dpFp=S.dpFp===t.dataset.dpFp?'':t.dataset.dpFp;renderDP();});
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-dp-mvg],[data-dp-ocano],[data-dp-octipo]');if(!t||!document.getElementById('v-dp').contains(t))return;
+  if(t.dataset.dpMvg!=null)S.dpMvG=t.dataset.dpMvg;else if(t.dataset.dpOcano!=null)S.dpOcAno=t.dataset.dpOcano;else S.dpOcTipo=t.dataset.dpOctipo;renderDP();});
 document.addEventListener('change',e=>{if(e.target&&e.target.id==='dp-mv-all'){S.dpMvAll=e.target.checked;renderDP();}});
 function dpEmpSaldo(r){return Math.max(0,(+r.valor||0)-(+r.pago||0));}
 function dpEmpAberto(r){return r.status!=='Quitado'&&dpEmpSaldo(r)>0;}
