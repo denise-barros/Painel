@@ -97,6 +97,7 @@ function driveSubfolder(ctx){
   const txt=((rec&&rec.descricao)||'')+' '+el('descricao')+' '+el('titulo');
   switch(rt){
     case 'dp-oc':return tipo==='Atestado'?'Atestados':'Ocorrências';
+    case 'dp-emp':return 'Empréstimos';
     case 'dp-pag':return 'Folhas de Pagamento';
     case 'dp-mov':return tipo==='Férias'?'Folhas de Pagamento':/empr[ée]stimo/i.test(txt)?'Empréstimos':'Documentos';
     case 'dp-esc':return 'Documentos';

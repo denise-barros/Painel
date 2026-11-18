@@ -791,6 +791,7 @@ document.addEventListener('change',e=>{
   if(id==='rf-anexos')uploadFiles(e.target);
   if(id.startsWith('dpf-')&&id!=='dpf-q'){S.dpF[id.slice(4)]=e.target.value;renderDP();}
   if(id.startsWith('facf-')&&id!=='facf-q'){S.facF[id.slice(5)]=e.target.value;if(id==='facf-tipoAtivo'||id==='facf-exec')S.facF.ativo='';renderFac();}
+  if(id==='dp-emp-st'){S.dpEmpSt=e.target.value;renderDP();}
   if(id==='dp-oc-tipo'){S.dpOcTipo=e.target.value;renderDP();}
   if(id==='dp-oc-mes'){S.dpOcMes=e.target.value;renderDP();}
   if(id==='dp-f-pessoa'){S.dpFp=e.target.value;renderDP();}

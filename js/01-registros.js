@@ -37,6 +37,18 @@ const REC={
     {k:'dias',l:'Dias de afastamento',t:'num'},
     {k:'descricao',l:'Descrição',long:true},
     {k:'anexos',l:'Anexos',t:'files'}]},
+  'dp-emp':{one:'empréstimo',col:'dp-emp',fem:false,fields:[
+    {k:'pessoa',l:'Pessoa',ref:'equipe',req:true},
+    {k:'data',l:'Data do empréstimo',t:'date',req:true,def:()=>todayISO()},
+    {k:'valor',l:'Valor emprestado',t:'money',req:true},
+    {k:'parcelas',l:'Número de parcelas',t:'num',hint:'Deixe em branco se não há parcelamento combinado.'},
+    {k:'valorParcela',l:'Valor da parcela',t:'money'},
+    {k:'inicioDesc',l:'Começa a descontar em',t:'month',hint:'Mês da primeira parcela (desconto na folha ou devolução).'},
+    {k:'forma',l:'Como será devolvido',opts:['','Desconto na folha','Pix / transferência','Dinheiro','Outro']},
+    {k:'pago',l:'Já devolvido',t:'money',hint:'Total devolvido até agora. O saldo é calculado sozinho.'},
+    {k:'status',l:'Situação',opts:['Em aberto','Quitado']},
+    {k:'descricao',l:'Motivo / observações',long:true},
+    {k:'anexos',l:'Comprovantes e recibos',t:'files'}]},
   'fac-ch':{one:'chamado',col:'fac-ch',fem:false,fields:[
     {k:'titulo',l:'O que precisa ser feito',req:true,ph:'Ex.: Conserto do portão da garagem'},
     {k:'ativo',l:'Casa, carro, escritório ou serviço',ref:'ativos'},
