@@ -11,14 +11,14 @@ function renderDP(){
   const prevMes=pagMes.filter(p=>p.status!=='Pago').reduce((a,p)=>a+(+p.valor||0),0);
   const ocMes=recs('dp-oc').filter(o=>String(o.data||'').slice(0,7)===ym&&ids.has(o.pessoa)).length;
   const foraL=active.map(p=>({p,s:dayStatus(p.id,t0)})).filter(x=>x.s&&(x.s.k==='ferias'||x.s.k==='afast'||x.s.k==='atest'));const fora=foraL.length;
-  const TAB=['ind','equipe','pag','mov','esc','fer','oc'].includes(S.dpTab)?S.dpTab:'ind';
-  const HERO={ind:['Departamento pessoal','Indicadores, avisos, demandas e o que vem pela frente.'],equipe:['Equipe','Funcionários e prestadores.'],pag:['Pagamentos','Salários, extras, 13º, férias e guias, mês a mês.'],mov:['Movimentações','O que já aconteceu: admissões, reajustes, férias e desligamentos. O que ainda vem fica em Visão geral › Pela frente.'],esc:['Escalas','Escalas de trabalho da equipe.'],fer:['Férias','Férias das funcionárias CLT: o que falta tirar, prazos, próximas saídas e quem cobre.'],oc:['Ocorrências','Faltas, atestados e outras ocorrências.']};
+  const TAB=['ind','equipe','pag','mov','esc','fer','oc','emp'].includes(S.dpTab)?S.dpTab:'ind';
+  const HERO={ind:['Departamento pessoal','Indicadores, avisos, demandas e o que vem pela frente.'],equipe:['Equipe','Funcionários e prestadores.'],pag:['Pagamentos','Salários, extras, 13º, férias e guias, mês a mês.'],mov:['Movimentações','O que já aconteceu: admissões, reajustes, férias e desligamentos. O que ainda vem fica em Visão geral › Pela frente.'],esc:['Escalas','Escalas de trabalho da equipe.'],fer:['Férias','Férias das funcionárias CLT: o que falta tirar, prazos, próximas saídas e quem cobre.'],oc:['Ocorrências','Faltas, atestados e outras ocorrências.'],emp:['Empréstimos','Dinheiro emprestado à equipe: valor, parcelas, o que já foi devolvido e o saldo.']};
   const wrapDp=b=>'<div class="wrap"><div class="side-layout">'+dpMenu()+'<div class="side-main">'+b+'</div></div></div>';
   let h='<div class="plan-hero"><div><h2>'+HERO[TAB][0]+'</h2><p>'+HERO[TAB][1]+'</p></div>'+
-    '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button></div></details>')+'</div></div>';
+    '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',emp:'<button class="btn primary" data-new-rec="dp-emp">Novo empréstimo</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',emp:'<button class="btn primary" data-new-rec="dp-emp">Novo empréstimo</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button><button class="btn" data-new-rec="dp-emp">Empréstimo</button></div></details>')+'</div></div>';
   if(TAB==='ind'){h+=dpIndKpis(active,foraL)+dpAvisosHtml()+demBlock('p-dp')+(equipe().length?dpInd():'');el.innerHTML=wrapDp(h);return;}
   if(TAB==='fer'){h+=equipe().length?dpFer():'';el.innerHTML=wrapDp(h);return;}
-  const SLIM=TAB==='mov'||TAB==='oc';
+  const SLIM=TAB==='mov'||TAB==='oc'||TAB==='emp';
   const SEARCH='<input class="sel qsearch" id="dpf-q" type="search" placeholder="Buscar pessoa" value="'+esc(S.dpF.q||'')+'" aria-label="Buscar pessoa">';
   if(!SLIM)h+='<div class="filters">'+(selHtml('dpf-vinculo',S.dpF.vinculo,[['','Todos os vínculos'],['CLT','CLT'],['CLT doméstica','CLT doméstica'],['PJ','PJ'],['MEI','MEI'],['Autônomo(a)','Autônomo(a)']],'Vínculo')+
     
@@ -30,6 +30,7 @@ function renderDP(){
   else if(TAB==='pag')h+=dpPag(people);
   else if(TAB==='mov')h+=dpMov(ids,SEARCH);
   else if(TAB==='esc')h+=dpEsc(people);
+  else if(TAB==='emp')h+=dpEmp(ids,SEARCH);
   else h+=dpOc(ids,SEARCH);
   el.innerHTML=wrapDp(h);
 }
@@ -42,8 +43,9 @@ function dpMenu(){
     mov:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
     esc:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
     fer:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    oc:'<path d="M12 4 3 19h18zM12 10v4M12 17v.5"/>'};
-  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['mov','Movimentações'],['pag','Pagamentos'],['oc','Ocorrências']];
+    oc:'<path d="M12 4 3 19h18zM12 10v4M12 17v.5"/>',
+    emp:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M14.5 9.5c-.6-.8-1.5-1.2-2.5-1.2-1.4 0-2.5.8-2.5 1.9 0 2.6 5 1.2 5 3.8 0 1.1-1.1 1.9-2.5 1.9-1.1 0-2-.5-2.6-1.3"/>'};
+  const L=[['ind','Visão geral'],['equipe','Equipe'],['esc','Escalas'],['fer','Férias'],['mov','Movimentações'],['pag','Pagamentos'],['oc','Ocorrências'],['emp','Empréstimos']];
   return '<nav class="neg-menu" aria-label="Departamento pessoal"><div class="nm-head"><div class="nm-mark">DP</div><div><b>Departamento pessoal</b><small>Funcionários e prestadores</small></div></div><div class="nm-list">'+
     L.map(([k,l])=>'<div class="nm-grp"><button class="nm-item nm-g'+on(k)+'" data-dp-tab="'+k+'">'+I(IC_[k])+'<b class="lbl">'+l+'</b></button></div>').join('')+'</div></nav>';
 }
@@ -215,6 +217,19 @@ function dpOc(ids,SEARCH){
   if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhuma ocorrência</b>Atestados, faltas, atrasos e advertências aparecem aqui.</div></li></ul>';
   return h+'<ul class="list">'+rows.map(o=>rowBtn('dp-oc',o,'<span style="min-width:0"><span class="tt">'+esc(refName('equipe',o.pessoa))+' · '+esc(o.tipo)+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(o.data))+'</span>'+(+o.dias?'<span class="tag warn">'+esc(o.dias)+' dia'+(+o.dias>1?'s':'')+'</span>':'')+filesHtml(o.anexos)+'</span>'+(o.descricao?'<span class="desc-line">'+esc(String(o.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>',o.tipo==='Advertência'||o.tipo==='Falta'?'bad':o.tipo==='Elogio'?'ok':'warn')).join('')+'</ul>';
 }
+function empSaldo(r){return Math.max(0,(+r.valor||0)-(+r.pago||0));}
+function empAberto(r){return r.status!=='Quitado'&&empSaldo(r)>0;}
+function empRow(r,nome){const sal=empSaldo(r);const ab=empAberto(r);
+  return rowBtn('dp-emp',r,'<span style="min-width:0"><span class="tt">'+(nome?esc(refName('equipe',r.pessoa))+' · ':'')+esc(fmtMoney(r.valor))+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(r.data))+'</span>'+(+r.parcelas?'<span class="tag">'+esc(r.parcelas)+'x'+(+r.valorParcela?' de '+esc(fmtMoney(r.valorParcela)):'')+'</span>':'')+(ab?'<span class="tag warn">Saldo '+esc(fmtMoney(sal))+'</span>':'<span class="tag ok">Quitado</span>')+filesHtml(r.anexos)+'</span>'+(r.descricao?'<span class="desc-line">'+esc(String(r.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>',ab?'warn':'ok');}
+function dpEmp(ids,SEARCH){
+  const f=S.dpEmpSt;
+  const base=recs('dp-emp').filter(r=>ids.has(r.pessoa)&&(!S.dpFp||r.pessoa===S.dpFp));
+  const rows=base.filter(r=>!f||(f==='aberto'?empAberto(r):!empAberto(r))).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  const tot=base.filter(empAberto).reduce((a,r)=>a+empSaldo(r),0);
+  const tb='<div class="toolbar">'+dpPessoaSel(ids)+selHtml('dp-emp-st',f,[['','Todos'],['aberto','Em aberto'],['quitado','Quitados']],'Situação')+'<span class="hint" style="margin-left:6px">'+rows.length+' empréstimo'+(rows.length===1?'':'s')+' · saldo a receber <b>'+esc(fmtMoney(tot))+'</b></span>'+(SEARCH||'')+'</div>';
+  if(!rows.length)return tb+'<ul class="list"><li><div class="empty"><b>Nenhum empréstimo</b>Os empréstimos feitos à equipe aparecem aqui, com o saldo a receber.</div></li></ul>';
+  return tb+'<ul class="list">'+rows.map(r=>empRow(r,true)).join('')+'</ul>';
+}
 function fichaHtml(pid){
   const p=personById(pid);const t0=todayISO();const sal=salarioAtual(pid);const hist=salaryHist(pid);
   const pags=recs('dp-pag').filter(x=>x.pessoa===pid).sort((a,b)=>String(b.competencia).localeCompare(String(a.competencia))||String(a.tipo).localeCompare(String(b.tipo)));
@@ -231,6 +246,8 @@ function fichaHtml(pid){
   h+='<div class="grid2"><div style="display:flex;flex-direction:column;gap:22px">';
   h+='<div><div class="sec-h"><h3>Pagamentos</h3><span class="cnt">'+pags.length+'</span></div>'+(pags.length?'<ul class="list">'+pags.slice(0,24).map(r=>rowBtn('dp-pag',r,'<span style="min-width:0"><span class="tt">'+esc(fmtYm(r.competencia))+' · '+esc(r.tipo||'Pagamento')+'</span><span class="mm"><span class="tag '+(ST_TONE[r.status]||'')+'">'+esc(r.status||'Previsto')+'</span>'+(r.dataPag?'<span class="tag">'+esc(fmtDateFull(r.dataPag))+'</span>':'')+filesHtml(r.anexos)+'</span></span><span class="rr"><b>'+fmtMoney(r.valor)+'</b></span>',r.status==='Pago'?'ok':'warn')).join('')+'</ul>':'<ul class="list"><li><div class="empty">Nenhum pagamento lançado.</div></li></ul>')+'</div>';
   h+='<div><div class="sec-h"><h3>Ocorrências e atestados</h3><span class="cnt">'+ocs.length+'</span><span class="act"><button class="btn sm ghost" data-new-rec="dp-oc" data-pre-pessoa="'+esc(pid)+'">Registrar</button></span></div>'+(ocs.length?byYear(ocs,o=>rowBtn('dp-oc',o,'<span style="min-width:0"><span class="tt">'+esc(o.tipo)+' · '+esc(fmtDateFull(o.data))+'</span><span class="mm">'+(+o.dias?'<span class="tag warn">'+esc(o.dias)+' dia(s)</span>':'')+filesHtml(o.anexos)+'</span>'+(o.descricao?'<span class="desc-line">'+esc(String(o.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>','warn')):'<ul class="list"><li><div class="empty">Nenhuma ocorrência.</div></li></ul>')+'</div>';
+  {const emps=recs('dp-emp').filter(x=>x.pessoa===pid).sort((a,b)=>String(b.data).localeCompare(String(a.data)));const sd=emps.filter(empAberto).reduce((a,r)=>a+empSaldo(r),0);
+   h+='<div><div class="sec-h"><h3>Empréstimos</h3><span class="cnt">'+emps.length+'</span>'+(sd?'<span class="hint" style="margin-left:8px">saldo '+esc(fmtMoney(sd))+'</span>':'')+'<span class="act"><button class="btn sm ghost" data-new-rec="dp-emp" data-pre-pessoa="'+esc(pid)+'">Registrar</button></span></div>'+(emps.length?'<ul class="list">'+emps.map(r=>empRow(r,false)).join('')+'</ul>':'<ul class="list"><li><div class="empty">Nenhum empréstimo.</div></li></ul>')+'</div>';}
   h+='</div><div style="display:flex;flex-direction:column;gap:22px">';
   h+='<div class="panel"><div class="sec-h"><h3>Escala</h3><span class="act"><button class="btn sm ghost" data-'+(e?'rec="dp-esc:'+esc(e.id)+'"':'new-rec="dp-esc" data-pre-pessoa="'+esc(pid)+'"')+'>'+(e?'Editar':'Cadastrar')+'</button></span></div><p class="hint" style="margin:0 0 10px">'+esc(escalaText(e)+escNote)+'</p>'+(escLink(e)?'<p style="margin:0 0 10px">'+escLink(e)+'</p>':'')+
      '<div class="mini-week">'+week.map(d=>{const st=dayStatus(pid,d);const dt=new Date(d+'T12:00:00');return '<div class="'+(d===t0?'today':'')+'"><span>'+DOW[dt.getDay()]+'</span>'+(st?'<i class="st-'+st.k+'" title="'+esc(st.l)+'"></i>':'<i></i>')+'</div>';}).join('')+'</div></div>';

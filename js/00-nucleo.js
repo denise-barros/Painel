@@ -153,8 +153,8 @@ const showVal=(c,k,v)=>{const f=fieldOf(c,k);if(f&&f.t==='money')return v===''||
 const S={view:'capa',exec:'',cadTab:'pessoas',tasks:new Map(),cats:[],staleDays:3,
   fin:{cronograma:[],solicitacoes:[],'reemb-corp':[],'reemb-med':[],'reemb-pagar':[],parcelas:[],faturas:[],emprestimos:[],assinaturas:[],'rep-fech':[],'rep-transf':[],'rep-contas':[],'rep-dev':[],'fdc-leticia':[],'fdc-luciano':[],'fdc-fernando':[],'fdc-camburi':[],'fdc-criancas':[]},
   finOk:{},finErr:{},cad:{pessoas:[],ativos:[],empresas:[],fornecedores:[],prestadores:[],medicos:[]},loaded:false,db:null,dbState:'loading',assets:null,
-  rec:{'dp-pag':[],'dp-mov':[],'dp-esc':[],'dp-oc':[],'fac-ch':[],'fac-rec':[]},
-  dpTab:'ind',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''},dpMonth:ymOf(todayISO()),dpWeek:'',dpPagView:'mes',dpOcTipo:'',dpPerson:null,
+  rec:{'dp-pag':[],'dp-mov':[],'dp-esc':[],'dp-oc':[],'dp-emp':[],'fac-ch':[],'fac-rec':[]},
+  dpTab:'ind',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''},dpMonth:ymOf(todayISO()),dpWeek:'',dpPagView:'mes',dpOcTipo:'',dpEmpSt:'',dpPerson:null,
   facTab:'venc',facF:{ativo:'',exec:'',tipo:'',status:'abertos',forn:'',tipoAtivo:'',q:''}};
 try{const s=JSON.parse(localStorage.getItem('ce-ui')||'{}');if(s.exec)S.exec=s.exec;if(s.cadTab&&(CAD[s.cadTab]||s.cadTab==='funcionarios'||s.cadTab==='pets'))S.cadTab=s.cadTab;if(s.view)S.view=s.view;if(s.dpTab&&s.dpV===2)S.dpTab=s.dpTab;if(s.facTab)S.facTab=s.facTab;if(s.dpPagView)S.dpPagView=s.dpPagView;}catch(e){}
 function saveUi(){try{localStorage.setItem('ce-ui',JSON.stringify({exec:S.exec,cadTab:S.cadTab,view:S.view,dpTab:S.dpTab,dpV:2,facTab:S.facTab,dpPagView:S.dpPagView,sauTab:S.sauTab,negTab:S.negTab,brdTab:S.brdTab,famTab:S.famTab,viaTab:S.viaTab,ageTab:S.ageTab}));}catch(e){}}
