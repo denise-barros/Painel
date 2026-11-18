@@ -519,5 +519,5 @@ function ferResumoHtml(){const t0=todayISO();const rows=ferRows();if(!rows.lengt
     if(v)v.semFim.forEach(d=>it.push({t:nm+': férias de '+fmtDateFull(d)+' sem data de volta (contando 30 dias). Se foram 15, preencha o "Até" na movimentação para o saldo ficar certo.'}));
     prox.filter(m=>dDiff(t0,m.data)<=60).forEach(m=>{const sc=!(Array.isArray(m.cobertura)&&m.cobertura.length);it.push({bad:sc&&dDiff(t0,m.data)<=15,t:nm+(m.data>t0?' sai em '+fmtDateFull(m.data)+' e volta '+fmtDateFull(addDays(ferFim(m),1))+' · pagar até '+fmtDateFull(addDays(m.data,-2)):' está de férias até '+fmtDateFull(ferFim(m)))+(sc?' · sem cobertura':'')});});
     if(dDiff(t0,f.proxDireito)<=60)it.push({t:nm+(v?' ganha mais 30 dias':' ganha as primeiras férias')+' em '+fmtDateFull(f.proxDireito)});});
-  return '<div class="panel"><div class="sec-h"><h3>Férias: o que pede ação</h3><span class="act"><button class="btn sm ghost" data-dp-tab="fer">Ver férias ›</button></span></div>'+
-    (it.length?'<ul class="fer-res">'+it.map(x=>'<li class="'+(x.bad?'bad':'')+'">'+esc(x.t)+'</li>').join('')+'</ul>':'<p class="hint" style="margin:0">Todas em dia.</p>')+'</div>';}
+  return '<div class="panel"><div class="sec-h"><h3>Férias: lembretes</h3><span class="act"><button class="btn sm ghost" data-dp-tab="fer">Ver férias ›</button></span></div>'+
+    (it.length?'<ul class="fer-res">'+it.map(x=>'<li class="'+(x.bad?'bad':'')+'">'+esc(x.t)+'</li>').join('')+'</ul>':'<p class="hint" style="margin:0">Nada para lembrar agora.</p>')+'</div>';}
