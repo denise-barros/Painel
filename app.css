@@ -830,8 +830,16 @@ details.more .more-m .btn{justify-content:flex-start;border:0;width:100%}
   #views>.view.scroll{padding-top:28px}
 }
 /* DP › Escalas: dias da semana em letras */
-.esc-d{display:inline-flex;gap:3px;vertical-align:middle}
+.esc-d{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
 .esc-d span{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;font-size:10.5px;font-weight:600;color:var(--faint);background:var(--sunk)}
 .esc-d span.on{background:var(--accent);color:var(--on-accent)}
 .esc-alt{display:block;margin-top:3px}
 table.esc-t td{vertical-align:middle;padding-top:9px;padding-bottom:9px}
+/* DP › Ocorrências e Movimentações */
+.oc-res{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.oc-card{padding:10px 14px;min-width:150px;text-align:left;cursor:pointer;font:inherit;color:inherit;border:1px solid var(--line)}
+.oc-card b{font-weight:600;display:block}
+.oc-card span{font-size:12px;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.oc-card i{font-style:normal;color:var(--muted)}.oc-card i.f{color:var(--neg)}.oc-card i.a{color:var(--warn)}
+.oc-card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+td.dp-desc{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
