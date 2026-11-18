@@ -829,3 +829,9 @@ details.more .more-m .btn{justify-content:flex-start;border:0;width:100%}
   .nav button{padding:4px 7px;font-size:10px}
   #views>.view.scroll{padding-top:28px}
 }
+/* DP › Escalas: dias da semana em letras */
+.esc-d{display:inline-flex;gap:3px;vertical-align:middle}
+.esc-d span{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;font-size:10.5px;font-weight:600;color:var(--faint);background:var(--sunk)}
+.esc-d span.on{background:var(--accent);color:var(--on-accent)}
+.esc-alt{display:block;margin-top:3px}
+table.esc-t td{vertical-align:middle;padding-top:9px;padding-bottom:9px}
