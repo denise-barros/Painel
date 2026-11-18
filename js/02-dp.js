@@ -196,17 +196,29 @@ function dpMov(ids,SEARCH){
   return tb+'<ul class="list">'+rows.map(m=>rowBtn('dp-mov',m,'<span style="min-width:0"><span class="tt">'+esc(refName('equipe',m.pessoa))+' · '+esc(m.tipo)+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(m.data))+(m.dataFim?' a '+esc(fmtDateFull(m.dataFim)):'')+'</span>'+filesHtml(m.anexos)+'</span>'+(m.descricao?'<span class="desc-line">'+esc(String(m.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr">'+(+m.valor?'<b>'+fmtMoney(m.valor)+'</b><small>novo salário</small>':'')+'</span>',m.tipo==='Desligamento'?'bad':m.tipo==='Férias'||m.tipo==='Afastamento'?'warn':'info')).join('')+'</ul>';
 }
 function dpEsc(people){
-  const ws=S.dpWeek||weekStart(todayISO());const days=[0,1,2,3,4,5,6].map(i=>addDays(ws,i));const t0=todayISO();
-  let h='<div class="toolbar"><div class="seg"><button data-dp-week="-7" aria-label="Semana anterior">‹</button><button class="on">'+esc(days[0].slice(8)+'/'+days[0].slice(5,7)+' a '+days[6].slice(8)+'/'+days[6].slice(5,7))+'</button><button data-dp-week="7" aria-label="Próxima semana">›</button></div>'+(ws!==weekStart(t0)?'<button class="btn sm ghost" data-dp-week="0">Esta semana</button>':'')+'<span class="grow"></span><button class="btn sm" data-new-rec="dp-esc">Nova escala</button></div>';
-  const act=people.filter(p=>isActive(p.id));
-  h+='<div class="tbl-wrap"><table class="week"><thead><tr><th>Pessoa</th>'+days.map(d=>{const dt=new Date(d+'T12:00:00');return '<th class="c'+(d===t0?' today':'')+'">'+DOW[dt.getDay()]+' '+dt.getDate()+'</th>';}).join('')+'</tr></thead><tbody>'+
-    act.map(p=>'<tr data-person="'+esc(p.id)+'"><td class="nm">'+esc(p.nome)+'</td>'+days.map(d=>{const s=dayStatus(p.id,d);return '<td class="c'+(d===t0?' today':'')+'">'+(s?'<span class="cell st-'+s.k+'">'+esc(s.l)+'</span>':'<span class="dim">—</span>')+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div>';
-  const es=recs('dp-esc').filter(e=>people.some(p=>p.id===e.pessoa)).sort((a,b)=>refName('equipe',a.pessoa).localeCompare(refName('equipe',b.pessoa),'pt'));
-  h+='<div class="sec-h" style="margin-top:6px"><h3>Escalas cadastradas</h3><span class="cnt">'+es.length+'</span></div>';
-  h+=es.length?'<ul class="list">'+es.map(e=>rowBtn('dp-esc',e,'<span style="min-width:0"><span class="tt">'+esc(refName('equipe',e.pessoa))+'</span><span class="mm"><span class="tag">'+esc(escalaText(e))+'</span><span class="tag">Desde '+esc(fmtDateFull(e.inicio))+(e.fim?' até '+esc(fmtDateFull(e.fim)):'')+'</span>'+(e.local?'<span class="tag">'+esc(refName('casas',e.local))+'</span>':'')+(e.link?'<span class="tag info">Documento anexado</span>':'')+'</span></span><span class="rr"></span>','info')).join('')+'</ul>'
-    :'<ul class="list"><li><div class="empty"><b>Nenhuma escala</b>Cadastre a escala de cada pessoa para ver quem trabalha em cada dia.</div></li></ul>';
-  return h;
+  const t0=todayISO();const act=people.filter(p=>isActive(p.id));const wk=[0,1,2,3,4,5,6].map(i=>addDays(weekStart(t0),i));
+  const LET=[[1,'S'],[2,'T'],[3,'Q'],[4,'Q'],[5,'S'],[6,'S'],[0,'D']];const DN={1:'segunda',2:'terça',3:'quarta',4:'quinta',5:'sexta',6:'sábado',0:'domingo'};
+  let h='<div class="toolbar"><span class="hint" style="margin:0">'+act.length+' pessoa'+(act.length===1?'':'s')+' · clique na linha para editar a escala</span><span class="grow"></span>'+
+    '<button class="btn sm ghost" data-dp-escweek="1">'+(S.dpEscWeek?'Fechar semana':'Ver semana')+'</button><button class="btn sm" data-new-rec="dp-esc">Nova escala</button></div>';
+  if(S.dpEscWeek){const ws=S.dpWeek||weekStart(t0);const days=[0,1,2,3,4,5,6].map(i=>addDays(ws,i));
+    h+='<div class="panel" style="margin-bottom:14px"><div class="toolbar" style="margin:0 0 8px"><div class="seg"><button data-dp-week="-7" aria-label="Semana anterior">‹</button><button class="on">'+esc(days[0].slice(8)+'/'+days[0].slice(5,7)+' a '+days[6].slice(8)+'/'+days[6].slice(5,7))+'</button><button data-dp-week="7" aria-label="Próxima semana">›</button></div>'+(ws!==weekStart(t0)?'<button class="btn sm ghost" data-dp-week="0">Esta semana</button>':'')+'</div>'+
+      '<div class="tbl-wrap" style="min-height:0"><table class="week"><thead><tr><th>Pessoa</th>'+days.map(d=>{const dt=new Date(d+'T12:00:00');return '<th class="c'+(d===t0?' today':'')+'">'+DOW[dt.getDay()]+' '+dt.getDate()+'</th>';}).join('')+'</tr></thead><tbody>'+
+      act.map(p=>'<tr data-person="'+esc(p.id)+'"><td class="nm">'+esc(p.nome)+'</td>'+days.map(d=>{const st=dayStatus(p.id,d);return '<td class="c'+(d===t0?' today':'')+'">'+(st?'<span class="cell st-'+st.k+'">'+esc(st.l)+'</span>':'<span class="dim">—</span>')+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div></div>';}
+  if(!act.length)return h+'<ul class="list"><li><div class="empty"><b>Ninguém com esses filtros</b>Ajuste os filtros acima.</div></li></ul>';
+  const rows=act.map(p=>{const e=escalaOf(p.id,t0);const nx=e?null:recs('dp-esc').filter(x=>x.pessoa===p.id&&x.inicio&&x.inicio>t0).sort((x,y)=>String(x.inicio).localeCompare(String(y.inicio)))[0];const E=e||nx;
+    const s=dayStatus(p.id,t0);
+    let dias='<span class="sub">Sem escala · cadastrar</span>';
+    if(E){if(E.padrao==='Sob demanda'||E.padrao==='12x36')dias='<span class="tag">'+esc(E.padrao)+'</span>';
+      else{const set=new Set((Array.isArray(E.dias)?E.dias:[]).map(Number));
+        dias='<span class="esc-d" aria-label="'+esc([...LET].filter(([d])=>set.has(d)).map(([d])=>DN[d]).join(', ')||'nenhum dia')+'">'+LET.map(([d,l])=>'<span class="'+(set.has(d)?'on':'')+'" title="'+DN[d]+'">'+l+'</span>').join('')+'</span>';
+        if(E.padrao==='Semanas alternadas'){const w=wk.some(d=>worksOn(E,d)===true);dias+='<small class="sub esc-alt">semanas alternadas · '+(w?'<b>trabalha esta semana</b>':'folga esta semana')+'</small>';}}
+      if(nx)dias+='<small class="sub esc-alt">começa em '+esc(fmtDateFull(nx.inicio))+'</small>';}
+    const lk=escLink(E)?' '+escLink(E).replace('<a ','<a onclick="event.stopPropagation()" ').replace('Ver escala completa','PDF'):'';
+    const loc=E&&E.local?refName('casas',E.local):p.local?refName('casas',p.local):'';
+    return '<tr '+(E?'data-rec="dp-esc:'+esc(E.id)+'"':'data-new-rec="dp-esc" data-pre-pessoa="'+esc(p.id)+'"')+' tabindex="0" style="cursor:pointer"><td><b style="font-weight:600">'+esc(String(p.nome).split(' ')[0])+'</b><br><small class="sub">'+esc(p.relacao||p.vinculo||'')+'</small></td><td>'+dias+'</td><td>'+(E&&E.horario?esc(E.horario):lk?'':'<span class="sub">—</span>')+lk+'</td><td>'+(loc?esc(loc):'<span class="sub">—</span>')+'</td><td>'+(s?'<span class="tag st-'+s.k+'">'+esc(s.l)+'</span>':'<span class="sub">—</span>')+'</td></tr>';}).join('');
+  return h+'<div class="tbl-wrap" style="overflow:auto;min-height:0"><table class="pac esc-t"><thead><tr><th>Pessoa</th><th>Dias</th><th>Horário</th><th>Local</th><th>Hoje</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dp-escweek]');if(!b)return;S.dpEscWeek=!S.dpEscWeek;if(S.dpEscWeek&&!S.dpWeek)S.dpWeek=weekStart(todayISO());renderDP();});
 function byYear(rows,fn){const cy=String(new Date().getFullYear());const g={};rows.forEach(r=>{const y=String(r.data||'').slice(0,4)||'—';(g[y]=g[y]||[]).push(r);});const ys=Object.keys(g).sort().reverse();const open=ys.includes(cy)?cy:ys.filter(y=>y<=cy)[0]||ys[ys.length-1];
   return ys.map(y=>{const ul='<ul class="list">'+g[y].map(fn).join('')+'</ul>';const hd=esc(y)+' · '+g[y].length;return y===open?'<div class="dem-sub-h">'+hd+'</div>'+ul:'<details style="margin-top:6px"><summary class="dem-sub-h" style="cursor:pointer">'+hd+'</summary>'+ul+'</details>';}).join('');}
 function dpOc(ids,SEARCH){
