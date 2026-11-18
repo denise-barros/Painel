@@ -837,3 +837,14 @@ details.more .more-m .btn{justify-content:flex-start;border:0;width:100%}
 table.esc-t td{vertical-align:middle;padding-top:9px;padding-bottom:9px}
 /* DP › Ocorrências e Movimentações */
 td.dp-desc{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* DP › Pagamentos: folha do mês */
+.pag-t .pag-prev{color:var(--warn)}
+.pag-t td.pag-new{cursor:pointer}
+.pag-t td.pag-new:hover .sub{color:var(--accent)}
+.pag-t td.pag-new:hover .sub::after{content:' +'}
+.pres-list li.pres-li{padding:10px 16px;display:grid;grid-template-columns:minmax(120px,170px) minmax(0,1fr);gap:12px;align-items:center}
+.pres-row{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
+.pres-tot{font-size:12px;color:var(--muted)}
+.pres-x summary{cursor:pointer;font-size:12px;color:var(--accent);list-style:none}
+.pres-x summary::-webkit-details-marker{display:none}
+.pres-x[open]{display:flex;gap:6px;align-items:center}

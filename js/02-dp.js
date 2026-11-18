@@ -65,7 +65,7 @@ function dpPag(people){
   const ym=S.dpMonth;const ids=new Set(people.map(p=>p.id));
   let h='<div class="toolbar"><div class="seg"><button data-dp-month="-1" aria-label="Mês anterior">‹</button><button class="on" style="min-width:96px">'+esc(fmtYm(ym))+'</button><button data-dp-month="1" aria-label="Próximo mês">›</button></div>'+
     '<div class="seg"><button data-dp-pagview="mes" class="'+(S.dpPagView==='mes'?'on':'')+'">Mês</button><button data-dp-pagview="hist" class="'+(S.dpPagView==='hist'?'on':'')+'">Histórico mês a mês</button></div>'+
-    '<span class="grow"></span><button class="btn sm" id="dp-gerar">Gerar folha de '+esc(fmtYm(ym))+'</button></div>';
+    '</div>';
   if(S.dpPagView==='hist'){
     const months=[];let m=ym;for(let i=0;i<6;i++){months.unshift(m);m=prevYm(m);}
     const sum=(pid,mm)=>recs('dp-pag').filter(x=>x.pessoa===pid&&x.competencia===mm);
@@ -76,16 +76,31 @@ function dpPag(people){
     h+='</tbody><tfoot><tr><td>Total</td>'+months.map(mm=>'<td class="r">'+fmtMoney(tot[mm]||0)+'</td>').join('')+'</tr></tfoot></table></div><p class="hint">Inclui salário, extras e demais pagamentos lançados para cada competência.</p>';
     return h;
   }
-  const rows=recs('dp-pag').filter(x=>x.competencia===ym&&ids.has(x.pessoa)).sort((a,b)=>refName('equipe',a.pessoa).localeCompare(refName('equipe',b.pessoa),'pt')||String(a.tipo).localeCompare(String(b.tipo)));
-  const pago=rows.filter(x=>x.status==='Pago').reduce((a,x)=>a+(+x.valor||0),0),prev=rows.filter(x=>x.status!=='Pago').reduce((a,x)=>a+(+x.valor||0),0);
+  const rs=recs('dp-pag').filter(x=>x.competencia===ym&&ids.has(x.pessoa));
   {const ou={};recs('dp-pag').filter(x=>x.status!=='Pago'&&x.competencia<ym&&x.competencia>=DP_PAG_INICIO&&ids.has(x.pessoa)).forEach(x=>{ou[x.competencia]=(ou[x.competencia]||0)+1;});const ks=Object.keys(ou).sort();
    if(ks.length)h+='<div class="dp-av"><div class="bad"><b>Atenção</b><span>Ainda há pagamentos como Previsto em meses anteriores: '+ks.map(k=>'<button class="lnk" data-dp-month="'+esc(k)+'">'+esc(fmtYm(k))+' ('+ou[k]+')</button>').join(', ')+'.</span></div></div>';}
-  h+='<div class="sumline"><span>Total do mês <b>'+fmtMoney(pago+prev)+'</b></span><span>Pago <b class="pos">'+fmtMoney(pago)+'</b></span><span>A pagar <b class="'+(prev?'warn':'')+'">'+fmtMoney(prev)+'</b></span></div>';
-  if(!rows.length)return h+'<ul class="list"><li><div class="empty"><b>Nenhum pagamento em '+esc(fmtYm(ym))+'</b>Use “Gerar folha” para criar os pagamentos previstos de quem tem valor cadastrado, ou lance um pagamento avulso.</div></li></ul>'+dpPres(people,ym)+dpExtras(people,ym);
-  h+='<ul class="list">'+rows.map(r=>{const late=r.status!=='Pago'&&r.dataPag&&r.dataPag<todayISO();
-    return rowBtn('dp-pag',r,'<span style="min-width:0"><span class="tt">'+esc(refName('equipe',r.pessoa))+' · '+esc(r.tipo||'Pagamento')+'</span><span class="mm"><span class="tag '+(ST_TONE[r.status]||'')+'">'+esc(r.status||'Previsto')+'</span>'+(r.dataPag?'<span class="tag '+(late?'bad':'')+'">'+(r.status==='Pago'?'Pago em ':'Pagar até ')+esc(fmtDateFull(r.dataPag))+'</span>':'')+(r.forma?'<span class="tag">'+esc(r.forma)+'</span>':'')+(/^Guia|^13º|^Férias|^Rescisão/.test(r.tipo||'')&&(personById(r.pessoa)||{}).esocial?'<span class="tag">eSocial: '+esc(EXEC[personById(r.pessoa).esocial])+'</span>':'')+filesHtml(r.anexos)+'</span></span><span class="rr"><b>'+fmtMoney(r.valor)+'</b></span>',late?'bad':r.status==='Pago'?'ok':'warn');}).join('')+'</ul>';
-  return h+dpPres(people,ym)+dpExtras(people,ym);
+  const ps=people.filter(p=>rs.some(x=>x.pessoa===p.id)||isActive(p.id)).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt'));
+  const tot=DP_PAG_COLS.map(()=>0);let TT=0,TP=0;
+  const body=ps.map(p=>{const mine=rs.filter(x=>x.pessoa===p.id);const used=new Set();let t=0,pg=0;
+    const cells=DP_PAG_COLS.map(([l,fn,tp],i)=>{const c=mine.filter(x=>!used.has(x.id)&&fn(x));c.forEach(x=>used.add(x.id));const v=c.reduce((a,x)=>a+(+x.valor||0),0);t+=v;pg+=c.filter(x=>x.status==='Pago').reduce((a,x)=>a+(+x.valor||0),0);tot[i]+=v;
+      if(!c.length)return '<td class="c pag-new" data-new-rec="dp-pag" data-pre-pessoa="'+esc(p.id)+'" data-pre-tipo="'+esc(typeof tp==='function'?tp(p):tp)+'" title="Lançar '+esc(l.toLowerCase())+' de '+esc(fnm(p.id))+'"><span class="sub">—</span></td>';
+      const prev=c.some(x=>x.status!=='Pago');const one=c.length===1;
+      return '<td class="c" '+(one?'data-rec="dp-pag:'+esc(c[0].id)+'"':'data-person="'+esc(p.id)+'"')+' style="cursor:pointer" title="'+(one?esc((c[0].tipo||'')+' · '+(c[0].status||'Previsto')):c.length+' lançamentos · abrir a ficha')+'"><span class="'+(prev?'pag-prev':'')+'">'+esc(fmtMoney(v))+'</span>'+(one?'':' <small class="sub">('+c.length+')</small>')+'</td>';}).join('');
+    TT+=t;TP+=pg;const st=!t?'<span class="sub">nada lançado</span>':pg>=t?'<span class="tag ok">Pago</span>':pg?'<span class="tag warn">Parcial</span>':'<span class="tag warn">A pagar</span>';
+    return '<tr><td><button class="lnk" data-person="'+esc(p.id)+'" style="font-weight:600">'+esc(fnm(p.id))+'</button><br><small class="sub">'+esc(p.remun||'')+'</small></td>'+cells+'<td class="c"><b>'+(t?esc(fmtMoney(t)):'—')+'</b></td><td>'+st+'</td></tr>';}).join('');
+  h+='<div class="sumline"><span>Total do mês <b>'+fmtMoney(TT)+'</b></span><span>Pago <b class="pos">'+fmtMoney(TP)+'</b></span><span>A pagar <b class="'+(TT-TP?'warn':'')+'">'+fmtMoney(TT-TP)+'</b></span></div>';
+  if(!ps.length)return h+'<ul class="list"><li><div class="empty"><b>Ninguém com esses filtros</b>Ajuste os filtros acima.</div></li></ul>';
+  h+='<div class="tbl-wrap" style="overflow:auto;min-height:0"><table class="pac esc-t pag-t"><thead><tr><th>Pessoa</th>'+DP_PAG_COLS.map(([l])=>'<th class="c">'+esc(l)+'</th>').join('')+'<th class="c">Total</th><th>Situação</th></tr></thead><tbody>'+body+'</tbody>'+
+    '<tfoot><tr><td>Total</td>'+tot.map(v=>'<td class="c">'+(v?esc(fmtMoney(v)):'—')+'</td>').join('')+'<td class="c"><b>'+esc(fmtMoney(TT))+'</b></td><td></td></tr></tfoot></table></div>';
+  h+='<p class="hint">Valores em laranja ainda estão como Previsto. Clique num valor para abrir o lançamento, ou num traço para lançar.</p>';
+  const pp=people.filter(p=>isActive(p.id)&&PRES_UN[p.remun]);
+  if(pp.length)h+='<details class="panel" id="dp-pres"'+(S.dpPresOpen?' open':'')+' style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Diárias e sessões de '+esc(fmtYm(ym))+' · '+esc(pp.map(p=>fnm(p.id)).join(', '))+'</summary><p class="hint" style="margin:8px 0">Diárias: marque quando pagar · sessões: marque as realizadas.</p><ul class="list pres-list">'+
+    pp.map(p=>{const v=salarioAtual(p.id);return '<li class="pres-li"><div><b style="font-weight:600">'+esc(fnm(p.id))+'</b><small class="sub" style="display:block">'+esc((PRES_UN[p.remun]||[''])[0])+(v!=null?' · '+esc(fmtMoney(v))+' <button class="lnk" data-new-rec="dp-mov" data-pre-pessoa="'+esc(p.id)+'" data-pre-tipo="Reajuste salarial">alterar</button>':'')+'</small></div>'+presHtml(p,ym)+'</li>';}).join('')+'</ul></details>';
+  return h;
 }
+/* Colunas da folha do mês: [rótulo, quais lançamentos entram, tipo sugerido ao lançar] */
+const DP_PAG_COLS=[['Salário',x=>/^(Salário|Pacote|Sessões|Diária)$/.test(x.tipo||''),p=>FOLHA_T[p.remun]||'Salário'],['Extras',x=>x.tipo==='Extra','Extra'],['VT',x=>x.tipo==='Vale-transporte','Vale-transporte'],['Guia DAE',x=>/^Guia/.test(x.tipo||''),'Guia DAE / INSS / FGTS'],['13º / férias',x=>/^(13º|Férias|Rescisão)/.test(x.tipo||''),'13º salário'],['Outros',()=>true,'Outro']];
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='dp-pres')S.dpPresOpen=e.target.open;},true);
 const PRES_UN={'Por diária':['diária','diárias'],'Por sessão':['sessão','sessões']};
 function presDias(p,ym,marc){const [y,m]=ym.split('-').map(Number);const n=new Date(y,m,0).getDate();const out=[];for(let d=1;d<=n;d++){const ds=ym+'-'+pad2(d);if(worksOn(escalaOf(p.id,ds),ds)===true||(marc&&marc.has(ds)))out.push(ds);}return out;}
 function presHtml(p,ym){
@@ -95,13 +110,14 @@ function presHtml(p,ym){
   const marc=diaria?new Set(diariasPagas(p.id,ym).map(r=>r.dia)):new Set(pag&&Array.isArray(pag.diasTrab)?pag.diasTrab:[]);const dias=presDias(p,ym,marc);const pago=pag&&pag.status==='Pago';
   const n=dias.filter(d=>marc.has(d)).length;
   const pend=diaria?dias.filter(d=>!marc.has(d)&&d<=todayISO()).length:0;
-  const valBox=v==null?'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">Valor da '+un[0]+':</span><input class="sel" style="width:120px;text-align:right" inputmode="decimal" data-money data-val-input placeholder="0,00" aria-label="Valor da '+un[0]+'"><button class="btn sm primary" data-val-save="'+esc(p.id)+'">Salvar valor</button></div>'
-    :'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">Valor da '+un[0]+': <b>'+esc(fmtMoney(v))+'</b></span><button class="btn sm ghost" data-new-rec="dp-mov" data-pre-pessoa="'+esc(p.id)+'" data-pre-tipo="Reajuste salarial">Alterar valor</button></div>';
-  return '<div data-pres-box="'+esc(p.id)+'" style="display:flex;flex-direction:column;gap:8px">'+valBox+
-    (dias.length?'<div class="days-pick">'+dias.map(d=>{const dt=new Date(d+'T12:00:00');const ext=worksOn(escalaOf(p.id,d),d)!==true;return '<label title="'+esc(fmtDateFull(d))+(ext?' · dia extra (desmarque para remover)':'')+'"><input type="checkbox" data-pres="'+esc(p.id)+'|'+ym+'|'+d+'"'+(marc.has(d)?' checked':'')+(pago?' disabled':'')+'><span>'+DOW[dt.getDay()]+' '+dt.getDate()+(ext?' · extra':'')+'</span></label>';}).join('')+'</div>'
-      :'<p class="hint" style="margin:0">Sem dias na escala deste mês.</p>')+
-    (pago?'':'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="date" class="sel" style="width:150px" data-pres-date min="'+ym+'-01" max="'+ym+'-'+pad2(new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate())+'" aria-label="Data do dia extra"><button class="btn sm" data-pres-add="'+esc(p.id)+'|'+ym+'">+ '+(un[0]==='diária'?'Diária extra paga':'Sessão extra')+'</button></div>')+
-    '<p class="hint" style="margin:0">'+(v==null?'Preencha o valor da '+un[0]+' acima para calcular.':diaria?'<b>'+n+'</b> '+(n===1?'diária paga':'diárias pagas')+' = <b>'+esc(fmtMoney(diariasPagas(p.id,ym).reduce((a,r)=>a+(+r.valor||0),0)))+'</b>'+(pend?' · <span style="color:var(--warn)">'+pend+' '+(pend===1?'dia da escala sem pagamento marcado':'dias da escala sem pagamento marcado')+'</span>':'')+' · marque quando pagar':'<b>'+n+'</b> '+(n===1?un[0]:un[1])+' × '+esc(fmtMoney(v))+' = <b>'+esc(fmtMoney(n*v))+'</b>'+(pago?' · já pago':''))+'</p></div>';
+  if(v==null)return '<div data-pres-box="'+esc(p.id)+'" class="pres-row"><span class="hint" style="margin:0">Valor da '+un[0]+':</span><input class="sel" style="width:110px;text-align:right" inputmode="decimal" data-money data-val-input placeholder="0,00" aria-label="Valor da '+un[0]+'"><button class="btn sm primary" data-val-save="'+esc(p.id)+'">Salvar valor</button></div>';
+  const total=diaria?diariasPagas(p.id,ym).reduce((a,r)=>a+(+r.valor||0),0):n*v;
+  const last=new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();
+  return '<div data-pres-box="'+esc(p.id)+'" class="pres-row">'+
+    (dias.length?'<div class="days-pick">'+dias.map(d=>{const dt=new Date(d+'T12:00:00');const ext=worksOn(escalaOf(p.id,d),d)!==true;return '<label title="'+esc(fmtDateFull(d))+(ext?' · dia extra (desmarque para remover)':'')+'"><input type="checkbox" data-pres="'+esc(p.id)+'|'+ym+'|'+d+'"'+(marc.has(d)?' checked':'')+(pago?' disabled':'')+'><span>'+DOW[dt.getDay()]+' '+dt.getDate()+(ext?' · extra':'')+'</span></label>';}).join('')+'</div>':'<span class="hint" style="margin:0">Sem dias na escala deste mês.</span>')+
+    (pag&&!Array.isArray(pag.diasTrab)?'<span class="pres-tot">lançado: <b>'+esc(fmtMoney(pag.valor))+'</b>'+(pago?' · já pago':' · marque os dias para recalcular')+'</span>':'<span class="pres-tot"><b>'+n+'</b> '+(diaria?(n===1?'paga':'pagas'):(n===1?un[0]:un[1]))+' · <b>'+esc(fmtMoney(total))+'</b>'+(pago?' · já pago':'')+(pend?' · <span style="color:var(--warn)">'+pend+' sem pagamento</span>':'')+'</span>')+
+    (pago?'':'<details class="pres-x"><summary>+ dia extra</summary><input type="date" class="sel" style="width:150px" data-pres-date min="'+ym+'-01" max="'+ym+'-'+pad2(last)+'" aria-label="Data do dia extra"><button class="btn sm" data-pres-add="'+esc(p.id)+'|'+ym+'">Adicionar</button></details>')+
+  '</div>';
 }
 function diariasPagas(pid,ym){return recs('dp-pag').filter(x=>x.pessoa===pid&&x.competencia===ym&&x.tipo==='Diária'&&x.dia);}
 async function diariaToggle(pid,ym,d,on){
@@ -113,11 +129,6 @@ async function diariaToggle(pid,ym,d,on){
     else if(!on&&ex)await S.db.collection('dp-pag').doc(ex.id).delete();
     toast(on?'Diária de '+fmtDate(d)+' paga · '+fmtMoney(v):'Pagamento da diária de '+fmtDate(d)+' removido');return true;
   }catch(err){toast('Não foi possível salvar agora. Tente de novo.');return false;}
-}
-function dpPres(people,ym){
-  const ps=people.filter(p=>isActive(p.id)&&PRES_UN[p.remun]);if(!ps.length)return '';
-  return '<div class="sec-h" style="margin-top:6px"><h3>Diárias e sessões de '+esc(fmtYm(ym))+'</h3><span class="cnt">diárias: marque quando pagar · sessões: marque as realizadas</span></div><ul class="list">'+
-    ps.map(p=>'<li style="padding:12px 16px;display:grid;grid-template-columns:minmax(140px,200px) minmax(0,1fr);gap:12px;align-items:start"><div><b style="font-weight:600">'+esc(p.nome)+'</b><small class="sub" style="display:block;color:var(--muted)">'+esc(p.remun)+'</small></div>'+presHtml(p,ym)+'</li>').join('')+'</ul>';
 }
 document.addEventListener('change',async e=>{
   const el=e.target.closest&&e.target.closest('[data-pres]');if(!el||!S.db)return;
@@ -162,28 +173,6 @@ async function presSave(pid,ym,dias){
     toast(n+' '+(n===1?un[0]:un[1])+' · '+fmtMoney(valor));return true;
   }catch(err){toast('Não foi possível salvar agora. Tente de novo.');return false;}
 }
-function dpExtras(people,ym){
-  const act=people.filter(p=>isActive(p.id));if(!act.length)return '';
-  const cell=(p,tipo)=>{const ex=recs('dp-pag').filter(x=>x.pessoa===p.id&&x.competencia===ym&&x.tipo===tipo);const tot=ex.reduce((a,x)=>a+(+x.valor||0),0);
-    return '<td class="r">'+(ex.length>1?'<span title="Mais de um lançamento neste mês: edite pela lista de pagamentos">'+fmtMoney(tot)+'</span>':'<input class="sel" style="width:120px;text-align:right" inputmode="decimal" data-money data-dp-extra="'+esc(p.id)+'" data-dp-tipo="'+esc(tipo)+'" placeholder="0,00" aria-label="'+esc(tipo)+' de '+esc(p.nome)+'" value="'+(ex[0]?esc(moneyFmtInput(ex[0].valor)):'')+'">')+'</td>';};
-  return '<div class="sec-h" style="margin-top:6px"><h3>Extras e vale-transporte de '+esc(fmtYm(ym))+'</h3><span class="cnt">digite o valor e saia do campo para salvar</span></div><div class="tbl-wrap" style="min-height:0;max-height:none"><table class="num-t" style="min-width:0"><thead><tr><th>Pessoa</th><th>Remuneração</th><th class="r">Extra do mês</th><th class="r">Vale-transporte</th></tr></thead><tbody>'+
-    act.map(p=>'<tr style="cursor:default"><td class="nm">'+esc(p.nome)+'</td><td>'+esc(p.remun||'—')+'</td>'+cell(p,'Extra')+(p.vt==='Sim'?cell(p,'Vale-transporte').replace('placeholder="0,00"','placeholder="'+(+p.vtValor?esc(moneyFmtInput(p.vtValor)):'0,00')+'"'):'<td class="r"><span class="dim" title="Sem VT no cadastro">—</span></td>')+'</tr>').join('')+
-    '</tbody></table></div>';
-}
-document.addEventListener('change',async e=>{
-  const el=e.target.closest&&e.target.closest('[data-dp-extra]');if(!el||!S.db)return;
-  const pid=el.dataset.dpExtra,tipo=el.dataset.dpTipo||'Extra',ym=S.dpMonth;const v=el.value.trim()===''?0:moneyParse(el.value);
-  if(isNaN(v)){toast('Valor inválido.');return;}
-  const ex=recs('dp-pag').find(x=>x.pessoa===pid&&x.competencia===ym&&x.tipo===tipo);const now=new Date().toISOString();
-  const nome=tipo==='Extra'?'Extra':'Vale-transporte';
-  try{
-    if(ex&&!v)await S.db.collection('dp-pag').doc(ex.id).delete();
-    else if(ex)await S.db.collection('dp-pag').doc(ex.id).update({valor:v,atualizadoEm:now});
-    else if(v)await S.db.collection('dp-pag').doc(uid('pag')).set({pessoa:pid,competencia:ym,tipo,valor:v,status:'Previsto',dataPag:'',forma:'',obs:'',anexos:[],criadoEm:now,atualizadoEm:now});
-    else return;
-    toast(nome+(v?' salvo':' removido'));
-  }catch(err){toast('Não foi possível salvar agora. Tente de novo.');}
-});
 const dpPessoaSel=ids=>selHtml('dp-f-pessoa',S.dpFp||'',[['','Todas as pessoas']].concat(equipe().filter(p=>ids.has(p.id)).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt')).map(p=>[p.id,p.nome])),'Pessoa');
 const DP_MV_G={adm:['Admissão','Registro inicial'],rea:['Reajuste salarial','Dissídio'],afa:['Afastamento'],des:['Desligamento'],out:['Alteração contratual','Mudança de função','Outro','Férias']};
 const DP_MV_TONE={'Admissão':'ok','Registro inicial':'ok','Reajuste salarial':'info','Dissídio':'info','Afastamento':'warn','Desligamento':'bad','Férias':'pess'};
