@@ -455,7 +455,7 @@ function resetModule(id){
   if(id==='dp')Object.assign(S,{dpTab:'ind',dpPerson:null,dpMonth:ymOf(todayISO()),dpWeek:weekStart(todayISO()),dpOcTipo:'',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''}});
   else if(id==='fac')Object.assign(S,{facTab:'geral',facF:{ativo:'',exec:'',tipo:'',status:'abertos',forn:'',tipoAtivo:'',q:''}});
   else if(id==='sau')Object.assign(S,{sauTab:'agenda',sauP:'',sauTipo:''});
-  else if(id==='neg')Object.assign(S,{negTab:'obr',negE:'',negOv:'ass'});
+  else if(id==='neg')Object.assign(S,{negTab:'obr',negE:'',negOv:'att'});
   else if(id==='brd')Object.assign(S,{brdTab:'boards',brdB:'',brdExec:''});
   else if(id==='fam')Object.assign(S,{famTab:'geral',famP:'',famPet:''});
   else if(id==='via')Object.assign(S,{viaTab:'ger',viaSel:null,viaExec:'',viaTipo:'',viaPar:''});
