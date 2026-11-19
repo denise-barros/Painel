@@ -432,6 +432,13 @@ function renderNav(){
 }
 const DRIVE_ROOT='1Vne9tQl8NuetZV7oOHWPQf1YlGx5pEzd';
 const DRIVE={age:'1Smgv4DVfD5ggO-oIHX9s3kcRk6sbQJgB',rel:'1YAlbc9fqx4SNpLhqXnBZ10hC6yYf5Qzr',sec:'1AzM9aLVRzTDj3F9VV9c0U8T4r1q-LdXa',fin:'1sVaoiivC9pbwpv1iUewIvTrRna1z38sS',dp:'1oHOA37caEBT_v9KqqIJ8PN5-zw30wtp0',fac:'1HqO514gfBTu23CChYJIm0HSGERrX32-0',sau:'15NWF6phkmEFlkXlopSGjtsOCaHTf1FmY',fam:'1AuOTadw6IAC1X2yObC6xVHuzxRfpNY2r',neg:'1lNtr4p9_5HHZQ4Ntv_EULcL4nkOYD7ze',brd:'1GVfA72arBTG9FlYXMov5iEIcns5m3g0i',via:'1mc3jMdVeO9xFA7X7vVlpYtTrZgVL6bpX',cad:'1j3QyS7T5KxOUQ9ZjgDG-0H1IPR0Xv9ll'};
+/* ícone de pasta do Financeiro: cada subcategoria (grupo do menu) abre a sua subpasta; Visão geral e Relatórios, a pasta principal */
+const DRIVE_FIN_SUB=[
+  {l:'Cronograma de pagamentos',id:'1CtbDX37o3QFYYv7obfev-dn2BcMfVwWk',tabs:['cronograma']},
+  {l:'Fluxos de caixa e prestação de contas',id:'1USU8qivmfO4PbqWyK87tTXdlBYR5HaV1',tabs:['fdc-']},
+  {l:'Controles financeiros',id:'1RWOZKn4tN9RB25y-5PX-iQmKg2JfxM5r',tabs:['assinaturas','reemb-','pontos']},
+  {l:'Crédito e movimentações entre sócios',id:'1yIUxho193OkUDWbT88vreGg9EmxsR3rx',tabs:['emprestimos','repasses','rep-','parcelas']},
+  {l:'Solicitações de pagamentos',id:'1Wh1L4aDLKxGeExjTXu0Dn323hB4wyuPx',tabs:['solicitacoes']}];
 function driveTarget(){
   const v=S.view;let rec=null,key=v;
   if(v==='dp'&&S.dpPerson)rec=personById(S.dpPerson);
@@ -443,6 +450,9 @@ function driveTarget(){
   else if(v==='via'&&S.viaSel)rec=viaById(S.viaSel);
   const fid=rec&&rec.drive&&rec.drive[key];
   if(fid)return{id:fid,label:'Pasta no Drive',title:'Abrir a pasta de '+(rec.nome||rec.titulo)+' no Google Drive'};
+  if(v==='fin'){let tab=null;try{const w=frames.fin&&frames.fin.contentWindow;tab=w&&w.FIN&&w.FIN.current();}catch(e){}
+    const sf=DRIVE_FIN_SUB.find(x=>x.tabs.some(t=>t===tab||(t.endsWith('-')&&String(tab||'').indexOf(t)===0)));
+    if(sf)return{id:sf.id,label:'Pasta '+sf.l+' no Drive',title:'Abrir a pasta '+sf.l+' no Google Drive'};}
   const nn=NAV.find(x=>x.id===v);
   return{id:DRIVE[v]||DRIVE_ROOT,label:DRIVE[v]?'Pasta '+nn.l+' no Drive':'Pasta do Painel no Drive',title:DRIVE[v]?'Abrir a pasta '+nn.l+' no Google Drive':'Abrir a pasta Central Executiva no Google Drive'};
 }
