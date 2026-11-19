@@ -1417,15 +1417,16 @@ function encCobTxt(d){const items=data["rep-contas"]||[],by={};(d.cob||[]).forEa
   const parts=Object.keys(by).map(id=>{const r=items.find(x=>x.id===id),b=by[id],ms=b.ms.sort();const nome=(r&&r.item)||b.item||"Item excluído";
     const tot=r&&encCells(r).length===ms.length&&encCells(r).every(k=>ms.includes(k));const quitou=!tot&&r&&!encDone(r)&&encQuit(r,encPaidMap())&&(()=>{const l=(data["rep-dev"]||[]).filter(x=>(x.cob||[]).some(c=>c.id===id)).sort((x,z)=>String(x.data||"").localeCompare(String(z.data||""))||String(x.criado||"").localeCompare(String(z.criado||"")));return l.length&&l[l.length-1].id===d.id})();return nome+" ("+(tot?"total":ms.map(fmtMonth).join(", ")+(quitou?" · quitou o item":""))+")"});
   return parts.length?parts.join(" · "):(d.ref||"Saldo geral")}
-function encSelSum(){const S=state.encSel;if(!S)return{n:0,v:0,txt:""};const items=data["rep-contas"]||[];let v=0;const by={};
-  S.cells.forEach(k=>{const[id,m]=k.split("|");const r=items.find(x=>x.id===id);if(!r)return;v+=(+r.m[m]||0)-Math.min((encPaidMap().M[k]||0),+r.m[m]||0);(by[id]=by[id]||{n:r.item,ms:[]}).ms.push(m)});
+function encSelSum(){const S=state.encSel;if(!S)return{n:0,v:0,txt:""};const items=data["rep-contas"]||[],P=encPaidMap(),byId={};items.forEach(r=>{byId[r.id]=r});let v=0;const by={};
+  S.cells.forEach(k=>{const[id,m]=k.split("|");const r=byId[id];if(!r)return;v+=(+r.m[m]||0)-Math.min((P.M[k]||0),+r.m[m]||0);(by[id]=by[id]||{n:r.item,ms:[]}).ms.push(m)});
   return{n:S.cells.size,v:Math.round(v*100)/100,txt:Object.values(by).map(b=>b.n+" ("+b.ms.sort().map(fmtMonth).join(", ")+")").join(" · ")}}
-function encSelInfo(s){return s.n?`${s.n} ${s.n===1?"célula":"células"} · <b>${fmtMoney(s.v)}</b> · ${esc(s.txt)}`:"Use “todas” para marcar o item inteiro. Células verdes já estão pagas."}
+function encSelInfo(s){return s.n?`${s.n} ${s.n===1?"célula":"células"} · <b>${fmtMoney(s.v)}</b> · ${esc(s.txt)}`:"Toque nas células, use “todas” para marcar uma linha ou “Selecionar tudo” para marcar a tabela inteira."}
+function encAllTxt(){const S=state.encSel;if(!S||!S.cells.size)return "Selecionar tudo";const ks=encVisKeys();return ks.length&&ks.every(k=>S.cells.has(k))?"Limpar seleção":"Selecionar tudo"}
 function encSelGoTxt(s){return "Salvar devolução"+(s.n?" de "+fmtMoney(s.v):"")}
 /* marcar/desmarcar células sem redesenhar a tela inteira: o redesenho fazia a tela piscar no tablet e voltava a rolagem da tabela para o topo */
 function encPickPaint(){const S=state.encSel,bar=document.querySelector(".enc-selbar");if(!S||!bar)return render();
   document.querySelectorAll("[data-encpick]").forEach(b=>{const on=S.cells.has(b.dataset.encpick);b.setAttribute("aria-pressed",String(on));const td=b.closest("td");if(td)td.classList.toggle("on",on)});
-  const s=encSelSum(),t=bar.querySelector(".enc-selbar-t span"),g=bar.querySelector("[data-encselgo]");if(t)t.innerHTML=encSelInfo(s);if(g){g.disabled=!s.n;g.textContent=encSelGoTxt(s)}}
+  const s=encSelSum(),t=bar.querySelector(".enc-selbar-t span"),g=bar.querySelector("[data-encselgo]");if(t)t.innerHTML=encSelInfo(s);if(g){g.disabled=!s.n;g.textContent=encSelGoTxt(s)}const a=bar.querySelector("[data-encpickall]");if(a)a.textContent=encAllTxt()}
 function encontroHTML(tb){
   const tid=tb.id,y=state.year,items=data[tid]||[],C=encCalc(),P=C.P;const ym=i=>y+"-"+String(i).padStart(2,"0");
   const liq=C.F.ab-C.L.ab,SEL=state.encSel;
@@ -1443,7 +1444,7 @@ function encontroHTML(tb){
     h+=`<section class="tbl enc-side"><div class="enc-side-h"><h3>${nome}</h3><div class="seg" role="tablist" aria-label="${nome}">${[["deve","Deve",rows.length],["emdia",ICO_OK+" Em dia",emd.length],["dev","Devolveu",devs.length],["rec","Recusado",rec.length]].map(([k,l,n])=>`<button role="tab" data-encv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}" ${k==="emdia"?'title="Nada vencido em aberto até o último mês fechado"':""}>${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</b></span><span class="grow"></span>${sel?"":`<button class="btn sm primary" data-encsel="${p}">Registrar devolução</button>`}</div>`;
     if(sel){const s=encSelSum();
       h+=`<div class="enc-selbar"><div class="enc-selbar-t"><b>Clique nas células que ${nome} pagou</b><span>${encSelInfo(s)}</span></div>
-      <div class="enc-selbar-f"><label for="enc-sel-data">Data</label><input class="sel" type="date" id="enc-sel-data" value="${esc(SEL.data)}"><label class="sr" for="enc-sel-obs">Observação</label><input class="sel" type="text" id="enc-sel-obs" placeholder="Observação (opcional)" value="${esc(SEL.obs||"")}"><button class="btn sm" data-encselno>Cancelar</button><button class="btn sm primary" data-encselgo ${s.n?"":"disabled"}>${encSelGoTxt(s)}</button></div></div>`}
+      <div class="enc-selbar-f"><label for="enc-sel-data">Data</label><input class="sel" type="date" id="enc-sel-data" value="${esc(SEL.data)}"><label class="sr" for="enc-sel-obs">Observação</label><input class="sel" type="text" id="enc-sel-obs" placeholder="Observação (opcional)" value="${esc(SEL.obs||"")}"><button class="btn sm" data-encpickall>${encAllTxt()}</button><button class="btn sm" data-encselno>Cancelar</button><button class="btn sm primary" data-encselgo ${s.n?"":"disabled"}>${encSelGoTxt(s)}</button></div></div>`}
     const grid=(rows,add)=>{let h="";const tm=Array(13).fill(0);const CUT=encCut(),gab=rows.reduce((a,r)=>a+encAbertoDue(r,P),0);
       h+=`<div class="wrap enc-wrap"><table class="grid mx enc${sel?" enc-picking":""}"><thead><tr><th>Item</th><th>Tipo</th>${MES.map(m=>`<th>${m.replace(".","")}</th>`).join("")}<th>Em aberto</th><th>Status</th><th aria-label="Ações"></th></tr></thead><tbody>`;
       rows.forEach(r=>{const tot=encTotal(r),dv=encDevItem(r,P),ab=encAbertoDue(r,P);
@@ -1484,8 +1485,11 @@ function encontroHTML(tb){
   return h;
 }
 function encSelStart(p,rowId){const hj=new Date().toISOString().slice(0,10);state.encSel={p,cells:new Set(),data:hj,obs:""};if(rowId)encPickRow(rowId);render()}
-function encPickRow(id){const S=state.encSel;const r=(data["rep-contas"]||[]).find(x=>x.id===id);if(!S||!r)return;const P=encPaidMap();
-  const open=encCells(r).filter(k=>!encCellPaid(r,k,P)).map(k=>r.id+"|"+k);const allOn=open.every(k=>S.cells.has(k));open.forEach(k=>allOn?S.cells.delete(k):S.cells.add(k))}
+/* "todas" (linha) e "Selecionar tudo": só as células que aparecem na tabela, para a soma bater com o que está marcado na tela */
+const encVisKeys=row=>[...(row||document).querySelectorAll("[data-encpick]")].map(b=>b.dataset.encpick);
+function encToggleKeys(ks){const S=state.encSel;if(!S||!ks.length)return;const allOn=ks.every(k=>S.cells.has(k));ks.forEach(k=>allOn?S.cells.delete(k):S.cells.add(k))}
+function encPickRow(id,btn){const tr=btn&&btn.closest("tr");if(tr)return encToggleKeys(encVisKeys(tr));
+  const r=(data["rep-contas"]||[]).find(x=>x.id===id);if(!r)return;const P=encPaidMap(),y=state.year+"-";encToggleKeys(encCells(r).filter(k=>k.startsWith(y)&&!encCellPaid(r,k,P)).map(k=>r.id+"|"+k))}
 async function encSelSave(){const S=state.encSel;if(!S||!S.cells.size)return;const items=data["rep-contas"]||[],P=encPaidMap();
   const dt=($("#enc-sel-data")||{}).value||S.data,obs=(($("#enc-sel-obs")||{}).value||"").trim();
   const cob=[...S.cells].map(k=>{const[id,m]=k.split("|");const r=items.find(x=>x.id===id);if(!r)return null;const v=Math.round(((+r.m[m]||0)-Math.min(P.M[k]||0,+r.m[m]||0))*100)/100;return{id,item:r.item||"",m,v}}).filter(Boolean);
@@ -1531,6 +1535,7 @@ function render(){
     else if(tab.monthly&&state.cronView==="cal")h+=calendarHTML();
     else tbs.forEach(tb=>h+=tb.encontro?encontroHTML(tb):listHTML(tb,ctx,tab.tables.length>1))}
   $("#fin-content").innerHTML=h;renderNav();
+  if(state.encSel){const a=document.querySelector("[data-encpickall]");if(a)a.textContent=encAllTxt()}
   if(aid&&!aid.startsWith("fi-")){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
 
@@ -1585,7 +1590,8 @@ document.addEventListener("click",async e=>{
   if(e.target.closest("[data-encselno]")){state.encSel=null;render();return}
   const eg=e.target.closest("[data-encselgo]");if(eg){eg.disabled=true;encSelSave();return}
   const pk=e.target.closest("[data-encpick]");if(pk&&state.encSel){const k=pk.dataset.encpick,S=state.encSel.cells;S.has(k)?S.delete(k):S.add(k);encPickPaint();return}
-  const pr=e.target.closest("[data-encpickrow]");if(pr&&state.encSel){encPickRow(pr.dataset.encpickrow);encPickPaint();return}
+  const pr=e.target.closest("[data-encpickrow]");if(pr&&state.encSel){encPickRow(pr.dataset.encpickrow,pr);encPickPaint();return}
+  if(e.target.closest("[data-encpickall]")&&state.encSel){const S=state.encSel.cells,ks=encVisKeys();if(ks.length&&ks.every(k=>S.has(k)))S.clear();else ks.forEach(k=>S.add(k));encPickPaint();return}
   const er=e.target.closest("[data-encreopen]");if(er){encReabrir(er.dataset.encreopen);return}
   const b=e.target.closest("[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
   if(!b)return;const d=b.dataset;
