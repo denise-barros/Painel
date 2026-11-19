@@ -246,6 +246,7 @@ function compute(hz){
   const doneMonth=tasks.filter(t=>t.status==='concluido'&&t.completedAt&&String(t.completedAt).slice(0,7)===ym).length;
   const attention=[],upcoming=[];
   open.forEach(t=>{
+    if(t.kind==='certificado')return; // o certificado já avisa sozinho (Negócios), sem repetir a demanda de renovação
     if(t.due&&t.due<t0)attention.push({sev:'bad',kind:'Demanda',title:t.title||'(sem título)',meta:[t.executive?['',EXEC[t.executive]]:null,sphereTag(t),['bad','Atrasada desde '+fmtDate(t.due)]],right:'#'+(t.num||''),go:'sec',sort:t.due});
     else if(t.status==='aguardando'&&t.waitingSince&&daysBetween(t.waitingSince,new Date())>=S.staleDays)attention.push({sev:'warn',kind:'Demanda',title:t.title||'(sem título)',meta:[t.executive?['',EXEC[t.executive]]:null,sphereTag(t),['warn','Aguardando há '+daysBetween(t.waitingSince,new Date())+' dias'],t.waitingFor?['', 'De: '+t.waitingFor]:null],right:'#'+(t.num||''),go:'sec',sort:'1'});
     if(t.due&&t.due>=t0&&t.due<=horizon)upcoming.push({date:t.due,kind:'Demanda',title:t.title||'(sem título)',meta:[t.executive?['',EXEC[t.executive]]:null,sphereTag(t)],right:'',go:'sec',sev:(t.priority==='alta'||t.priority==='critica')?'bad':'info'});
@@ -312,7 +313,7 @@ function attSave(){S.attSeen=Object.assign({},S.attSeen);const lim=new Date(Date
 document.addEventListener('click',e=>{const o=e.target.closest('[data-att-ok]');if(o){e.stopPropagation();S.attSeen=Object.assign({},S.attSeen,{[o.dataset.attOk]:todayISO()});attSave();return;}
   const u=e.target.closest('[data-att-undo]');if(u){e.stopPropagation();S.attSeen=Object.assign({},S.attSeen);delete S.attSeen[u.dataset.attUndo];attSave();return;}},true);
 function itemHtml(it,showDate){
-  return '<li><button class="item '+(it.sev||'')+'" data-go="'+it.go+'"><span class="sev"></span><span style="min-width:0"><span class="tt">'+esc(it.title)+'</span><span class="mm"><span class="tag mod-'+esc(it.go||'')+'">'+esc(it.kind)+'</span>'+tagsHtml(it.meta)+'</span></span><span class="rr">'+(it.right?'<b>'+esc(it.right)+'</b>':'')+(showDate?'<small>'+esc(fmtDate(it.date))+'</small>':'')+'</span></button></li>';
+  return '<li><button class="item '+(it.sev||'')+'" data-go="'+it.go+'"'+(it.goPg?' data-go-pg="'+esc(it.goPg)+'"':'')+'><span class="sev"></span><span style="min-width:0"><span class="tt">'+esc(it.title)+'</span><span class="mm"><span class="tag mod-'+esc(it.go||'')+'">'+esc(it.kind)+'</span>'+tagsHtml(it.meta)+'</span></span><span class="rr">'+(it.right?'<b>'+esc(it.right)+'</b>':'')+(showDate?'<small>'+esc(fmtDate(it.date))+'</small>':'')+'</span></button></li>';
 }
 
 /* ---------- render: capa ---------- */

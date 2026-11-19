@@ -771,7 +771,7 @@ document.addEventListener('click',e=>{
   if(t.id==='rf-save')return saveRec();
   if(t.id==='rf-del')return delRec();
   if(t.dataset.nav!=null)return goHome(t.dataset.nav);
-  if(t.dataset.go!=null){const gid=t.dataset.go;if(gid===S.view)return go(gid);return goHome(gid);}
+  if(t.dataset.go!=null){const gid=t.dataset.go;if(t.dataset.goPg&&gid==='neg'){goHome(gid);S.negPg=t.dataset.goPg;renderNeg();return;}if(gid===S.view)return go(gid);return goHome(gid);}
   if(t.dataset.exec!=null){S.exec=t.dataset.exec;saveUi();return renderCurrent();}
   if(t.dataset.cadTab!=null){S.cadTab=t.dataset.cadTab;saveUi();if(S.view!=='cad')return go('cad');return renderCad();}
   if(t.dataset.edit!=null){const[c,id]=t.dataset.edit.split(':');return openCad(c,id);}
