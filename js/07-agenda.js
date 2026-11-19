@@ -129,11 +129,11 @@ function ageEv(evs){
   const up=evs.filter(e=>evEnd(e)>=t0).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
   const past=evs.filter(e=>evEnd(e)<t0).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
   const wd=iso=>{const d=new Date(iso+'T12:00:00');return DIAS_SEM[(d.getDay()+6)%7].replace('-feira','');};
-  const exIc=ex=>ex==='ambos'?'<span class="ex-who" title="'+esc(EXEC.ambos)+'"><i class="ex-f"></i><i class="ex-l ex-2"></i>Ambos</span>':ex?'<span class="ex-who" title="'+esc(EXEC[ex]||'')+'"><i class="ex-'+(ex==='fernando'?'f':'l')+'"></i>'+(ex==='fernando'?'Fernando':'Leticia')+'</span>':'<span class="mut">·</span>';
+  const exIc=ex=>ex?'<span class="ex-who" title="'+esc(EXEC[ex]||'')+'">'+(ex==='ambos'?'Ambos':ex==='fernando'?'Fernando':'Leticia')+'</span>':'<span class="mut">·</span>';
   const row=e=>{const off=evOff(e);const feito=e.status==='Sim'||EV_SO.includes(e.status);
     const pe=e.pessoa&&personById(e.pessoa)?'<span class="tag pess">'+esc(personById(e.pessoa).nome.split(' ')[0])+'</span>':'';const bo=e.board&&boardById(e.board)?'<span class="tag">'+esc(boardById(e.board).nome)+'</span>':'';
     const dt=esc(fmtDate(e.data))+(e.fim&&e.fim!==e.data?' a '+esc(fmtDate(e.fim)):'');
-    return '<tr class="'+(off?'off':'')+'"><td class="ex">'+exIc(e.executivo)+'</td><td class="l"><button class="rot-n" data-rec="age-ev:'+esc(e.id)+'">'+esc(e.titulo)+'</button>'+(e.tema?' <span class="mut">· '+esc(e.tema)+'</span>':'')+pe+bo+(e.palestrante==='Sim'?'<span class="tag warn">Palestrante</span>':'')+filesHtml(e.anexos)+'</td>'+
+    return '<tr class="'+(off?'off':'')+'"><td class="ex ex-'+esc(e.executivo||'')+'">'+exIc(e.executivo)+'</td><td class="l"><button class="rot-n" data-rec="age-ev:'+esc(e.id)+'">'+esc(e.titulo)+'</button>'+(e.tema?' <span class="mut">· '+esc(e.tema)+'</span>':'')+pe+bo+(e.palestrante==='Sim'?'<span class="tag warn">Palestrante</span>':'')+filesHtml(e.anexos)+'</td>'+
       '<td class="l">'+dt+(e.fim&&e.fim!==e.data?'':' <span class="mut">'+esc(wd(e.data))+'</span>')+'</td><td class="l mut">'+esc(e.horario||'')+'</td><td class="l mut">'+esc([e.formato,e.ambito].filter(Boolean).join(' · '))+'</td><td class="l mut">'+esc(e.local||'')+'</td>'+
       '<td class="l">'+(off||feito?'<span class="tag '+(off?'bad':'ok')+'">'+esc(e.status==='Sim'?'Feito':e.status)+'</span>':'<span class="mut">'+esc(e.status||'Previsto')+'</span>')+'</td></tr>';};
   const byMonth=list=>{const g=new Map();list.forEach(e=>{const k=String(e.data||'').slice(0,7);if(!g.has(k))g.set(k,[]);g.get(k).push(e);});
