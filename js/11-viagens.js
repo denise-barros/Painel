@@ -455,7 +455,7 @@ function resetModule(id){
   if(id==='dp')Object.assign(S,{dpTab:'ind',dpPerson:null,dpMonth:ymOf(todayISO()),dpWeek:weekStart(todayISO()),dpOcTipo:'',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''}});
   else if(id==='fac')Object.assign(S,{facTab:'geral',facF:{ativo:'',exec:'',tipo:'',status:'abertos',forn:'',tipoAtivo:'',q:''}});
   else if(id==='sau')Object.assign(S,{sauTab:'agenda',sauP:'',sauTipo:''});
-  else if(id==='neg')Object.assign(S,{negTab:'obr',negE:'',negOv:'att'});
+  else if(id==='neg')Object.assign(S,{negTab:'obr',negE:'',negOv:'att',negPg:''});
   else if(id==='brd')Object.assign(S,{brdTab:'boards',brdB:'',brdExec:''});
   else if(id==='fam')Object.assign(S,{famTab:'geral',famP:'',famPet:''});
   else if(id==='via')Object.assign(S,{viaTab:'ger',viaSel:null,viaExec:'',viaTipo:'',viaPar:''});
@@ -748,7 +748,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.sauTab!=null){S.sauTab=t.dataset.sauTab;saveUi();return renderSau();}
   if(t.dataset.ovTick){const x=S.tasks.get(t.dataset.ovTick);if(x)setTaskStatus(x.id,x.status==='concluido'?'nova':'concluido');return;}
   if(t.dataset.negNew){openNewTask('p-neg',{kind:t.dataset.negNew});return;}
-  if(t.dataset.negE!=null){S.negE=t.dataset.negE;if(t.dataset.negTabGo){S.negTab=t.dataset.negTabGo;saveUi();}return renderNeg();}
+  if(t.dataset.negE!=null){S.negE=t.dataset.negE;S.negPg='';if(t.dataset.negTabGo){S.negTab=t.dataset.negTabGo;saveUi();}return renderNeg();}
   if(t.dataset.retorno!=null){const id=t.dataset.retorno;if(dr)closeDrawer();return agendarRetorno(id);}
   if(t.dataset.comprou!=null){const id=t.dataset.comprou;if(dr)closeDrawer();return comprou(id);}
   if(t.dataset.lancarReemb!=null){const id=t.dataset.lancarReemb;if(dr)closeDrawer();return lancarReemb(id);}
