@@ -484,6 +484,15 @@ li>div.item{cursor:default}
 .dem-blk .item.done .tt{color:var(--muted)}.dem-blk .item.done .sev{background:#3F7A5F;opacity:.55}
 .dem-blk .dem-row{cursor:default}.dem-blk .dem-row .item-main{flex:1}
 .dem-blk .dem-row .rr{display:flex;flex-direction:row;align-items:center;gap:8px}
+/* demandas: título sem negrito, descrições e prazo em texto (sem pílulas) */
+.dem-blk .dem-row .tt,.views .dem-blk .list .item.dem-row .tt{font-weight:400!important}
+.dem-blk .dem-row .mm{gap:0;align-items:baseline}
+.dem-blk .dem-row .mm .tag{background:none;border:0;padding:0;border-radius:0;color:var(--muted);font-size:11.5px;font-weight:400;font-family:inherit;letter-spacing:0;max-width:none}
+.dem-blk .dem-row .mm .tag::before{display:none}
+.dem-blk .dem-row .mm .tag+.tag::before{content:"·";display:inline;margin:0 6px;color:var(--faint);background:none;width:auto;height:auto;border-radius:0}
+.dem-blk .dem-row .mm .tag.bad,.dem-blk .dem-row .mm .tag.warn{color:var(--neg)}.dem-blk .dem-row .mm .tag.ok{color:var(--pos)}
+.dem-blk .dem-st{font-weight:400}
+.dem-due{font-size:12px;color:var(--muted);white-space:nowrap}.dem-due.bad{color:var(--neg);font-weight:600}.dem-due.ok{color:var(--pos)}.dem-due.none{color:var(--faint)}
 .dem-st{appearance:none;-webkit-appearance:none;border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;font-size:10px;font-weight:600;padding:4px 22px 4px 10px;color:var(--ink);cursor:pointer;
   background-image:linear-gradient(45deg,transparent 50%,#7E8C84 50%),linear-gradient(135deg,#7E8C84 50%,transparent 50%);background-position:calc(100% - 11px) 50%,calc(100% - 7px) 50%;background-size:4px 4px;background-repeat:no-repeat}
 .dem-st{text-align:center;text-align-last:center;padding-left:22px!important}
