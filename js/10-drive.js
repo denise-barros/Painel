@@ -3,6 +3,13 @@
 const GD='Google Drive';
 const DRIVE_SUB={casas:'1oPAKtilXU9W_AYjQdlkUznJawFBbM7jT',carros:'1_O4-IgjmCTtPbdfcayqR65SjWxJkSxMn',escritorios:'1JlOnG-pd70hvg0zHfU_8y7Tj27x8EyZE',servicos:'1sfgqsrzx67nkjI7cREav7Qz2tOcaVFJM'};
 const ativoPasta=a=>a.tipo==='Casa'?DRIVE_SUB.casas:a.tipo==='Carro'?DRIVE_SUB.carros:a.tipo==='Escritório'?DRIVE_SUB.escritorios:a.tipo==='Serviço'?DRIVE_SUB.servicos:DRIVE.fac;
+/* pastas do Financeiro por aba do módulo (subcategoria > aba) */
+const DRIVE_FIN={cronograma:'1CtbDX37o3QFYYv7obfev-dn2BcMfVwWk',solicitacoes:'1Wh1L4aDLKxGeExjTXu0Dn323hB4wyuPx',
+  'fdc-leticia':'1lNXSt46gjlBjZJKasHK0zS6gUQc0duMa','fdc-camburi':'1K5NFkVbZa5dWcAB-5V5rIrY-HC8CYp--',
+  'fdc-fernando':'1ujMFLm9wzwQOy65uHIfcmXhb1lEA3DWk','fdc-luciano':'1woFeH20h3LYlHhmYt9Mk_Lj_Qjh7id50','fdc-criancas':'1yYIwB56hM0RxbxHtWDDp6dSZVrh2fWeh',
+  assinaturas:'1qxpkSGGgohQDQSyqPlzJY-Z2EoBbWcuy','reemb-corp':'11qQwQzb5RAfJ5WelZeC856h7ISjW5rEc','reemb-med':'14Im_DxVWwbyafptASawDXxSsifDx3ArF',
+  'reemb-pagar':'1b__DiuuTbggzohC3BMTxaM1wwPQIR4eb',pontos:'1RWOZKn4tN9RB25y-5PX-iQmKg2JfxM5r',
+  emprestimos:'1Ssfy4z49tWtKFDBBHlYhstRtbo6luWGp',repasses:'12oYGfdMGbnOFf7FSKNNPVDSvhmoCVDNa',parcelas:'17Vjh2tzFVVdZq6HAUkWZHdSiTTtJO323'};
 const FAC_GRP={'c-fac-casas':'casas','c-fac-carros':'carros','c-fac-escritorios':'escritorios','c-fac-servicos':'servicos'};
 const TASK_ROOT=()=>({'p-fin':DRIVE.fin,'p-dp':DRIVE.dp,'p-fac':DRIVE.fac,'p-fam':DRIVE.fam,'p-neg':DRIVE.neg,'p-sau':DRIVE.sau,'p-brd':DRIVE.brd,'k-via':DRIVE.via,'p-age':DRIVE.age});
 function taskCatPath(t){const path=[];let n=catById(t&&t.categoryId),g=0;while(n&&g++<20){path.unshift(n);n=catById(n.parentId);}return path;}
@@ -70,7 +77,7 @@ async function driveFolderFor(ctx){
     for(let i=path.length-1;i>0;i--){const g=FAC_GRP[path[i].id];if(g)return DRIVE_SUB[g];}
     return TASK_ROOT()[path[0].id]||DRIVE.sec;
   }
-  if(ctx.fin)return DRIVE.fin;
+  if(ctx.fin)return DRIVE_FIN[ctx.tid]||(String(ctx.tid||'').indexOf('rep-')===0?DRIVE_FIN.repasses:DRIVE.fin);
   const rt=ctx.rt||'',v=ctx.vals||{};
   if(rt.indexOf('dp-')===0)return via('pessoas',pes(v.pessoa),'dp',DRIVE.dp);
   if(rt.indexOf('sau-')===0)return via('pessoas',pes(v.pessoa),'sau',DRIVE.sau);

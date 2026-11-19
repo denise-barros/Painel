@@ -710,7 +710,7 @@ function navHTML(active){
   return h;
 }
 function renderNav(){const n=$("#sideNav");if(n)n.innerHTML=navHTML(true);const b=$("#btnNew");if(b)b.hidden=true}
-function go(id){const nt=tabById(id);if(!state.tab||state.tab.id!==nt.id){delete state.subs[nt.id];state.encV={};state.encSel=null;state.encDevOpen={};state.encDevEdit=null;state.fxOpen={}}state.tab=nt;store.set("pgf.tab",state.tab.id);tableIds(state.tab).forEach(subscribe);state.paste=null;state.confirm=null;state.advance=false;
+function go(id){const nt=tabById(id);if(!state.tab||state.tab.id!==nt.id){delete state.subs[nt.id];state.encV={};state.encSel=null;state.encDevOpen={};state.encDevEdit=null;state.fxOpen={}}state.tab=nt;store.set("pgf.tab",state.tab.id);try{window.parent.updateDriveLink&&window.parent.updateDriveLink()}catch(e){}tableIds(state.tab).forEach(subscribe);state.paste=null;state.confirm=null;state.advance=false;
   $("#app").classList.remove("nav-open");render();$("#fin-content").scrollTop=0}
 
 /* ---------- valores ---------- */
@@ -906,15 +906,15 @@ function attHTML(){
   h+=`</div>`;
   if(fAtt.link)h+=`<div class="att-link"><label class="sr" for="fi-linkurl">Endereço do link</label><input id="fi-linkurl" type="url" placeholder="https://drive.google.com/…"><button type="button" class="btn sm primary" data-attlinkgo>Adicionar</button><button type="button" class="btn sm" data-attlinkno>Cancelar</button></div>`;
   h+=`<div class="att-acts">${(assetsNs||driveOn)?`<button type="button" class="btn sm" data-attfile>Anexar arquivo</button>`:""}<button type="button" class="btn sm" data-attlink>Adicionar link</button><input type="file" id="fi-file" multiple hidden></div>
-    <p class="hint-k">${driveOn?"Qualquer formato, até 16 MB. O arquivo vai para a pasta 02 Financeiro no Drive.":assetsNs?"PDF, imagens, vídeos, CSV e texto, até 20 MB. Word e Excel: anexe como link do Drive.":"Envio de arquivos indisponível nesta visualização. Use links."}</p>`;
+    <p class="hint-k">${driveOn?"Qualquer formato, até 16 MB. O arquivo vai para a pasta desta aba dentro de 02 Financeiro no Drive.":assetsNs?"PDF, imagens, vídeos, CSV e texto, até 20 MB. Word e Excel: anexe como link do Drive.":"Envio de arquivos indisponível nesta visualização. Use links."}</p>`;
   return h;
 }
 function renderAtt(){const el=document.getElementById("fi-att");if(el)el.innerHTML=attHTML()}
 async function saveAtt(list,toastMsg){fAtt.list=list;renderAtt();try{await updRow(fAtt.tid,fAtt.id,attPatch(fAtt.tid,ctxFor(),list));if(toastMsg)toast(toastMsg)}catch(e){toast("Não foi possível salvar o anexo.")}}
-/* envia um arquivo: Drive (pasta 02 Financeiro) se estiver ligado, senão o armazenamento da página; null se não deu */
-async function attUploadFile(f){
+/* envia um arquivo: Drive (subpasta da aba em 02 Financeiro) se estiver ligado, senão o armazenamento da página; null se não deu */
+async function attUploadFile(f,tid){
   const ce=driveOn?CEd():null;
-  if(ce){try{const r=await ce.driveUpload(f,{fin:true});return{id:"d"+r.id,kind:"drive",name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()}}
+  if(ce){try{const r=await ce.driveUpload(f,{fin:true,tid});return{id:"d"+r.id,kind:"drive",name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()}}
     catch(e){const msg=ce.driveErr(e,f.name);if(!assetsNs){toast(msg);return null}toast(msg+" Salvo só no Painel.")}}
   if(!assetsNs)return null;
   const ext=(f.name.split(".").pop()||"").toLowerCase();const type=AOK.has(f.type)?f.type:AEXT[ext];
@@ -929,7 +929,7 @@ async function uploadAtt(files){
   if(!attCan()){toast("Envio de arquivos indisponível aqui. Use “Adicionar link”.");return}
   for(const f of Array.from(files||[])){
     fAtt.up++;renderAtt();
-    try{const att=await attUploadFile(f);if(att)await saveAtt(fAtt.list.concat([att]),"Arquivo anexado"+(att.kind==="drive"?" no Drive":""))}
+    try{const att=await attUploadFile(f,fAtt.tid);if(att)await saveAtt(fAtt.list.concat([att]),"Arquivo anexado"+(att.kind==="drive"?" no Drive":""))}
     catch(e){toast("“"+f.name+"”: não foi possível enviar agora.")}
     finally{fAtt.up--;renderAtt()}}
 }
@@ -1524,7 +1524,7 @@ async function dvUpload(id,files){
   state.encDevOpen[id]=true;
   for(const f of Array.from(files||[])){
     dvAtt.up[id]=(dvAtt.up[id]||0)+1;render();
-    try{const att=await attUploadFile(f);if(att)await dvAttSave(id,dvList(id).concat([att]),"Comprovante anexado"+(att.kind==="drive"?" no Drive":""))}
+    try{const att=await attUploadFile(f,"rep-dev");if(att)await dvAttSave(id,dvList(id).concat([att]),"Comprovante anexado"+(att.kind==="drive"?" no Drive":""))}
     catch(e){toast("“"+f.name+"”: não foi possível enviar agora.")}
     finally{dvAtt.up[id]--;render()}}
 }
