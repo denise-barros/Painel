@@ -107,7 +107,7 @@ function renderSau(){
   const famV=fam.filter(p=>!S.exec||ownerOk(p.executivo)||p.id===S.sauP);
   if(famV.length){items.push({l:'Pessoas',nav:'sau|pessoa|'+(S.sauP||famV[0].id),on:S.sauTab==='pessoa',ic:MIC.reun});
     famV.forEach(p=>{const rep=recs('sau-med').filter(m=>m.pessoa===p.id&&medRepor(m)).length;const n=recs('sau-ev').filter(e=>e.pessoa===p.id&&evUpcoming(e)&&e.data<=addDays(t1,30)).length;items.push({l:p.nome.split(' ')[0]+(p.nome.split(' ').length>1?' '+p.nome.split(' ').slice(-1)[0]:''),nav:'sau|pessoa|'+p.id,on:S.sauTab==='pessoa'&&S.sauP===p.id,child:true,cnt:rep||n||'',alert:!!rep});});}
-  el.innerHTML=sideWrap(sideNav({mark:'SA',title:'Saúde',sub:'Saúde da família',items}),h);
+  setView(el,sideWrap(sideNav({mark:'SA',title:'Saúde',sub:'Saúde da família',items}),h));
 }
 function evLine(e,opts){
   const p=personById(e.pessoa);const late=evPastPending(e);
@@ -238,7 +238,7 @@ function renderNeg(){
     c+=card('Contratos e documentos',docs.length+' registrado'+(docs.length===1?'':'s'),'<button class="btn sm primary" data-new-rec="neg-doc">Adicionar</button>',negDoc(docs));
     h+='<div class="ov-grid">'+c+'</div>';
   }
-  h+='</div></div></div>';el.innerHTML=h;
+  h+='</div></div></div>';setView(el,h);
 }
 
 

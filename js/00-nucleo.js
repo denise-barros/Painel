@@ -224,6 +224,19 @@ function catLabel(t){const c=catById(t.categoryId);if(c){const path=[];let n=c,g
 const sphereOf=t=>{const c=catById(t.categoryId);return c?c.sphere:(t.sphere||null);};
 const isOpen=t=>t.status!=='concluido';
 
+/* ---------- redesenhar uma tela sem perder a rolagem ----------
+   As telas com menu lateral são redesenhadas inteiras a cada clique (marcar uma reunião, trocar o mês…). Isso recriava a área
+   que rola e a página voltava ao topo, piscando. Aqui guardamos a rolagem antes e devolvemos depois, se a aba continua a mesma. */
+const KEEP_SCROLL='.side-main,.neg-menu,.nm-list,.wrap,.rot-wrap';
+function setView(el,html){
+  const sig=()=>{const o=el.querySelector('.neg-menu .on');return (o?(o.dataset.snav||o.textContent):'')+'|'+(S.dpPerson||'')+'|'+(S.viaSel||'');};
+  const s0=sig(),top=el.scrollTop,left=el.scrollLeft,P=[...el.querySelectorAll(KEEP_SCROLL)].map(x=>[x.className,x.scrollTop,x.scrollLeft]);
+  el.innerHTML=html;
+  if(sig()!==s0)return;
+  el.scrollTop=top;el.scrollLeft=left;
+  [...el.querySelectorAll(KEEP_SCROLL)].forEach((x,i)=>{const p=P[i];if(p&&p[0]===x.className){if(p[1])x.scrollTop=p[1];if(p[2])x.scrollLeft=p[2];}});
+}
+
 /* ---------- cálculos da capa ---------- */
 function compute(hz){
   const t0=todayISO(),ym=ymOf(t0),day=+t0.slice(8),horizon=addDays(t0,hz||3);

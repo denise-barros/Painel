@@ -3,7 +3,7 @@
 function renderDP(){
   const el=$('#v-dp');const t0=todayISO();const ym=ymOf(t0);
   const people=dpFiltered();const ids=new Set(people.map(p=>p.id));
-  if(S.dpPerson&&personById(S.dpPerson)){el.innerHTML='<div class="wrap"><div class="side-layout">'+dpMenu()+'<div class="side-main">'+fichaHtml(S.dpPerson).replace(/^<div class="wrap">/,'').replace(/<\/div>$/,'')+'</div></div></div>';return;}
+  if(S.dpPerson&&personById(S.dpPerson)){setView(el,'<div class="wrap"><div class="side-layout">'+dpMenu()+'<div class="side-main">'+fichaHtml(S.dpPerson).replace(/^<div class="wrap">/,'').replace(/<\/div>$/,'')+'</div></div></div>');return;}
   S.dpPerson=null;
   const active=equipe().filter(p=>isActive(p.id));
   const pagMes=recs('dp-pag').filter(p=>p.competencia===ym&&ids.has(p.pessoa));
@@ -16,8 +16,8 @@ function renderDP(){
   const wrapDp=b=>'<div class="wrap"><div class="side-layout">'+dpMenu()+'<div class="side-main">'+b+'</div></div></div>';
   let h='<div class="plan-hero"><div><h2>'+HERO[TAB][0]+'</h2><p>'+HERO[TAB][1]+'</p></div>'+
     '<div class="acts">'+({pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',emp:'<button class="btn primary" data-new-rec="dp-emp">Novo empréstimo</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]!==undefined?{pag:'<button class="btn primary" data-new-rec="dp-pag">Lançar pagamento</button>',mov:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>',oc:'<button class="btn primary" data-new-rec="dp-oc">Nova ocorrência</button>',emp:'<button class="btn primary" data-new-rec="dp-emp">Novo empréstimo</button>',esc:'',fer:'<button class="btn primary" data-new-rec="dp-mov">Nova movimentação</button>'}[TAB]:'<details class="newmenu"><summary class="btn primary">+ Novo</summary><div class="nm-pop"><button class="btn" data-new-rec="dp-pag">Pagamento</button><button class="btn" data-new-rec="dp-mov">Movimentação</button><button class="btn" data-new-rec="dp-oc">Ocorrência</button><button class="btn" data-new-rec="dp-emp">Empréstimo</button></div></details>')+'</div></div>';
-  if(TAB==='ind'){h+=dpIndKpis(active,foraL)+dpAvisosHtml()+demBlock('p-dp')+(equipe().length?dpInd():'');el.innerHTML=wrapDp(h);return;}
-  if(TAB==='fer'){h+=equipe().length?dpFer():'';el.innerHTML=wrapDp(h);return;}
+  if(TAB==='ind'){h+=dpIndKpis(active,foraL)+dpAvisosHtml()+demBlock('p-dp')+(equipe().length?dpInd():'');setView(el,wrapDp(h));return;}
+  if(TAB==='fer'){h+=equipe().length?dpFer():'';setView(el,wrapDp(h));return;}
   const SLIM=TAB==='mov'||TAB==='oc'||TAB==='emp';
   const SEARCH='<input class="sel qsearch" id="dpf-q" type="search" placeholder="Buscar pessoa" value="'+esc(S.dpF.q||'')+'" aria-label="Buscar pessoa">';
   if(!SLIM)h+='<div class="filters">'+(selHtml('dpf-vinculo',S.dpF.vinculo,[['','Todos os vínculos'],['CLT','CLT'],['CLT doméstica','CLT doméstica'],['PJ','PJ'],['MEI','MEI'],['Autônomo(a)','Autônomo(a)']],'Vínculo')+
@@ -25,14 +25,14 @@ function renderDP(){
     selHtml('dpf-local',S.dpF.local,[['','Todos os locais principais']].concat(refRows('casas').map(c=>[c.id,c.nome])),'Local principal')+
     selHtml('dpf-ativos',S.dpF.ativos,[['sim','Só ativos'],['nao','Só desligados'],['','Ativos e desligados']],'Situação'))+
     SEARCH+'</div>';
-  if(!equipe().length){h+='<ul class="list"><li><div class="empty"><b>Nenhum funcionário ou prestador cadastrado</b>Cadastre em Cadastros › Funcionários.<br><button class="btn sm" data-add="funcionarios" style="margin-top:8px">Adicionar pessoa</button></div></li></ul>';el.innerHTML=wrapDp(h);return;}
+  if(!equipe().length){h+='<ul class="list"><li><div class="empty"><b>Nenhum funcionário ou prestador cadastrado</b>Cadastre em Cadastros › Funcionários.<br><button class="btn sm" data-add="funcionarios" style="margin-top:8px">Adicionar pessoa</button></div></li></ul>';setView(el,wrapDp(h));return;}
   if(TAB==='equipe')h+=dpEquipe(people);
   else if(TAB==='pag')h+=dpPag(people);
   else if(TAB==='mov')h+=dpMov(ids,SEARCH);
   else if(TAB==='esc')h+=dpEsc(people);
   else if(TAB==='emp')h+=dpEmp(ids,SEARCH);
   else h+=dpOc(ids,SEARCH);
-  el.innerHTML=wrapDp(h);
+  setView(el,wrapDp(h));
 }
 function dpMenu(){
   const on=k=>(S.dpPerson?k==='equipe':S.dpTab===k)?' on':'';
