@@ -902,7 +902,7 @@ function attHTML(){
   h+=`</div>`;
   if(fAtt.link)h+=`<div class="att-link"><label class="sr" for="fi-linkurl">Endereço do link</label><input id="fi-linkurl" type="url" placeholder="https://drive.google.com/…"><button type="button" class="btn sm primary" data-attlinkgo>Adicionar</button><button type="button" class="btn sm" data-attlinkno>Cancelar</button></div>`;
   h+=`<div class="att-acts">${(assetsNs||driveOn)?`<button type="button" class="btn sm" data-attfile>Anexar arquivo</button>`:""}<button type="button" class="btn sm" data-attlink>Adicionar link</button><input type="file" id="fi-file" multiple hidden></div>
-    <p class="hint-k">${driveOn?"Qualquer formato, até 16 MB. O arquivo vai para a pasta 02 Financeiro no Drive.":assetsNs?"PDF, imagens, vídeos, CSV e texto, até 20 MB. Word e Excel: anexe como link do Drive.":"Envio de arquivos indisponível nesta visualização. Use links."}</p>`;
+    <p class="hint-k">${driveOn?"Qualquer formato, até 16 MB. O arquivo vai para a pasta desta aba dentro de 02 Financeiro no Drive.":assetsNs?"PDF, imagens, vídeos, CSV e texto, até 20 MB. Word e Excel: anexe como link do Drive.":"Envio de arquivos indisponível nesta visualização. Use links."}</p>`;
   return h;
 }
 function renderAtt(){const el=document.getElementById("fi-att");if(el)el.innerHTML=attHTML()}
@@ -914,7 +914,7 @@ async function uploadAtt(files){
     fAtt.up++;renderAtt();
     try{
       let att=null;
-      if(ce){try{const r=await ce.driveUpload(f,{fin:true});att={id:"d"+r.id,kind:"drive",name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()}}
+      if(ce){try{const r=await ce.driveUpload(f,{fin:true,tid:fAtt.tid});att={id:"d"+r.id,kind:"drive",name:f.name,type:f.type,size:f.size,url:r.url,at:new Date().toISOString()}}
         catch(e){const msg=ce.driveErr(e,f.name);if(!assetsNs){toast(msg);continue}toast(msg+" Salvo só no Painel.")}}
       if(!att){
         const ext=(f.name.split(".").pop()||"").toLowerCase();const type=AOK.has(f.type)?f.type:AEXT[ext];
