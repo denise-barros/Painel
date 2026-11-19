@@ -706,7 +706,7 @@ function navHTML(active){
   return h;
 }
 function renderNav(){const n=$("#sideNav");if(n)n.innerHTML=navHTML(true);const b=$("#btnNew");if(b)b.hidden=true}
-function go(id){const nt=tabById(id);if(!state.tab||state.tab.id!==nt.id){delete state.subs[nt.id];state.encV={};state.encSel=null;state.encDevOpen={};state.encDevEdit=null;state.fxOpen={}}state.tab=nt;store.set("pgf.tab",state.tab.id);tableIds(state.tab).forEach(subscribe);state.paste=null;state.confirm=null;state.advance=false;
+function go(id){const nt=tabById(id);if(!state.tab||state.tab.id!==nt.id){delete state.subs[nt.id];state.encV={};state.encSel=null;state.encDevOpen={};state.encDevEdit=null;state.fxOpen={}}state.tab=nt;store.set("pgf.tab",state.tab.id);try{window.parent.updateDriveLink&&window.parent.updateDriveLink()}catch(e){}tableIds(state.tab).forEach(subscribe);state.paste=null;state.confirm=null;state.advance=false;
   $("#app").classList.remove("nav-open");render();$("#fin-content").scrollTop=0}
 
 /* ---------- valores ---------- */
