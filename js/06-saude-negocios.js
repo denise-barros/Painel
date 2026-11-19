@@ -218,14 +218,13 @@ function renderNeg(){
   const tasksAll=negTasks().filter(t=>(ns?ns.has(taskEmp(t)):(!S.exec||taskExec(t))));const tasks=tasksAll.filter(isOpen);
   const obr=obrList().filter(o=>negScope(o.empresa));const docs=recs('neg-doc').filter(d=>negScope(d.empresa));
   let h='<div class="wrap"><div class="side-layout">'+negMenu(emps)+'<div class="side-main">'+(sel?'<div class="back-row"><button class="back-home" data-neg-e="">‹ Voltar para todas as empresas</button></div>':'');
-  h+='<div class="plan-hero"><div><h2>'+esc(sel?sel.nome:'Negócios')+'</h2><p>'+(sel?esc([sel.pai?'Unidade de negócio da '+((empById(sel.pai)||{}).nome||''):'',empChildren(sel.id).length?'Unidades: '+empChildren(sel.id).sort(empOrd).map(e=>e.nome).join(', '):'',sel.situacao,sel.executivo?EXEC[sel.executivo]:''].filter(Boolean).join(' · ')):'Demandas e o que precisa de atenção hoje, em todas as empresas.')+'</p></div>'+
+  h+='<div class="plan-hero"><div><h2>'+esc(sel?sel.nome:'Negócios')+'</h2><p>'+(sel?esc([sel.pai?'Unidade de negócio da '+((empById(sel.pai)||{}).nome||''):'',empChildren(sel.id).length?'Unidades: '+empChildren(sel.id).sort(empOrd).map(e=>e.nome).join(', '):'',sel.situacao,sel.executivo?EXEC[sel.executivo]:''].filter(Boolean).join(' · ')):'O que precisa de atenção hoje e as demandas de todas as empresas.')+'</p></div>'+
     '<div class="acts">'+(sel?subDrive(sel,'neg'):'')+'</div></div>';
   const late=obr.filter(obrLate).length,soon=obr.filter(o=>!o.encerrada&&o.proxima&&o.proxima>=todayISO()&&o.proxima<=addDays(todayISO(),30)).length;
   const asPend=negKind('assinatura').filter(isOpen).length,faPend=negKind('familia').filter(isOpen).length;
   const ceSoon=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(todayISO(),30)),ceLate=ceSoon.filter(e=>e.certVenc<todayISO()).length;
-  if(!sel)h+='<div class="kpis">'+kpi('Demandas abertas',String(tasks.length))+kpi('Assinaturas pendentes',String(asPend),asPend?'warn':'')+kpi('Famílias aguardando',String(faPend),faPend?'warn':'')+kpi('Certificados vencendo em 30 dias',String(ceSoon.length),ceLate?'neg':ceSoon.length?'warn':'',ceLate?ceLate+' já vencido'+(ceLate>1?'s':''):'')+'</div>';
-  h+=demBlock('p-neg',tasksAll,{hook:t=>famAg(t)?'p-age':undefined,area:t=>{if(sel)return '';const v=taskEmp(t);return v==='todas'?'Todas as empresas':((empById(v)||{}).nome||'');}});
   if(!sel)h+=negHome(emps);
+  h+=demBlock('p-neg',tasksAll,{hook:t=>famAg(t)?'p-age':undefined,area:t=>{if(sel)return '';const v=taskEmp(t);return v==='todas'?'Todas as empresas':((empById(v)||{}).nome||'');}});
   if(!sel){if(!emps.length)h+='<ul class="list"><li><div class="empty"><b>Nenhuma empresa cadastrada</b>Cadastre em Cadastros › Empresas.<br><button class="btn sm" data-add="empresas" style="margin-top:8px">Adicionar empresa</button></div></li></ul>';}
   else if(!emps.length)h+='<ul class="list"><li><div class="empty"><b>Nenhuma empresa cadastrada</b>Cadastre em Cadastros › Empresas.<br><button class="btn sm" data-add="empresas" style="margin-top:8px">Adicionar empresa</button></div></li></ul>';
   else{
@@ -256,26 +255,38 @@ function negHome(empsIn){
   const none=x=>'<ul class="list"><li><div class="empty">'+x+'</div></li></ul>';
   const origem=t=>rootOf(t.categoryId)==='p-brd'?'Conselhos e Programas':sphereOf(t)==='pessoal'?'Pessoal':'Corporativo';
   const em=L('email').filter(t=>isOpen(t)&&origem(t)==='Corporativo').sort((a,b)=>String(a.due||'9999').localeCompare(String(b.due||'9999')));
-  const emH=em.length?'<ul class="list">'+em.map(t=>{const f=t.fields||{};const d=due(t);return row(t,[en(t)?[en(t)]:null,f.de?['De '+f.de]:null,d],d&&d[1]==='bad'?'bad':'',ck(t,'Marcar como respondido',false));}).join('')+'</ul>':none('Nenhum follow-up pendente.');
+  const emR=t=>{const f=t.fields||{};const d=due(t);return row(t,[en(t)?[en(t)]:null,f.de?['De '+f.de]:null,d],d&&d[1]==='bad'?'bad':'',ck(t,'Marcar como respondido',false));},imR=t=>{const f=t.fields||{};const d=due(t);const done=!isOpen(t);return row(t,[en(t)?[en(t)]:null,f.qtd?[f.qtd+' cópias']:null,f.solic?[f.solic]:null,d],done?'ok':d&&d[1]==='bad'?'bad':'',ck(t,done?'Desfazer':'Marcar como impressa',done));},asR=t=>{const f=t.fields||{};const d=due(t);return row(t,[[f.etapa||'Recebida','warn'],en(t)?[en(t)]:null,f.modo?[f.modo]:null,f.quem?['Em nome de '+(EXEC[f.quem]||f.quem)]:null,d],d&&d[1]==='bad'?'bad':'warn');},faR=t=>{const f=t.fields||{};const w=dayBetween(base(t),t0);return row(t,[[w<=0?'Contato hoje':'Há '+w+' dia'+(w>1?'s':''),w>=3?'bad':'warn'],f.familia?[f.familia]:null,f.canal?[f.canal]:null,f.recebeu?['Contato com '+(EXEC[f.recebeu]||f.recebeu)]:null,famAgTag(t)],w>=3?'bad':'warn',ck(t,'Marcar retorno feito',false));};
+  const ul=(arr,fn,empty)=>arr.length?'<ul class="list">'+arr.map(fn).join('')+'</ul>':none(empty);
   const im=L('impressao').filter(t=>(isOpen(t)&&(!t.due||t.due<=t0))||(!isOpen(t)&&localDayOf(t.completedAt)===t0)).sort((a,b)=>(isOpen(b)-isOpen(a))||String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
   const imDone=im.filter(t=>!isOpen(t)).length;
-  const imH=im.length?'<ul class="list">'+im.map(t=>{const f=t.fields||{};const d=due(t);const done=!isOpen(t);return row(t,[en(t)?[en(t)]:null,f.qtd?[f.qtd+' cópias']:null,f.solic?[f.solic]:null,d],done?'ok':d&&d[1]==='bad'?'bad':'',ck(t,done?'Desfazer':'Marcar como impressa',done));}).join('')+'</ul>':none('Nenhuma impressão para hoje.');
   const as=L('assinatura').filter(isOpen).sort((a,b)=>String(a.due||'9999').localeCompare(String(b.due||'9999')));
-  const asH=as.length?'<ul class="list">'+as.map(t=>{const f=t.fields||{};const d=due(t);return row(t,[[f.etapa||'Recebida','warn'],en(t)?[en(t)]:null,f.modo?[f.modo]:null,f.quem?['Em nome de '+(EXEC[f.quem]||f.quem)]:null,d],d&&d[1]==='bad'?'bad':'warn');}).join('')+'</ul>':none('Nenhuma assinatura pendente.');
   const fa=L('familia').filter(isOpen);const base=t=>(t.fields||{}).contatoEm||localDayOf(t.createdAt)||t0;fa.sort((a,b)=>base(a).localeCompare(base(b)));
-  const faH=fa.length?'<ul class="list">'+fa.map(t=>{const f=t.fields||{};const w=dayBetween(base(t),t0);return row(t,[[w<=0?'Contato hoje':'Há '+w+' dia'+(w>1?'s':''),w>=3?'bad':'warn'],f.familia?[f.familia]:null,f.canal?[f.canal]:null,f.recebeu?['Contato com '+(EXEC[f.recebeu]||f.recebeu)]:null,famAgTag(t)],w>=3?'bad':'warn',ck(t,'Marcar retorno feito',false));}).join('')+'</ul>':none('Nenhuma família aguardando retorno.');
+  const obr=obrList().filter(o=>negScope(o.empresa)&&!o.encerrada&&o.proxima&&o.proxima<=addDays(t0,30));
   const rows=[];
   certEmps().forEach(e=>{const v=e.certVenc||'';const n=v?dayBetween(t0,v):null;const cl=n==null?'':n<0?'bad':n<=30?'warn':'';
     const dm=[...S.tasks.values()].find(t=>t.kind==='certificado'&&t.id==='cert-'+e.id+'-'+v);
     rows.push('<tr><td class="emp'+(dm?' clk':'')+'"'+(dm?' data-task="'+esc(dm.id)+'" title="Abrir a demanda de renovação"':'')+'>'+esc(e.nome)+'</td><td class="cnpj">'+(e.cnpj?esc(e.cnpj):'<span class="none">—</span>')+'</td><td><select class="cert-in" data-cert-rep="'+esc(e.id)+'" aria-label="Representante legal">'+['fernando','leticia'].concat(e.certRep==='outro'?['outro']:[]).map(k=>'<option value="'+k+'"'+(certRepOf(e)===k?' selected':'')+'>'+esc(k==='outro'?(e.certRepNome||'Outra pessoa'):EXEC[k])+'</option>').join('')+'</select></td><td><input class="cert-in" type="date" data-cert-due="'+esc(e.id)+'" value="'+esc(v)+'" aria-label="Vencimento"></td><td>'+(n==null?'<span class="none">Sem data</span>':'<span class="tag '+cl+'">'+(n<0?'Vencido há '+(-n)+' dias':n===0?'Vence hoje':n+' dias')+'</span>')+'</td></tr>');});
   const ceH='<table class="cert-t"><thead><tr><th>Empresa</th><th>CNPJ</th><th>Representante legal</th><th>Vencimento</th><th>Situação</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
-  return '<div class="ov-grid">'
-    +blk('Follow-ups de e-mail',em.length+' pendente'+(em.length===1?'':'s'),emH)
-    +blk('Impressões do dia',im.length?imDone+' de '+im.length+' feitas':'0',imH)
-    +blk('Assinaturas pendentes',as.length+' pendente'+(as.length===1?'':'s'),asH)
-    +blk('Famílias aguardando retorno',fa.length+' aguardando',faH)
-    +blk('Certificados digitais','todas as empresas',ceH,true)+'</div>';
+  const ceN=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(t0,30)),ceLate=ceN.filter(e=>e.certVenc<t0);
+  /* Atenção: só o que está atrasado, de todos os tipos */
+  const att='<ul class="list">'+[].concat(as.filter(t=>t.due&&t.due<t0).map(asR),fa.filter(t=>dayBetween(base(t),t0)>=3).map(faR),em.filter(t=>t.due&&t.due<t0).map(emR)).join('')
+    +(obr.some(obrLate)?negObr(obr.filter(obrLate)).replace(/^<ul class="list">|<\/ul>$/g,''):'')
+    +ceLate.map(e=>'<li><div class="item bad"><span class="sev"></span><button class="item-main" data-neg-ov="cert"><span class="tt">Certificado digital · '+esc(e.nome)+'</span><span class="mm"><span class="tag bad">Vencido há '+dayBetween(e.certVenc,t0)+' dias</span></span></button></div></li>').join('')+'</ul>';
+  const nAtt=as.filter(t=>t.due&&t.due<t0).length+fa.filter(t=>dayBetween(base(t),t0)>=3).length+em.filter(t=>t.due&&t.due<t0).length+obr.filter(obrLate).length+ceLate.length;
+  const TABS=[
+    ['att','Atenção',nAtt,nAtt?'neg':'',nAtt?'atrasados':'nada atrasado',()=>nAtt?att:none('Nada atrasado. Tudo em dia.')],
+    ['ass','Assinaturas',as.length,as.length?'warn':'','pendentes',()=>ul(as,asR,'Nenhuma assinatura pendente.')],
+    ['fam','Famílias',fa.length,fa.length?'warn':'','aguardando retorno',()=>ul(fa,faR,'Nenhuma família aguardando retorno.')],
+    ['em','Follow-ups',em.length,'','de e-mail',()=>ul(em,emR,'Nenhum follow-up pendente.')],
+    ['imp','Impressões',im.length?imDone+'/'+im.length:'0','','do dia',()=>ul(im,imR,'Nenhuma impressão para hoje.')],
+    ['obr','Obrigações',obr.length,obr.some(obrLate)?'neg':obr.length?'warn':'','em 30 dias',()=>obr.length?negObr(obr):none('Nenhuma obrigação nos próximos 30 dias.')],
+    ['cert','Certificados',ceN.length,ceLate.length?'neg':ceN.length?'warn':'',ceLate.length?ceLate.length+' vencido'+(ceLate.length>1?'s':''):'vencem em 30 dias',()=>'<div class="ov-box">'+ceH+'</div>']];
+  const cur=TABS.find(x=>x[0]===S.negOv)||TABS[0];
+  return '<div class="neg-tabs" role="tablist" aria-label="O que ver">'+TABS.map(([k,l,n,c,sub])=>'<button class="kpi neg-tab'+(k===cur[0]?' on':'')+'" role="tab" aria-selected="'+(k===cur[0])+'" data-neg-ov="'+k+'"><span>'+esc(l)+'</span><b class="'+c+'">'+n+'</b><small>'+esc(sub)+'</small></button>').join('')+'</div>'
+    +'<section class="neg-tab-body">'+cur[5]()+'</section>';
 }
+/* abas da visão geral de Negócios */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-neg-ov]');if(!b)return;e.stopPropagation();S.negOv=b.dataset.negOv;renderNeg();},true);
 function negKind(k){const ns=negSet();return [...S.tasks.values()].filter(t=>t.kind===k&&(k==='familia'||!ns||ns.has(taskEmp(t)))&&(!S.exec||taskExec(t)));}
 function negItem(t,tags,tone){return '<li><button class="item '+tone+'" data-task="'+esc(t.id)+'"><span class="sev"></span><span style="min-width:0"><span class="tt">'+esc(t.title||'(sem título)')+'</span><span class="mm">'+tags.filter(Boolean).map(x=>'<span class="tag '+(x[1]||'')+'">'+esc(x[0])+'</span>').join('')+'</span></span><span class="rr"><small>#'+esc(t.num||'')+'</small></span></button></li>';}
 function negAss(){
