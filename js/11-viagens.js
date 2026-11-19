@@ -574,14 +574,12 @@ async function createSub(){
   $('#nt-sub').innerHTML=subOptions(root,n.id);$('#nt-newsub').hidden=true;inp.value='';}
 const KIND_LBL={email:'Follow-up de e-mail',impressao:'Impressão',assinatura:'Solicitação de assinatura',certificado:'Certificado digital',familia:'Atendimento a família'};
 function kindNewFields(){
-  const emps=[['todas','Todas as empresas']].concat(empresasPessoais().map(e=>[e.id,(e.pai&&empById(e.pai)?'    ':'')+e.nome]));
-  const all='email impressao assinatura certificado';
+  /* a empresa vem da subcategoria (cada subcategoria de Negócios é uma empresa), então não há um campo Empresa separado */
   const L=(k,id,txt,ctl)=>'<label class="nt-k" data-k="'+k+'" for="'+id+'" hidden>'+esc(txt)+'</label>'+ctl;
   const I=(k,nk,txt,o)=>{o=o||{};const id='nt-k-'+nk;return L(k,id,txt,'<input class="nt-k" hidden data-k="'+k+'" data-nk="'+nk+'" id="'+id+'" type="'+(o.type||'text')+'"'+(o.ph?' placeholder="'+esc(o.ph)+'"':'')+' autocomplete="off">');};
   const Sl=(k,nk,txt,opts)=>{const id='nt-k-'+nk;return L(k,id,txt,'<select class="nt-k" hidden data-k="'+k+'" data-nk="'+nk+'" id="'+id+'"><option value="">—</option>'+opts.map(o=>Array.isArray(o)?'<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>':'<option>'+esc(o)+'</option>').join('')+'</select>');};
   const EX=[['leticia','Leticia Lyle'],['fernando','Fernando Shayer']];
-  return Sl(all,'empresa','Empresa',emps)+
-    I('email','de','De quem')+I('email','link','Link do e-mail',{ph:'Cole o link da conversa'})+
+  return I('email','de','De quem')+I('email','link','Link do e-mail',{ph:'Cole o link da conversa'})+
     I('impressao','qtd','Quantidade',{type:'number'})+I('impressao','solic','Solicitante')+
     Sl('assinatura','modo','Tipo de assinatura',['Digital','Física'])+Sl('assinatura','quem','Em nome de',EX.concat([['ambos','Fernando Shayer e Leticia Lyle']]))+
     I('assinatura','pedidoPor','Quem pediu',{ph:'Qualquer pessoa: o executivo, um parceiro, uma família…'})+Sl('assinatura','pedidoVia','Pedido feito por',['WhatsApp','E-mail','Presencial','Telefone','Outro'])+
@@ -621,7 +619,7 @@ function openNewTask(preCat,o){o=o||{};
     '</div>'+
     '<div class="hint">Entrada em '+new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'. Depois de registrada, a demanda abre na Operação com checklist, anexos e histórico.</div>',
     '<span class="grow"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="nt-save">Registrar demanda</button>');
-  if(o.kind&&$('#nt-kind')){$('#nt-kind').value=o.kind;$('#nt-kind').dispatchEvent(new Event('change',{bubbles:true}));const es=$('#nt-k-empresa');if(es&&S.negE&&[...es.options].some(x=>x.value===S.negE))es.value=S.negE;}
+  if(o.kind&&$('#nt-kind')){$('#nt-kind').value=o.kind;$('#nt-kind').dispatchEvent(new Event('change',{bubbles:true}));}
   ntKindVis();
   const ta=$('#nt-title');if(ta){const fit=()=>{ta.style.height='auto';ta.style.height=Math.max(30,ta.scrollHeight)+'px';};ta.addEventListener('input',fit);fit();ta.focus();}
 }
