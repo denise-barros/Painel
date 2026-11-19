@@ -282,8 +282,8 @@ function negHome(empsIn){
     ['imp','Impressões',im.length?imDone+'/'+im.length:'0','','do dia',()=>ul(im,imR,'Nenhuma impressão para hoje.')],
     ['obr','Obrigações',obr.length,obr.some(obrLate)?'neg':obr.length?'warn':'','em 30 dias',()=>obr.length?negObr(obr):none('Nenhuma obrigação nos próximos 30 dias.')]];
   const cur=TABS.find(x=>x[0]===S.negOv)||TABS[0];
-  return certAvisos(ceN)+'<div class="neg-tabs" role="tablist" aria-label="O que ver">'+TABS.map(([k,l,n,c,sub])=>'<button class="kpi neg-tab'+(k===cur[0]?' on':'')+'" role="tab" aria-selected="'+(k===cur[0])+'" data-neg-ov="'+k+'"><span>'+esc(l)+'</span><b class="'+c+'">'+n+'</b><small>'+esc(sub)+'</small></button>').join('')+'</div>'
-    +'<section class="neg-tab-body">'+cur[5]()+'</section>';
+  return '<div class="neg-tabs" role="tablist" aria-label="O que ver">'+TABS.map(([k,l,n,c,sub])=>'<button class="kpi neg-tab'+(k===cur[0]?' on':'')+'" role="tab" aria-selected="'+(k===cur[0])+'" data-neg-ov="'+k+'"><span>'+esc(l)+'</span><b class="'+c+'">'+n+'</b><small>'+esc(sub)+'</small></button>').join('')+'</div>'
+    +certAvisos(ceN)+'<section class="neg-tab-body">'+cur[5]()+'</section>';
 }
 /* abas da visão geral de Negócios */
 document.addEventListener('click',e=>{const g=e.target.closest('[data-neg-pg]');if(g){e.stopPropagation();S.negE='';S.negPg=g.dataset.negPg;renderNeg();const m=document.querySelector('#v-neg .side-main');if(m)m.scrollTop=0;return;}const b=e.target.closest('[data-neg-ov]');if(!b)return;e.stopPropagation();S.negOv=b.dataset.negOv;renderNeg();},true);
@@ -292,7 +292,7 @@ const CERT_AVISO=30;
 const certQuando=n=>n<0?'Venceu há '+(-n)+' dia'+(n===-1?'':'s'):n===0?'Vence hoje':n===1?'Vence amanhã':'Vence em '+n+' dias';
 const certProx=()=>{const t0=todayISO();return certEmps().filter(e=>certValid(e.certVenc)&&e.certVenc<=addDays(t0,CERT_AVISO)).sort((a,b)=>a.certVenc.localeCompare(b.certVenc));};
 function certAvisos(l){const t0=todayISO();if(!l.length)return '';
-  return '<div class="dp-av">'+l.map(e=>{const n=dayBetween(t0,e.certVenc);return '<div class="'+(n<0||n<=7?'bad':'')+'"><b>'+(n<0?'Vencido':'Certificado')+'</b><span>Certificado digital da '+esc(e.nome)+': '+esc(certQuando(n).toLowerCase())+' ('+esc(fmtDateFull(e.certVenc))+'). <button class="lnk" data-neg-pg="cert">Ver certificados ›</button></span></div>';}).join('')+'</div>';}
+  return '<div class="dp-av">'+l.map(e=>{const n=dayBetween(t0,e.certVenc);return '<div class="'+(n<0||n<=7?'bad':'')+'"><b>'+(n<0||n<=7?'Atenção':'Aviso')+'</b><span>Certificado digital da '+esc(e.nome)+': '+esc(certQuando(n).toLowerCase())+' ('+esc(fmtDateFull(e.certVenc))+'). <button class="lnk" data-neg-pg="cert">Ver certificados ›</button></span></div>';}).join('')+'</div>';}
 function negCertTable(){const t0=todayISO();
   const rows=[];
   certEmps().forEach(e=>{const v=e.certVenc||'';const n=v?dayBetween(t0,v):null;const cl=n==null?'':n<0?'bad':n<=30?'warn':'';
