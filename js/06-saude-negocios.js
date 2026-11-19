@@ -200,13 +200,16 @@ const localDayOf=iso=>{const d=new Date(iso);return isNaN(d)?'':d.getFullYear()+
 
 function negMenu(emps){
   const sub=id=>new Set([id].concat(empChildren(id).map(e=>e.id)));
+  const CERT='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="2"/><circle cx="12" cy="17" r="3"/><path d="M10.5 19.5 9.5 22l2.5-1 2.5 1-1-2.5M8 8h8M8 11h5"/></svg>';
+  const certInfo=()=>{const t0=todayISO();const l=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(t0,30));return l.length?'<span class="cnt'+(l.some(e=>e.certVenc<t0)?' alert':'')+'">'+l.length+'</span>':'';};
   const GRID='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>';
   const info=e=>{const set=sub(e.id);const n=negTasks().filter(t=>isOpen(t)&&set.has(taskEmp(t))).length+obrList().filter(o=>set.has(o.empresa)&&!o.encerrada).length;const late=obrList().some(o=>set.has(o.empresa)&&obrLate(o));
     return (e.situacao&&e.situacao!=='Ativa'?'<span class="soon">'+esc(e.situacao==='Em encerramento'?'encerrando':e.situacao)+'</span>':'')+(n?'<span class="cnt'+(late?' alert':'')+'">'+n+'</span>':'');};
   const root=e=>'<button class="nm-item nm-g'+(S.negE===e.id?' on':'')+'" data-neg-e="'+esc(e.id)+'"><span class="nm-chip">'+IC.neg+'</span><b class="lbl">'+esc(e.nome)+'</b>'+info(e)+'</button>';
   const child=e=>'<button class="nm-item nm-c'+(S.negE===e.id?' on':'')+'" data-neg-e="'+esc(e.id)+'"><span class="lbl">'+esc(e.nome)+'</span>'+info(e)+'</button>';
   return '<nav class="neg-menu" aria-label="Empresas"><div class="nm-head"><div class="nm-mark">NE</div><div><b>Negócios</b><small>Empresas e unidades</small></div></div><div class="nm-list">'+
-    '<button class="nm-item nm-g'+(!S.negE?' on':'')+'" data-neg-e=""><span class="nm-chip">'+GRID+'</span><b class="lbl">Visão geral</b></button>'+
+    '<button class="nm-item nm-g'+(!S.negE&&S.negPg!=='cert'?' on':'')+'" data-neg-e=""><span class="nm-chip">'+GRID+'</span><b class="lbl">Visão geral</b></button>'+
+    '<button class="nm-item nm-g'+(!S.negE&&S.negPg==='cert'?' on':'')+'" data-neg-pg="cert"><span class="nm-chip">'+CERT+'</span><b class="lbl">Certificados digitais</b>'+certInfo()+'</button>'+
     emps.filter(e=>!e.pai||!emps.some(x=>x.id===e.pai)).map(r=>'<div class="nm-grp">'+root(r)+emps.filter(c=>c.pai===r.id).map(child).join('')+'</div>').join('')+
     '<button class="nm-item nm-c add" data-add="empresas"><span class="lbl">+ Adicionar empresa</span></button></div></nav>';
 }
@@ -223,6 +226,8 @@ function renderNeg(){
   const late=obr.filter(obrLate).length,soon=obr.filter(o=>!o.encerrada&&o.proxima&&o.proxima>=todayISO()&&o.proxima<=addDays(todayISO(),30)).length;
   const asPend=negKind('assinatura').filter(isOpen).length,faPend=negKind('familia').filter(isOpen).length;
   const ceSoon=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(todayISO(),30)),ceLate=ceSoon.filter(e=>e.certVenc<todayISO()).length;
+  if(!sel&&S.negPg==='cert'){h=h.replace(/<div class="plan-hero">[\s\S]*$/,'');
+    h+='<div class="plan-hero"><div><h2>Certificados digitais</h2><p>Vencimento e representante legal do certificado de cada empresa. A renovação vira demanda 30 dias antes.</p></div></div><div class="ov-box neg-cert">'+negCertTable()+'</div></div></div></div>';setView(el,h);return;}
   if(!sel)h+=negHome(emps);
   h+=demBlock('p-neg',tasksAll,{hook:t=>famAg(t)?'p-age':undefined,area:t=>{if(sel)return '';const v=taskEmp(t);return v==='todas'?'Todas as empresas':((empById(v)||{}).nome||'');}});
   if(!sel){if(!emps.length)h+='<ul class="list"><li><div class="empty"><b>Nenhuma empresa cadastrada</b>Cadastre em Cadastros › Empresas.<br><button class="btn sm" data-add="empresas" style="margin-top:8px">Adicionar empresa</button></div></li></ul>';}
@@ -262,16 +267,12 @@ function negHome(empsIn){
   const as=L('assinatura').filter(isOpen).sort((a,b)=>String(a.due||'9999').localeCompare(String(b.due||'9999')));
   const fa=L('familia').filter(isOpen);const base=t=>(t.fields||{}).contatoEm||localDayOf(t.createdAt)||t0;fa.sort((a,b)=>base(a).localeCompare(base(b)));
   const obr=obrList().filter(o=>negScope(o.empresa)&&!o.encerrada&&o.proxima&&o.proxima<=addDays(t0,30));
-  const rows=[];
-  certEmps().forEach(e=>{const v=e.certVenc||'';const n=v?dayBetween(t0,v):null;const cl=n==null?'':n<0?'bad':n<=30?'warn':'';
-    const dm=[...S.tasks.values()].find(t=>t.kind==='certificado'&&t.id==='cert-'+e.id+'-'+v);
-    rows.push('<tr><td class="emp'+(dm?' clk':'')+'"'+(dm?' data-task="'+esc(dm.id)+'" title="Abrir a demanda de renovação"':'')+'>'+esc(e.nome)+'</td><td class="cnpj">'+(e.cnpj?esc(e.cnpj):'<span class="none">—</span>')+'</td><td><select class="cert-in" data-cert-rep="'+esc(e.id)+'" aria-label="Representante legal">'+['fernando','leticia'].concat(e.certRep==='outro'?['outro']:[]).map(k=>'<option value="'+k+'"'+(certRepOf(e)===k?' selected':'')+'>'+esc(k==='outro'?(e.certRepNome||'Outra pessoa'):EXEC[k])+'</option>').join('')+'</select></td><td><input class="cert-in" type="date" data-cert-due="'+esc(e.id)+'" value="'+esc(v)+'" aria-label="Vencimento"></td><td>'+(n==null?'<span class="none">Sem data</span>':'<span class="tag '+cl+'">'+(n<0?'Vencido há '+(-n)+' dias':n===0?'Vence hoje':n+' dias')+'</span>')+'</td></tr>');});
-  const ceH='<table class="cert-t"><thead><tr><th>Empresa</th><th>CNPJ</th><th>Representante legal</th><th>Vencimento</th><th>Situação</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+  const ceH=negCertTable();
   const ceN=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(t0,30)),ceLate=ceN.filter(e=>e.certVenc<t0);
   /* Atenção: só o que está atrasado, de todos os tipos */
   const att='<ul class="list">'+[].concat(as.filter(t=>t.due&&t.due<t0).map(asR),fa.filter(t=>dayBetween(base(t),t0)>=3).map(faR),em.filter(t=>t.due&&t.due<t0).map(emR)).join('')
     +(obr.some(obrLate)?negObr(obr.filter(obrLate)).replace(/^<ul class="list">|<\/ul>$/g,''):'')
-    +ceLate.map(e=>'<li><div class="item bad"><span class="sev"></span><button class="item-main" data-neg-ov="cert"><span class="tt">Certificado digital · '+esc(e.nome)+'</span><span class="mm"><span class="tag bad">Vencido há '+dayBetween(e.certVenc,t0)+' dias</span></span></button></div></li>').join('')+'</ul>';
+    +ceLate.map(e=>'<li><div class="item bad"><span class="sev"></span><button class="item-main" data-neg-pg="cert"><span class="tt">Certificado digital · '+esc(e.nome)+'</span><span class="mm"><span class="tag bad">Vencido há '+dayBetween(e.certVenc,t0)+' dias</span></span></button></div></li>').join('')+'</ul>';
   const nAtt=as.filter(t=>t.due&&t.due<t0).length+fa.filter(t=>dayBetween(base(t),t0)>=3).length+em.filter(t=>t.due&&t.due<t0).length+obr.filter(obrLate).length+ceLate.length;
   const TABS=[
     ['att','Atenção',nAtt,nAtt?'neg':'',nAtt?'atrasados':'nada atrasado',()=>nAtt?att:none('Nada atrasado. Tudo em dia.')],
@@ -279,14 +280,20 @@ function negHome(empsIn){
     ['fam','Famílias',fa.length,fa.length?'warn':'','aguardando retorno',()=>ul(fa,faR,'Nenhuma família aguardando retorno.')],
     ['em','Follow-ups',em.length,'','de e-mail',()=>ul(em,emR,'Nenhum follow-up pendente.')],
     ['imp','Impressões',im.length?imDone+'/'+im.length:'0','','do dia',()=>ul(im,imR,'Nenhuma impressão para hoje.')],
-    ['obr','Obrigações',obr.length,obr.some(obrLate)?'neg':obr.length?'warn':'','em 30 dias',()=>obr.length?negObr(obr):none('Nenhuma obrigação nos próximos 30 dias.')],
-    ['cert','Certificados',ceN.length,ceLate.length?'neg':ceN.length?'warn':'',ceLate.length?ceLate.length+' vencido'+(ceLate.length>1?'s':''):'vencem em 30 dias',()=>'<div class="ov-box">'+ceH+'</div>']];
+    ['obr','Obrigações',obr.length,obr.some(obrLate)?'neg':obr.length?'warn':'','em 30 dias',()=>obr.length?negObr(obr):none('Nenhuma obrigação nos próximos 30 dias.')]];
   const cur=TABS.find(x=>x[0]===S.negOv)||TABS[0];
   return '<div class="neg-tabs" role="tablist" aria-label="O que ver">'+TABS.map(([k,l,n,c,sub])=>'<button class="kpi neg-tab'+(k===cur[0]?' on':'')+'" role="tab" aria-selected="'+(k===cur[0])+'" data-neg-ov="'+k+'"><span>'+esc(l)+'</span><b class="'+c+'">'+n+'</b><small>'+esc(sub)+'</small></button>').join('')+'</div>'
     +'<section class="neg-tab-body">'+cur[5]()+'</section>';
 }
 /* abas da visão geral de Negócios */
-document.addEventListener('click',e=>{const b=e.target.closest('[data-neg-ov]');if(!b)return;e.stopPropagation();S.negOv=b.dataset.negOv;renderNeg();},true);
+document.addEventListener('click',e=>{const g=e.target.closest('[data-neg-pg]');if(g){e.stopPropagation();S.negE='';S.negPg=g.dataset.negPg;renderNeg();const m=document.querySelector('#v-neg .side-main');if(m)m.scrollTop=0;return;}const b=e.target.closest('[data-neg-ov]');if(!b)return;e.stopPropagation();S.negOv=b.dataset.negOv;renderNeg();},true);
+function negCertTable(){const t0=todayISO();
+  const rows=[];
+  certEmps().forEach(e=>{const v=e.certVenc||'';const n=v?dayBetween(t0,v):null;const cl=n==null?'':n<0?'bad':n<=30?'warn':'';
+    const dm=[...S.tasks.values()].find(t=>t.kind==='certificado'&&t.id==='cert-'+e.id+'-'+v);
+    rows.push('<tr><td class="emp'+(dm?' clk':'')+'"'+(dm?' data-task="'+esc(dm.id)+'" title="Abrir a demanda de renovação"':'')+'>'+esc(e.nome)+'</td><td class="cnpj">'+(e.cnpj?esc(e.cnpj):'<span class="none">—</span>')+'</td><td><select class="cert-in" data-cert-rep="'+esc(e.id)+'" aria-label="Representante legal">'+['fernando','leticia'].concat(e.certRep==='outro'?['outro']:[]).map(k=>'<option value="'+k+'"'+(certRepOf(e)===k?' selected':'')+'>'+esc(k==='outro'?(e.certRepNome||'Outra pessoa'):EXEC[k])+'</option>').join('')+'</select></td><td><input class="cert-in" type="date" data-cert-due="'+esc(e.id)+'" value="'+esc(v)+'" aria-label="Vencimento"></td><td>'+(n==null?'<span class="none">Sem data</span>':'<span class="tag '+cl+'">'+(n<0?'Vencido há '+(-n)+' dias':n===0?'Vence hoje':n+' dias')+'</span>')+'</td></tr>');});
+  const ceH='<table class="cert-t"><thead><tr><th>Empresa</th><th>CNPJ</th><th>Representante legal</th><th>Vencimento</th><th>Situação</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+  return ceH;}
 function negKind(k){const ns=negSet();return [...S.tasks.values()].filter(t=>t.kind===k&&(k==='familia'||!ns||ns.has(taskEmp(t)))&&(!S.exec||taskExec(t)));}
 function negItem(t,tags,tone){return '<li><button class="item '+tone+'" data-task="'+esc(t.id)+'"><span class="sev"></span><span style="min-width:0"><span class="tt">'+esc(t.title||'(sem título)')+'</span><span class="mm">'+tags.filter(Boolean).map(x=>'<span class="tag '+(x[1]||'')+'">'+esc(x[0])+'</span>').join('')+'</span></span><span class="rr"><small>#'+esc(t.num||'')+'</small></span></button></li>';}
 function negAss(){
