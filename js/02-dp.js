@@ -362,10 +362,10 @@ function dpEventos(){const t0=todayISO();const y=+t0.slice(0,4);
 function feriasVencer(n){const t0=todayISO();return equipe().map(p=>({p,f:feriasInfo(p)})).filter(x=>x.f&&x.f.venc&&x.f.venc.falta>0&&x.f.venc.lim>=t0&&dDiff(t0,x.f.venc.lim)<=n).map(x=>({p:x.p,lim:x.f.venc.lim,falta:x.f.venc.falta}));}
 function dpObrig(n){const t0=todayISO();return dpEventos().filter(e=>(/^13º/.test(e.t)||e.mov)&&e.d>=t0&&dDiff(t0,e.d)<=n);}
 function dpAvisos(){const t0=todayISO();const y=+t0.slice(0,4);const av=[];const nm=p=>String(p.nome).split(' ')[0];
-  feriasProx().filter(x=>x.em<=60).forEach(x=>av.push({d:x.m.data,bad:x.em<=15,t:'Férias de '+nm(x.p)+' começam em '+fmtDateFull(x.m.data)+' (em '+x.em+' dia'+(x.em===1?'':'s')+')'+'. Pagar até '+fmtDateFull(x.pagar)+' e combinar a cobertura.'}));
-  equipe().forEach(p=>{const f=feriasInfo(p);if(f&&f.venc&&f.venc.falta>0&&dDiff(t0,f.venc.lim)<=60)av.push({d:f.venc.lim,bad:true,t:nm(p)+' tem '+f.venc.falta+' dia(s) de férias sem data e precisa tirar até '+fmtDateFull(f.venc.lim)+'. Depois disso, paga em dobro.'});});
+  feriasProx().filter(x=>x.em<=60).forEach(x=>av.push({d:x.m.data,p:x.p,bad:x.em<=15,t:'Férias de '+nm(x.p)+' começam em '+fmtDateFull(x.m.data)+' (em '+x.em+' dia'+(x.em===1?'':'s')+')'+'. Pagar até '+fmtDateFull(x.pagar)+' e combinar a cobertura.'}));
+  equipe().forEach(p=>{const f=feriasInfo(p);if(f&&f.venc&&f.venc.falta>0&&dDiff(t0,f.venc.lim)<=60)av.push({d:f.venc.lim,p,bad:true,t:nm(p)+' tem '+f.venc.falta+' dia(s) de férias sem data e precisa tirar até '+fmtDateFull(f.venc.lim)+'. Depois disso, paga em dobro.'});});
   const dc=decimo(y);if(dc.length){[[y+'-11-30','1ª parcela do 13º',dc.reduce((a,r)=>a+r.p1,0)],[y+'-12-20','2ª parcela do 13º',dc.reduce((a,r)=>a+r.p2,0)]].forEach(([d,t,v])=>{const e=dDiff(t0,d);if(e>=0&&e<=30)av.push({d,bad:e<=7,t:t+' vence em '+fmtDateFull(d)+' (em '+e+' dia'+(e===1?'':'s')+') para '+dc.length+' pessoa(s).'});});}
-  dpEventos().filter(e=>e.mov&&dDiff(t0,e.d)<=30).forEach(e=>av.push({d:e.d,bad:false,t:e.t+' em '+fmtDateFull(e.d)+'.'}));
+  dpEventos().filter(e=>e.mov&&dDiff(t0,e.d)<=30).forEach(e=>av.push({d:e.d,p:e.p,bad:false,t:e.t+' em '+fmtDateFull(e.d)+'.'}));
   dpPagPend().forEach(g=>av.push(g));
   return av.sort((a,b)=>a.d.localeCompare(b.d));}
 /* Pagamentos previstos que já venceram, vencem em até 7 dias ou são de meses passados sem data: agrupados por tipo, competência e data. */
@@ -374,12 +374,12 @@ const DP_PAG_INICIO='2026-12';
 function dpPagPend(){const t0=todayISO();const ym=ymOf(t0);const eq=new Set(equipe().map(p=>p.id));const g={};
   recs('dp-pag').filter(x=>x.status!=='Pago'&&eq.has(x.pessoa)&&String(x.competencia||'')>=DP_PAG_INICIO).forEach(x=>{const dp=x.dataPag||'';let st;
     if(dp&&dp<t0)st='late';else if(dp&&dDiff(t0,dp)<=7)st='soon';else if(!dp&&String(x.competencia||'')<ym)st='nodate';else return;
-    const k=st+'|'+(x.tipo||'Pagamento')+'|'+x.competencia+'|'+dp;(g[k]=g[k]||{st,tipo:x.tipo||'Pagamento',ym:x.competencia,dp,v:0,n:[]});g[k].v+=(+x.valor||0);g[k].n.push(fnm(x.pessoa));});
+    const k=st+'|'+(x.tipo||'Pagamento')+'|'+x.competencia+'|'+dp;(g[k]=g[k]||{st,tipo:x.tipo||'Pagamento',ym:x.competencia,dp,v:0,n:[],ps:[]});g[k].v+=(+x.valor||0);g[k].n.push(fnm(x.pessoa));g[k].ps.push(x.pessoa);});
   return Object.values(g).map(o=>{const q=o.n.length;const qual=o.tipo+' de '+fmtYm(o.ym)+' ('+o.n.join(', ')+', '+fmtMoney(o.v)+')';const e=o.dp?dDiff(t0,o.dp):0;
     const t=o.st==='late'?qual+(q>1?' venceram':' venceu')+' em '+fmtDateFull(o.dp)+' e '+(q>1?'continuam':'continua')+' como Previsto. Pague ou marque como pago.'
       :o.st==='soon'?qual+(q>1?' vencem':' vence')+(e===0?' hoje':e===1?' amanhã':' em '+fmtDateFull(o.dp)+' (em '+e+' dias)')+'.'
       :qual+(q>1?' ainda estão':' ainda está')+' como Previsto, sem data de pagamento. Marque como pago ou informe a data.';
-    return {d:o.dp||t0,bad:o.st!=='soon'||e<=2,t,ym:o.ym};});}
+    return {d:o.dp||t0,bad:o.st!=='soon'||e<=2,t,ym:o.ym,st:o.st,ps:o.ps};});}
 function dpAvisosHtml(){const av=dpAvisos();if(!av.length)return '';return '<div class="dp-av">'+av.map(a=>'<div class="'+(a.bad?'bad':'')+'"><b>'+(a.bad?'Atenção':'Aviso')+'</b><span>'+esc(a.t)+(a.ym?' <button class="lnk" data-dp-month="'+esc(a.ym)+'">Ver pagamentos de '+esc(fmtYm(a.ym))+' ›</button>':'')+'</span></div>').join('')+'</div>';}
 function dpIndKpis(active,foraL){const t0=todayISO();const y=t0.slice(0,4);
   const oc=ocResumo(y+'-01-01',t0);const fd=oc.reduce((a,r)=>a+r.fd,0),ad=oc.reduce((a,r)=>a+r.ad,0);
