@@ -857,3 +857,7 @@ td.dp-desc{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:elli
 .pres-x summary{cursor:pointer;font-size:12px;color:var(--accent);list-style:none}
 .pres-x summary::-webkit-details-marker{display:none}
 .pres-x[open]{display:flex;gap:6px;align-items:center}
+
+/* cabeçalho congelado nas tabelas que ainda não tinham (Férias, Agenda, Relatórios, Certificados) */
+.fer-tw,.rot-wrap,.rel-tbl{overflow:auto;max-height:calc(100vh - 230px)}
+.fer-tw thead th,.rot-wrap thead th,.rel-tbl thead th,.cert-t thead th{position:sticky;top:0;z-index:2;background:var(--surface);box-shadow:0 1px 0 var(--line)}
