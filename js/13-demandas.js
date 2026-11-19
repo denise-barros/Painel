@@ -3,6 +3,7 @@
 S.demAll=S.demAll||{};S.demSub=S.demSub||{};S.demMode=S.demMode||{};S.demMonth=S.demMonth||{};
 function subList(root){const out=[];const walk=(pid,d)=>S.cats.filter(x=>x.parentId===pid).sort(catSort).forEach(c=>{out.push({id:c.id,name:c.name,depth:d});walk(c.id,d+1);});walk(root,0);return out;}
 const EXEC_SHORT={fernando:'FS',leticia:'LL',ambos:'FS + LL'};
+const EXEC_NOME={fernando:'Fernando',leticia:'Leticia',ambos:'Fernando e Leticia'};
 const MES_N=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 function modTasks(root){const set=descendants(root);return [...S.tasks.values()].filter(t=>set.has(t.categoryId)&&taskExec(t));}
 const doneAt=t=>String(t.completedAt||t.updatedAt||t.createdAt||'').slice(0,10);
@@ -18,9 +19,9 @@ async function setTaskStatus(id,st){const old=S.tasks.get(id);if(!old||old.statu
   t.updatedAt=now;t.history=(t.history||[]).concat(notes.map(text=>({at:now,text}))).slice(-150);
   try{await S.db.doc('tasks/'+id).set(t);toast('Movida para '+ST[st]);}catch(e){toast('Não foi possível mover agora. Tente de novo.');renderCurrent();}}
 function demRow(t,t0,o){const done=!isOpen(t);const late=!done&&t.due&&t.due<t0;const today=!done&&t.due===t0;const p=t.categoryId?catPath(t.categoryId):[];let area=p.length>1?p[p.length-1].name:(p[0]?p[0].name:'');if(o&&o.area){const v=o.area(t);if(v!==undefined)area=v||'';}const hk=DEM_HOOKS[(o&&o.hook&&o.hook(t))||(p[0]&&p[0].id)];
-  const right=done?'<span class="tag ok">Concluída '+esc(fmtDate(doneAt(t)))+'</span>':(t.due?'<span class="tag '+(late||today?'bad':'')+'">'+(late?'Venceu ':'')+esc(fmtDate(t.due))+'</span>':'<small>sem prazo</small>');
+  const right=done?'<span class="dem-due ok">Concluída '+esc(fmtDate(doneAt(t)).toLowerCase())+'</span>':(t.due?'<span class="dem-due'+(late||today?' bad':'')+'">'+esc(late?'Venceu '+fmtDate(t.due).toLowerCase():fmtDate(t.due))+'</span>':'<span class="dem-due none">Sem prazo</span>');
   return '<li><div class="item dem-row '+(done?'done':late?'bad':t.status==='aguardando'?'warn':'info')+'"><span class="sev"></span><button class="item-main" data-task="'+esc(t.id)+'"><span class="tt">'+esc(t.title||'(sem título)')+'</span><span class="mm">'+
-    (t.executive&&EXEC_SHORT[t.executive]?'<span class="tag exec">'+EXEC_SHORT[t.executive]+'</span>':'')+(area?'<span class="tag area">'+esc(area)+'</span>':'')+(t.kind&&KIND_LBL[t.kind]?'<span class="tag">'+esc(KIND_LBL[t.kind])+'</span>':'')+(hk?hk.tags(t):'')+'</span></button>'+
+    (t.executive&&EXEC_NOME[t.executive]?'<span class="tag exec">'+EXEC_NOME[t.executive]+'</span>':'')+(area?'<span class="tag area">'+esc(area)+'</span>':'')+(t.kind&&KIND_LBL[t.kind]?'<span class="tag">'+esc(KIND_LBL[t.kind])+'</span>':'')+(hk?hk.tags(t):'')+'</span></button>'+
     '<span class="rr">'+(hk?hk.act(t):'')+right+demStSel(t)+'</span></div></li>';}
 function demDone(root,done,o){if(!done.length)return '';const t0=todayISO();const cur=t0.slice(0,7);const groups=new Map();
   done.slice().sort((a,b)=>doneAt(b).localeCompare(doneAt(a))).forEach(t=>{const k=doneAt(t).slice(0,7)||'—';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(t);});
