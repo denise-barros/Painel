@@ -268,12 +268,12 @@ function negHome(empsIn){
   const fa=L('familia').filter(isOpen);const base=t=>(t.fields||{}).contatoEm||localDayOf(t.createdAt)||t0;fa.sort((a,b)=>base(a).localeCompare(base(b)));
   const obr=obrList().filter(o=>negScope(o.empresa)&&!o.encerrada&&o.proxima&&o.proxima<=addDays(t0,30));
   const ceH=negCertTable();
-  const ceN=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(t0,30)),ceLate=ceN.filter(e=>e.certVenc<t0);
+  const ceN=certProx(),ceLate=ceN.filter(e=>e.certVenc<t0);
   /* Atenção: só o que está atrasado, de todos os tipos */
   const att='<ul class="list">'+[].concat(as.filter(t=>t.due&&t.due<t0).map(asR),fa.filter(t=>dayBetween(base(t),t0)>=3).map(faR),em.filter(t=>t.due&&t.due<t0).map(emR)).join('')
     +(obr.some(obrLate)?negObr(obr.filter(obrLate)).replace(/^<ul class="list">|<\/ul>$/g,''):'')
-    +ceLate.map(e=>'<li><div class="item bad"><span class="sev"></span><button class="item-main" data-neg-pg="cert"><span class="tt">Certificado digital · '+esc(e.nome)+'</span><span class="mm"><span class="tag bad">Vencido há '+dayBetween(e.certVenc,t0)+' dias</span></span></button></div></li>').join('')+'</ul>';
-  const nAtt=as.filter(t=>t.due&&t.due<t0).length+fa.filter(t=>dayBetween(base(t),t0)>=3).length+em.filter(t=>t.due&&t.due<t0).length+obr.filter(obrLate).length+ceLate.length;
+    +ceN.map(e=>{const n=dayBetween(t0,e.certVenc),c=n<0?'bad':'warn';return '<li><div class="item '+c+'"><span class="sev"></span><button class="item-main" data-neg-pg="cert"><span class="tt">Certificado digital · '+esc(e.nome)+'</span><span class="mm"><span class="tag '+c+'">'+esc(certQuando(n))+'</span><span class="tag">'+esc(fmtDate(e.certVenc))+'</span></span></button></div></li>';}).join('')+'</ul>';
+  const nAtt=as.filter(t=>t.due&&t.due<t0).length+fa.filter(t=>dayBetween(base(t),t0)>=3).length+em.filter(t=>t.due&&t.due<t0).length+obr.filter(obrLate).length+ceN.length;
   const TABS=[
     ['att','Atenção',nAtt,nAtt?'neg':'',nAtt?'atrasados':'nada atrasado',()=>nAtt?att:none('Nada atrasado. Tudo em dia.')],
     ['ass','Assinaturas',as.length,as.length?'warn':'','pendentes',()=>ul(as,asR,'Nenhuma assinatura pendente.')],
@@ -282,11 +282,17 @@ function negHome(empsIn){
     ['imp','Impressões',im.length?imDone+'/'+im.length:'0','','do dia',()=>ul(im,imR,'Nenhuma impressão para hoje.')],
     ['obr','Obrigações',obr.length,obr.some(obrLate)?'neg':obr.length?'warn':'','em 30 dias',()=>obr.length?negObr(obr):none('Nenhuma obrigação nos próximos 30 dias.')]];
   const cur=TABS.find(x=>x[0]===S.negOv)||TABS[0];
-  return '<div class="neg-tabs" role="tablist" aria-label="O que ver">'+TABS.map(([k,l,n,c,sub])=>'<button class="kpi neg-tab'+(k===cur[0]?' on':'')+'" role="tab" aria-selected="'+(k===cur[0])+'" data-neg-ov="'+k+'"><span>'+esc(l)+'</span><b class="'+c+'">'+n+'</b><small>'+esc(sub)+'</small></button>').join('')+'</div>'
+  return certAvisos(ceN)+'<div class="neg-tabs" role="tablist" aria-label="O que ver">'+TABS.map(([k,l,n,c,sub])=>'<button class="kpi neg-tab'+(k===cur[0]?' on':'')+'" role="tab" aria-selected="'+(k===cur[0])+'" data-neg-ov="'+k+'"><span>'+esc(l)+'</span><b class="'+c+'">'+n+'</b><small>'+esc(sub)+'</small></button>').join('')+'</div>'
     +'<section class="neg-tab-body">'+cur[5]()+'</section>';
 }
 /* abas da visão geral de Negócios */
 document.addEventListener('click',e=>{const g=e.target.closest('[data-neg-pg]');if(g){e.stopPropagation();S.negE='';S.negPg=g.dataset.negPg;renderNeg();const m=document.querySelector('#v-neg .side-main');if(m)m.scrollTop=0;return;}const b=e.target.closest('[data-neg-ov]');if(!b)return;e.stopPropagation();S.negOv=b.dataset.negOv;renderNeg();},true);
+/* certificados digitais: aviso a partir de 30 dias do vencimento (faixa na Visão geral de Negócios e item na Capa) */
+const CERT_AVISO=30;
+const certQuando=n=>n<0?'Venceu há '+(-n)+' dia'+(n===-1?'':'s'):n===0?'Vence hoje':n===1?'Vence amanhã':'Vence em '+n+' dias';
+const certProx=()=>{const t0=todayISO();return certEmps().filter(e=>certValid(e.certVenc)&&e.certVenc<=addDays(t0,CERT_AVISO)).sort((a,b)=>a.certVenc.localeCompare(b.certVenc));};
+function certAvisos(l){const t0=todayISO();if(!l.length)return '';
+  return '<div class="dp-av">'+l.map(e=>{const n=dayBetween(t0,e.certVenc);return '<div class="'+(n<0||n<=7?'bad':'')+'"><b>'+(n<0?'Vencido':'Certificado')+'</b><span>Certificado digital da '+esc(e.nome)+': '+esc(certQuando(n).toLowerCase())+' ('+esc(fmtDateFull(e.certVenc))+'). <button class="lnk" data-neg-pg="cert">Ver certificados ›</button></span></div>';}).join('')+'</div>';}
 function negCertTable(){const t0=todayISO();
   const rows=[];
   certEmps().forEach(e=>{const v=e.certVenc||'';const n=v?dayBetween(t0,v):null;const cl=n==null?'':n<0?'bad':n<=30?'warn':'';
@@ -356,6 +362,7 @@ function phase3Capa(attention,upcoming,t0,horizon){
   obrList().forEach(o=>{if(o.encerrada||!o.proxima||!empOk(o.empresa))return;const e=empById(o.empresa);const nm=o.titulo+(e?' · '+e.nome:'');
     if(o.proxima<t0)attention.push({sev:'bad',kind:'Negócios',title:nm,meta:[['bad','Venceu '+fmtDate(o.proxima)],o.categoria?['',o.categoria]:null],right:+o.valor?fmtMoney(o.valor):'',go:'neg',sort:o.proxima});
     else if(o.proxima<=horizon)upcoming.push({date:o.proxima,kind:'Negócios',title:nm,meta:[o.categoria?['',o.categoria]:null],right:+o.valor?fmtMoney(o.valor):'',go:'neg',sev:'warn'});});
+  certProx().forEach(e=>{const n=dayBetween(t0,e.certVenc);attention.push({sev:n<0?'bad':'warn',kind:'Negócios',title:'Certificado digital · '+e.nome,meta:[[n<0?'bad':'warn',certQuando(n)],['',fmtDate(e.certVenc)]],right:'',go:'neg',goPg:'cert',sort:e.certVenc});});
   recs('neg-doc').forEach(d=>{if(d.status==='Encerrado'||!d.vencimento||!empOk(d.empresa))return;const e=empById(d.empresa);const nm=d.titulo+(e?' · '+e.nome:'');
     if(d.vencimento<t0)attention.push({sev:'warn',kind:'Contrato',title:nm,meta:[['warn','Vencido desde '+fmtDate(d.vencimento)]],right:'',go:'neg',sort:d.vencimento});
     else if(d.vencimento<=horizon)upcoming.push({date:d.vencimento,kind:'Contrato',title:'Vence · '+nm,meta:[],right:'',go:'neg',sev:'warn'});});
