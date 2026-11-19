@@ -538,16 +538,17 @@ const TABS=[
     kpis:(rows,ctx)=>{const m=ctx.month;let prev=0,pago=0,pend=0;rows.forEach(r=>{prev+=+r.medio||0;const x=(r.meses||{})[m]||{};if(x.s==="Pago"||x.s==="Emitido")pago+=+x.v||0;else if(x.s!=="Não se aplica")pend++});
       return[{l:"Previsto (valor médio)",v:fmtMoney(prev)},{l:"Pago em "+fmtMonth(m),v:fmtMoney(pago),c:"pos"},{l:"Sem status de pago",v:String(pend),c:pend?"neg":""}]}}]},
  ...Object.entries(FLUXOS).map(([id,f])=>({id,g:"Fluxos de caixa e prestação de contas",l:f.l,title:"Fluxo de caixa · "+f.l,desc:f.desc,src:f.src,matrix:f})),
- {id:"emprestimos",g:"Controles",l:"Empréstimos",desc:"Empréstimos de Leticia e Fernando: o que saiu, o que entrou, contratos, devoluções e saldo devedor. Sem titular, conta como Leticia.",
+ {id:"emprestimos",g:"Controles",l:"Empréstimos",desc:"Empréstimos de Leticia e Fernando, separados entre pessoas e companhia: o que saiu, o que entrou, devoluções e saldo devedor. Sem titular, conta como Leticia.",
+  subtabs:[{k:"leticia",l:"Leticia",tables:["emprestimos"],own:"leticia"},{k:"fernando",l:"Fernando",tables:["emprestimos"],own:"fernando"}],
   src:[["Empréstimos","https://drive.google.com/file/d/1kowHq-8zsWPX659N01nyM7djDgZdZsks/view"]],
   tables:[{id:"emprestimos",title:"Empréstimos",sort:"data",cols:[
-    SE("titular","Titular",["Leticia","Fernando"]),SE("tipo","Tipo",["Saída","Entrada"]),TX("razao","Razão social / pessoa",{w:180}),M("valor","Valor emprestado"),DT("data","Data do empréstimo"),DT("prevista","Previsão de liquidação"),
+    SE("titular","Titular",["Leticia","Fernando"],{f:false}),SE("destino","Para",["Pessoa","Companhia"]),SE("tipo","Tipo",["Saída","Entrada"]),TX("razao","Razão social / pessoa",{w:180}),M("valor","Valor emprestado"),DT("data","Data do empréstimo"),DT("prevista","Previsão de liquidação"),
     LG("contrato","Contrato / condições",{w:200}),M("parcela","Valor da parcela"),M("devolvido","Valor devolvido"),DT("datadev","Data da devolução"),
     SE("forma","Forma de pag.",["Pix","TED","Débito","Boleto"]),M("juros","Juros"),
     {k:"saldo",l:"Saldo devedor",t:"calc",ct:"money",sum:true,calc:r=>(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0)},
     SE("status","Status",["Em aberto","Quitado","Não será cobrado"]),LG("obs","Observações",{w:200})],
-    kpis:rows=>{let s=0,e=0;rows.forEach(r=>{if(r.status==="Quitado"||r.status==="Não será cobrado")return;const v=(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0);if(r.tipo==="Entrada")e+=v;else s+=v});
-      return[{l:"A receber (saídas em aberto)",v:fmtMoney(s),c:"pos"},{l:"A pagar (entradas em aberto)",v:fmtMoney(e),c:"neg"}]}}]},
+    kpis:rows=>{const t={ps:0,pe:0,cs:0,ce:0};let q=0;rows.forEach(r=>{if(r.status==="Quitado"||r.status==="Não será cobrado"){if(r.status==="Quitado")q++;return}const v=(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0);t[(r.destino==="Companhia"?"c":"p")+(r.tipo==="Entrada"?"e":"s")]+=v});
+      return[{l:"A receber de pessoas",v:fmtMoney(t.ps),c:"pos"},{l:"A receber da companhia",v:fmtMoney(t.cs),c:"pos"},{l:"A pagar a pessoas",v:fmtMoney(t.pe),c:"neg"},{l:"A pagar à companhia",v:fmtMoney(t.ce),c:"neg"},{l:"Quitados",v:String(q)}]}}]},
  {id:"reemb-corp",g:"Controles",l:"Reembolsos corporativos",desc:"Despesas de viagem e trabalho de Leticia e Fernando a reembolsar. Apurações com Daniel todo dia 03.",
   src:[["Reembolsos | Leticia",DRIVE+"1wLIT4EwtX28UUVc8nGwKhuYTJIM5rGsHH8tHLcMqYHk/edit"],["Reembolsos | Shayer",DRIVE+"1S7y0fKPuMFt6bi7G1N-Pw-q6q9pJcbuqrpbJc6oPdCc/edit"],["Base para reembolsos",DRIVE+"1t58x-alGZcLDutbojaWQgkhWSOAbkBWxlxGWvcbeqUs/edit"]],
   tables:[{id:"reemb-corp",title:"Lançamentos",sort:"data",cols:[
@@ -717,8 +718,13 @@ let gExec="";window.__setExec=v=>{gExec=v||"";try{render()}catch(e){}};
 const NOMES={fernando:["fernando","shayer"],leticia:["leticia","letícia","lyle"]};
 function execOk(r){if(!gExec||gExec==="ambos")return true;if(PF){if("razao" in r)return PF.empDono(r)===gExec;const c=[r.titular,r.quem,r.pessoa,r.pagador,r.cartao].filter(Boolean);if(!c.length)return true;return c.some(v=>PF.dono(v)===gExec)}if("vparc" in r&&r.titular)return gExec==="ambos"||(gExec==="fernando"?/fernando|shayer/i:/let[ií]cia/i).test(r.titular);const s=[r.pessoa,r.quem,r.titular,r.pagador,r.cartao,r.dequem,r.solic].filter(Boolean).join(" ").toLowerCase();if(!s)return true;const f=NOMES.fernando.some(n=>s.includes(n)),l=NOMES.leticia.some(n=>s.includes(n));if(!f&&!l)return true;return gExec==="fernando"?f:l}
 const cronoDue=(r,m)=>{try{return PF?PF.due(r,m):true}catch(e){return true}};
+/* seções Leticia / Fernando (empréstimos): sem titular, conta como Leticia */
+const ownOf=r=>/fernando|shayer/i.test(r.titular||"")?"fernando":"leticia";
+function secOwn(tb){const t=state.tab;if(!tb||!t||!t.subtabs||!(t.tables||[]).includes(tb))return"";return subOf(t).own||""}
+const secRows=(tb,rows)=>{const o=secOwn(tb);return o?rows.filter(r=>ownOf(r)===o):rows};
+const secBase=tb=>{const o=secOwn(tb);return o?{titular:o==="fernando"?"Fernando":"Leticia"}:{}};
 function visibleRows(tb,ctx,noPeriod){
-  let rows=(data[tb.id]||[]).filter(execOk);
+  let rows=secRows(tb,(data[tb.id]||[]).filter(execOk));
     const q=(state.qs[state.tab.id]||"").toLowerCase().trim();
   if(q)rows=rows.filter(r=>tb.cols.some(c=>{const v=getVal(r,c,ctx);return v!=null&&String(c.t==="date"?fmtDate(v):v).toLowerCase().includes(q)}));
   const fl=state.filters[tb.id]||{};
@@ -752,8 +758,8 @@ const LIST={
   badge:(r,c)=>{const s=mon(r,c).s;if(s)return s;const d=parseInt(r.venc);if(!d)return"";const now=new Date(),cur=today();if(c.month<cur||(c.month===cur&&d<now.getDate()))return"Vencido";return""},
   done:(r,c)=>["Pago","Emitido","Não se aplica"].includes(mon(r,c).s),stamp:(r,c)=>mon(r,c).pagoEm,
   doP:(r,c)=>{const x=mon(r,c);return{meses:{[c.month]:{s:"Pago",v:hasV(x.v)?x.v:(hasV(r.medio)?r.medio:null)}}}},undoP:(r,c)=>({meses:{[c.month]:{s:"Pendente"}}})},
- emprestimos:{cap:"razao",group:r=>r.tipo==="Entrada"?{k:"2",l:"Entradas · a pagar"}:{k:"1",l:"Saídas · a receber"},order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.razao,
-  tags:r=>[T(r.titular||"Leticia","info"),T(r.contrato),r.prevista?T("previsto "+fmtDate(r.prevista),r.prevista<new Date().toISOString().slice(0,10)&&r.status!=="Quitado"?"bad":""):null,hasV(r.devolvido)?T("devolvido "+fmtMoney(r.devolvido),"ok"):null],value:r=>(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0),badge:r=>r.status,
+ emprestimos:{cap:"razao",group:r=>{const c=r.destino==="Companhia",e=r.tipo==="Entrada",fim=r.status==="Quitado"||r.status==="Não será cobrado";return{k:(fim?"9":"")+(c?"3":"1")+(e?"b":"a"),l:(c?"Companhia":"Pessoas")+" · "+(e?"entradas":"saídas")+(fim?" quitadas":(e?" · a pagar":" · a receber"))}},order:r=>r.data||"",lead:r=>r.data?dm(r.data)+"/"+r.data.slice(2,4):"",title:r=>r.razao,
+  tags:r=>[T(r.destino||"Pessoa","info"),r.datadev?T("devolução "+fmtDate(r.datadev)):null,T(r.contrato),r.prevista?T("previsto "+fmtDate(r.prevista),r.prevista<new Date().toISOString().slice(0,10)&&r.status!=="Quitado"?"bad":""):null,hasV(r.devolvido)?T("devolvido "+fmtMoney(r.devolvido),"ok"):null],value:r=>(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0),badge:r=>r.status,
   done:r=>r.status==="Quitado",stamp:r=>r.pagoEm,doP:()=>({status:"Quitado"}),undoP:()=>({status:"Em aberto"})},
  "reemb-corp":{cap:"descr",sel:"status",group:byStatus(["A solicitar","Solicitado","Pago","Negado"],"A solicitar"),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.descr||r.cat,
   tags:r=>[T(r.pessoa,"info"),T(r.cat),T(r.ref),hasV(r.vme)&&r.moeda&&r.moeda!=="BRL"?T(`${r.moeda} ${fmtMoney(r.vme)}`):null],value:r=>r.brl,stamp:r=>r.status==="Pago"&&r.pagoEm},
@@ -800,7 +806,7 @@ function pasteHTML(tb){
     <div class="acts"><label style="display:flex;gap:6px;align-items:center;font-size:10px;color:var(--muted)"><input type="checkbox" id="pa-skip-${tb.id}"> Ignorar a primeira linha (cabeçalho)</label><label style="display:flex;gap:6px;align-items:center;font-size:10px;color:var(--muted)"><input type="checkbox" id="pa-k-${tb.id}"> Enviar todas para a Operação</label><span style="flex:1"></span><button class="btn" data-pastecancel>Cancelar</button><button class="btn primary" data-pastego="${tb.id}">Importar linhas</button></div></div>`;
 }
 function listHTML(tb,ctx,multi){
-  const L=LIST[tb.id];const all=data[tb.id]||[];const rows=visibleRows(tb,ctx);
+  const L=LIST[tb.id];const all=secRows(tb,data[tb.id]||[]);const rows=visibleRows(tb,ctx);
   let h=`<section class="tbl tb-${tb.id}">`;
   if(multi)h+=`<div class="tbl-h"><h3>${esc(tb.title)}</h3>${filtersHTML(tb)}${tableTools(tb)}<button class="btn sm primary ico" data-add="${tb.id}" title="Novo lançamento" aria-label="Novo lançamento"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
   h+=pasteHTML(tb);
@@ -941,7 +947,7 @@ function applyRO(dw,o){o=o||{};if(!dw)return;dw.classList.add('ro');
 function openFicha(tid,id,focusFirst){
   const tb=tbById(tid);if(!tb)return;const r=id?(data[tid]||[]).find(x=>x.id===id):null;if(id&&!r)return;
   const ctx=ctxFor();const fl=state.filters[tid]||{};fichaArm=false;
-  const base=r||Object.assign({},Object.fromEntries(Object.entries(fl).filter(([,v])=>v)),tid==="parcelas"?{atual:1}:{});
+  const base=r||Object.assign(secBase(tb),Object.fromEntries(Object.entries(fl).filter(([,v])=>v)),tid==="parcelas"?{atual:1}:{});
   const ed=tb.cols.filter(c=>c.t!=="calc"),calc=tb.cols.filter(c=>c.t==="calc");
   const val=c=>c.month?mon(base,ctx)[c.month]:base[c.k];
   const field=c=>{const v=val(c);const fid="fi-"+c.k;const lab=c.month?c.l.replace(" no mês","").replace(" do mês","")+" · "+fmtMonth(ctx.month):c.l;let inp;
@@ -1359,7 +1365,7 @@ function topHTML(tab){
   let h=`<div class="top-row"><button class="menu-btn" data-navopen aria-label="Abrir menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     <div class="title-wrap">${tab.home?"":`<div class="crumb"><button class="back-home" data-tab="visao">‹ Voltar para Visão geral</button>${g&&g.tabs.length>1?esc(g.l):""}</div>`}<h2 class="page-title">${esc(tab.title||tab.l)}</h2><div class="page-sub" title="${esc(tab.desc)}">${esc(tab.desc)}</div></div>`;
   if(tab.monthly||tab.home)h+=`<div class="top-acts"><label class="sr" for="fmes">Mês</label><input class="sel" type="month" id="fmes" data-month value="${esc(state.month)}"></div>`;
-  let srch="";if(isList&&!tab.subtabs)srch=`<label class="search" for="fq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fq" type="search" data-q placeholder="Buscar nesta aba" value="${esc(state.qs[tab.id]||"")}" autocomplete="off"></label>`;
+  let srch="";if(isList&&(!tab.subtabs||tab.subtabs.every(s=>s.own)))srch=`<label class="search" for="fq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fq" type="search" data-q placeholder="Buscar nesta aba" value="${esc(state.qs[tab.id]||"")}" autocomplete="off"></label>`;
   h+=`</div><div class="toolbar">`;
   if(tab.monthly){const f=state.filters.cronograma||{},hj=new Date().getDate(),at=!!f._sem,ho=!at&&+f._dia===hj,mes=state.cronGroup==="mes"&&!at&&!ho,sem=state.cronGroup!=="mes"&&!at&&!ho;h+=`<div class="seg" role="group" aria-label="Período da lista"><button data-cgroup="hoje" class="${ho?"on":""}">Hoje</button><button data-cgroup="atual" class="${at?"on":""}">Esta semana</button><button data-cgroup="semana" class="${!at&&!ho?"on":""}">Mês inteiro</button></div>`}
   if(tab.monthly)h+=`<div class="seg" role="group" aria-label="Visualização"><button data-view="list" class="${state.cronView!=="cal"?"on":""}">Lista</button><button data-view="cal" class="${state.cronView==="cal"?"on":""}">Calendário</button></div>`;
@@ -1514,7 +1520,7 @@ async function addEncItem(side){
   try{const id=await addRow(tid,{lado:ENC_LADOS[f?0:1],item:"Novo item",tipo:"Avulso",status:"Devolver",ordem:n+1,m:{},criado:new Date().toISOString()});setTimeout(()=>openFicha(tid,id),200)}catch(e){toast("Não foi possível criar o item.")}
 }
 
-function subOf(tab){const k=state.subs[tab.id];return tab.subtabs.find(s=>s.k===k)||tab.subtabs[0]}
+function subOf(tab){const k=state.subs[tab.id]||(tab.subtabs[0].own&&gExec==="fernando"?"fernando":"");return tab.subtabs.find(s=>s.k===k)||tab.subtabs[0]}
 function render(){
   if(!state.tab)return;
   const tab=state.tab,ctx=ctxFor();
@@ -1641,7 +1647,7 @@ document.addEventListener("click",async e=>{
 document.addEventListener("submit",async e=>{
   if(e.target.id!=="capForm"||!e.target.closest("#fin"))return;e.preventDefault();
   const inp=$("#fcap");const txt=inp.value.trim();if(!txt){toast("Escreva uma descrição antes de registrar.");return}
-  const tb=state.tab.tables[0];const L=LIST[tb.id];const o={criado:Date.now()};o[L.cap]=txt;
+  const tb=state.tab.tables[0];const L=LIST[tb.id];const o=Object.assign({criado:Date.now()},secBase(tb));o[L.cap]=txt;
   const fl=state.filters[tb.id]||{};Object.entries(fl).forEach(([k,v])=>{if(v)o[k]=v});if(tb.id==="parcelas")o.atual=1;
   try{const id=await addRow(tb.id,o);inp.value="";const kk=$("#fcapk");if(kk&&kk.checked)await kSend(tb.id,id,Object.assign({id},o));toast("Lançamento registrado");setTimeout(()=>openFicha(tb.id,id),200)}catch(err){toast(err&&err.code==="quota_exceeded"?"O painel atingiu o limite de lançamentos.":"Não foi possível registrar.")}
 });
