@@ -194,7 +194,7 @@ function viaMenu(){
 }
 function renderVia(){
   const el=$('#v-via');
-  if(S.viaSel&&viaById(S.viaSel)){el.innerHTML='<div class="wrap"><div class="side-layout">'+viaMenu()+'<div class="side-main">'+viaFicha(viaById(S.viaSel)).replace(/^<div class="wrap">/,'').replace(/<\/div>$/,'')+'</div></div></div>';return;}
+  if(S.viaSel&&viaById(S.viaSel)){setView(el,'<div class="wrap"><div class="side-layout">'+viaMenu()+'<div class="side-main">'+viaFicha(viaById(S.viaSel)).replace(/^<div class="wrap">/,'').replace(/<\/div>$/,'')+'</div></div></div>');return;}
   S.viaSel=null;const t0=todayISO();
   const vs=viaAll().filter(v=>viaExecOk(v)&&(!S.viaTipo||v.tipo===S.viaTipo));
   const prox=vs.filter(v=>viaOpen(v)&&v.inicio&&v.inicio>=t0&&v.inicio<=addDays(t0,30)).length;
@@ -265,7 +265,7 @@ if(S.viaTab==='viagens')h+=demBlock('c-via-viagens',null,{title:'Demandas de via
       h+='<div class="filters">'+selHtml('via-tipo',S.viaTipo,[['','Corporativas e pessoais'],['Corporativa','Só corporativas'],['Pessoal','Só pessoais']],'Tipo de viagem')+'</div>'+viaLista(vs);}
     else if(S.viaTab==='paises')h+=viaPaises();
   }
-  h+='</div></div></div>';el.innerHTML=h;
+  h+='</div></div></div>';setView(el,h);
 }
 function hotAmbito(x){return x.ambito||((x.paisNome&&!/^brasil$/i.test(String(x.paisNome).trim()))?'Internacional':'Nacional');}
 function viaHoteis(hs){

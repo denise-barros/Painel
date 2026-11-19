@@ -86,7 +86,7 @@ function renderAge(){
   const items=[{l:'Visão geral',nav:'age|geral|',on:S.ageTab==='geral',ic:MIC.geral,cnt:sol.length||''},
     {l:'Rotina de gestão',nav:'age|rot|',on:S.ageTab==='rot',ic:MIC.reun,cnt:semana.length?feitas+'/'+semana.length:''},
     {l:'Eventos',nav:'age|ev|',on:S.ageTab==='ev',ic:MIC.ev,cnt:ev30.length||''}];
-  el.innerHTML=sideWrap(sideNav({mark:'AG',title:'Agenda',sub:'Solicitações, rotina e eventos',items}),h);
+  setView(el,sideWrap(sideNav({mark:'AG',title:'Agenda',sub:'Solicitações, rotina e eventos',items}),h));
 }
 function ageRot(rots){
   if(!rots.length)return '<ul class="list"><li><div class="empty"><b>Nenhuma reunião de rotina cadastrada</b>Cadastre as reuniões gerais, inter áreas e os 1:1 de cada executivo, com frequência, dia e horário.<br><button class="btn sm" data-new-rec="age-rot" style="margin-top:8px">Cadastrar reunião</button></div></li></ul>';

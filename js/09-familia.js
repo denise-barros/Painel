@@ -113,7 +113,7 @@ function renderFam(){
   const famV=fam.filter(p=>!S.exec||ownerOk(p.executivo)||p.id===S.famP);
   if(famV.length){items.push({l:'Pessoas',nav:'fam|pessoa|'+(S.famP||famV[0].id),on:S.famTab==='pessoa',ic:MIC.reun});
     famV.forEach(p=>items.push({l:p.nome.split(' ')[0]+(p.nome.split(' ').length>1?' '+p.nome.split(' ').slice(-1)[0]:''),nav:'fam|pessoa|'+p.id,on:S.famTab==='pessoa'&&S.famP===p.id,child:true}));}
-  el.innerHTML=sideWrap(sideNav({mark:'RF',title:'Rotina e Família',sub:'Eventos, documentos e pets',items}),h);
+  setView(el,sideWrap(sideNav({mark:'RF',title:'Rotina e Família',sub:'Eventos, documentos e pets',items}),h));
 }
 function cadPets(rows){
   const th=['Nome','Espécie','De quem','Raça','Veterinário','Hotelzinho','Passeador(a)','Próxima vacina','Observações'];

@@ -35,7 +35,7 @@ function renderFac(){
     h+=demBlock('p-fac',null,{title:'Chamados',newLbl:'+ Abrir chamado',none:'Nenhum chamado',masc:true});
     h+='<div><div class="sec-h"><h3>Itens</h3></div>'+facAtivos()+'</div>';
   }
-  el.innerHTML=sideWrap(facMenu(),h);
+  setView(el,sideWrap(facMenu(),h));
 }
 function facFiltersHtml(withStatus){
   const f=S.facF;
