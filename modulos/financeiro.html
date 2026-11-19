@@ -546,13 +546,13 @@ const TABS=[
   subtabs:[{k:"leticia",l:"Leticia",tables:["emprestimos"],own:"leticia"},{k:"fernando",l:"Fernando",tables:["emprestimos"],own:"fernando"}],
   src:[["Empréstimos","https://drive.google.com/file/d/1kowHq-8zsWPX659N01nyM7djDgZdZsks/view"]],
   tables:[{id:"emprestimos",title:"Empréstimos",sort:"data",cols:[
-    SE("titular","Titular",["Leticia","Fernando"],{f:false}),SE("destino","Para",["Pessoa","Camino"]),SE("tipo","Tipo",["Saída","Entrada"]),TX("razao","Razão social / pessoa",{w:180}),M("valor","Valor emprestado"),DT("data","Data do empréstimo"),DT("prevista","Previsão de liquidação"),
+    SE("titular","Titular",["Leticia","Fernando"],{f:false}),SE("destino","Para",["Pessoa","Camino"]),SE("tipo","Tipo",["Saída","Entrada"],{f:false}),TX("razao","Razão social / pessoa",{w:180}),M("valor","Valor emprestado"),DT("data","Data do empréstimo"),DT("prevista","Previsão de liquidação"),
     LG("contrato","Contrato / condições",{w:200}),M("parcela","Valor da parcela"),M("devolvido","Valor devolvido"),DT("datadev","Data da devolução"),
-    SE("forma","Forma de pag.",["Pix","TED","Débito","Boleto"]),M("juros","Juros"),
+    SE("forma","Forma de pag.",["Pix","TED","Débito","Boleto"],{f:false}),M("juros","Juros"),
     {k:"saldo",l:"Saldo devedor",t:"calc",ct:"money",sum:true,calc:r=>(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0)},
     SE("status","Status",["Em aberto","Quitado","Não será cobrado"]),LG("obs","Observações",{w:200})],
-    kpis:rows=>{const t={ps:0,pe:0,cs:0,ce:0};let q=0;rows.forEach(r=>{if(r.status==="Quitado"||r.status==="Não será cobrado"){if(r.status==="Quitado")q++;return}const v=(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0);t[(r.destino==="Camino"?"c":"p")+(r.tipo==="Entrada"?"e":"s")]+=v});
-      return[{l:"A receber de pessoas",v:fmtMoney(t.ps),c:"pos"},{l:"A receber da Camino",v:fmtMoney(t.cs),c:"pos"},{l:"A pagar a pessoas",v:fmtMoney(t.pe),c:"neg"},{l:"A pagar à Camino",v:fmtMoney(t.ce),c:"neg"},{l:"Quitados",v:String(q)}]}}]},
+    kpis:rows=>{const e=state.empTipo==="Entrada";let p=0,c=0,q=0;rows.forEach(r=>{if(r.status==="Quitado"){q++;return}if(r.status==="Não será cobrado")return;const v=(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0);if(r.destino==="Camino")c+=v;else p+=v});
+      const cl=e?"neg":"pos";return e?[{l:"A pagar a pessoas",v:fmtMoney(p),c:cl},{l:"A pagar à Camino",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]:[{l:"A receber de pessoas",v:fmtMoney(p),c:cl},{l:"A receber da Camino",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]}}]},
  {id:"reemb-corp",g:"Controles",l:"Reembolsos corporativos",desc:"Despesas de viagem e trabalho de Leticia e Fernando a reembolsar. Apurações com Daniel todo dia 03.",
   src:[["Reembolsos | Leticia",DRIVE+"1wLIT4EwtX28UUVc8nGwKhuYTJIM5rGsHH8tHLcMqYHk/edit"],["Reembolsos | Shayer",DRIVE+"1S7y0fKPuMFt6bi7G1N-Pw-q6q9pJcbuqrpbJc6oPdCc/edit"],["Base para reembolsos",DRIVE+"1t58x-alGZcLDutbojaWQgkhWSOAbkBWxlxGWvcbeqUs/edit"]],
   tables:[{id:"reemb-corp",title:"Lançamentos",sort:"data",cols:[
@@ -690,7 +690,7 @@ async function updStamp(tid,id,patch){const r=(data[tid]||[]).find(x=>x.id===id)
 
 /* ---------- estado ---------- */
 /* mês e ano sempre começam no vigente ao abrir (decidido 27/10) */
-const state={tab:null,month:today(),year:new Date().getFullYear(),
+const state={empTipo:"Saída",tab:null,month:today(),year:new Date().getFullYear(),
   cronView:store.get("pgf.view")||"list",cronGroup:"semana",subs:{},encV:{},encSel:null,encDevOpen:{},encDevEdit:null,fxOpen:{},qs:{},filters:{},paste:null,confirm:null,editing:false,banner:null,advance:false};
 const grpOpen={};
 const asnMon=(all,fl)=>{if(fl._mes!==undefined)return fl._mes;return today()};
@@ -725,8 +725,8 @@ const cronoDue=(r,m)=>{try{return PF?PF.due(r,m):true}catch(e){return true}};
 /* seções Leticia / Fernando (empréstimos): sem titular, conta como Leticia */
 const ownOf=r=>/fernando|shayer/i.test(r.titular||"")?"fernando":"leticia";
 function secOwn(tb){const t=state.tab;if(!tb||!t||!t.subtabs||!(t.tables||[]).includes(tb))return"";return subOf(t).own||""}
-const secRows=(tb,rows)=>{const o=secOwn(tb);return o?rows.filter(r=>ownOf(r)===o):rows};
-const secBase=tb=>{const o=secOwn(tb);return o?{titular:o==="fernando"?"Fernando":"Leticia"}:{}};
+const secRows=(tb,rows)=>{const o=secOwn(tb);if(o)rows=rows.filter(r=>ownOf(r)===o);if(tb&&tb.id==="emprestimos")rows=rows.filter(r=>(r.tipo||"Saída")===state.empTipo);return rows};
+const secBase=tb=>{const o=secOwn(tb),b=o?{titular:o==="fernando"?"Fernando":"Leticia"}:{};if(tb&&tb.id==="emprestimos")b.tipo=state.empTipo;return b};
 function visibleRows(tb,ctx,noPeriod){
   let rows=secRows(tb,(data[tb.id]||[]).filter(execOk));
     const q=(state.qs[state.tab.id]||"").toLowerCase().trim();
@@ -826,8 +826,8 @@ function listHTML(tb,ctx,multi){
     const qs=(r,k)=>{const c=tb.cols.find(x=>x.k===k),cv=r[k]||c.opts[0];return `<label class="sr" for="qs-${k}-${r.id}">${esc(c.l)}</label><select id="qs-${k}-${r.id}" class="qsel ${k==="status"?badgeTone(cv):cv==="Camino"?"info":""}" data-qs="${tb.id}|${r.id}|${k}">${c.opts.map(o=>`<option ${o===cv?"selected":""}>${esc(o)}</option>`).join("")}</select>`};
     const rs=rows.slice().sort((x,y)=>String(x.data||"").localeCompare(String(y.data||"")));
     const sm=f=>rs.reduce((n,r)=>n+(+f(r)||0),0);
-    h+=`<div class="wrap asn-wrap"><div class="asn-sc" style="max-height:none"><table class="grid atb emt"><thead><tr><th>Data</th><th>Razão social / pessoa</th><th>Para</th><th>Tipo</th><th style="${R}">Emprestado</th><th style="${R}">Devolvido</th><th>Devolução</th><th style="${R}">Juros</th><th style="${R}">Saldo</th><th>Status</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td><td class="a-t"><b>${esc(r.razao||"Sem nome")}</b>${r.obs?`<span class="a-o" title="${esc(r.obs)}">${esc(r.obs)}</span>`:""}</td><td>${qs(r,"destino")}</td><td>${esc(r.tipo||"")}</td><td style="${R}">${mv(r.valor)}</td><td style="${R}">${mv(r.devolvido)}</td><td>${dd(r.datadev)}</td><td style="${R}">${mv(r.juros)}</td><td style="${R}"><b>${fmtMoney(L.value(r))}</b></td><td>${qs(r,"status")}</td></tr>`).join("")}
-      <tr class="emg"><td></td><td><b>Total</b></td><td></td><td></td><td style="${R}"><b>${fmtMoney(sm(r=>r.valor))}</b></td><td style="${R}"><b>${mv(sm(r=>r.devolvido))}</b></td><td></td><td style="${R}"><b>${mv(sm(r=>r.juros))}</b></td><td style="${R}"><b>${fmtMoney(sm(L.value))}</b></td><td></td></tr></tbody></table></div></div>`;
+    h+=`<div class="wrap asn-wrap"><div class="asn-sc" style="max-height:none"><table class="grid atb emt"><thead><tr><th>Data</th><th>Razão social / pessoa</th><th>Para</th><th style="${R}">Emprestado</th><th style="${R}">Devolvido</th><th>Devolução</th><th style="${R}">Juros</th><th style="${R}">Saldo</th><th>Status</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td><td class="a-t"><b>${esc(r.razao||"Sem nome")}</b>${r.obs?`<span class="a-o" title="${esc(r.obs)}">${esc(r.obs)}</span>`:""}</td><td>${qs(r,"destino")}</td><td style="${R}">${mv(r.valor)}</td><td style="${R}">${mv(r.devolvido)}</td><td>${dd(r.datadev)}</td><td style="${R}">${mv(r.juros)}</td><td style="${R}"><b>${fmtMoney(L.value(r))}</b></td><td>${qs(r,"status")}</td></tr>`).join("")}
+      <tr class="emg"><td></td><td><b>Total</b></td><td></td><td style="${R}"><b>${fmtMoney(sm(r=>r.valor))}</b></td><td style="${R}"><b>${mv(sm(r=>r.devolvido))}</b></td><td></td><td style="${R}"><b>${mv(sm(r=>r.juros))}</b></td><td style="${R}"><b>${fmtMoney(sm(L.value))}</b></td><td></td></tr></tbody></table></div></div>`;
     return h+`<div class="foot"><span>${rows.length} de ${all.length} lançamento${all.length===1?"":"s"}</span><span>Clique numa linha para abrir</span></div></section>`}
   if(tb.id==="parcelas"){/* Cartão de crédito: uma tabela por mês. Mês atual: parcelas ao vivo (planilha sincronizada). Meses anteriores: foto salva em abas/faturas. */
     subscribe("faturas");const atual=ccMes(),rs=rows,CARTOES=["Itaú The One","Itaú LATAM","Itaú Personnalité","Santander Black","C6 Bank"];
@@ -1384,7 +1384,8 @@ function topHTML(tab){
   h+=`</div><div class="toolbar">`;
   if(tab.monthly){const f=state.filters.cronograma||{},hj=new Date().getDate(),at=!!f._sem,ho=!at&&+f._dia===hj,mes=state.cronGroup==="mes"&&!at&&!ho,sem=state.cronGroup!=="mes"&&!at&&!ho;h+=`<div class="seg" role="group" aria-label="Período da lista"><button data-cgroup="hoje" class="${ho?"on":""}">Hoje</button><button data-cgroup="atual" class="${at?"on":""}">Esta semana</button><button data-cgroup="semana" class="${!at&&!ho?"on":""}">Mês inteiro</button></div>`}
   if(tab.monthly)h+=`<div class="seg" role="group" aria-label="Visualização"><button data-view="list" class="${state.cronView!=="cal"?"on":""}">Lista</button><button data-view="cal" class="${state.cronView==="cal"?"on":""}">Calendário</button></div>`;
-  if(tab.subtabs){const sk=subOf(tab).k;h+=`<div class="seg subtabs" role="tablist" aria-label="Seções">${tab.subtabs.map(s=>`<button role="tab" data-subtab="${s.k}" aria-selected="${s.k===sk}" class="${s.k===sk?"on":""}">${esc(s.l)}</button>`).join("")}</div>`}
+  if(tab.subtabs){const sk=subOf(tab).k;h+=`<div class="seg subtabs" role="tablist" aria-label="Seções">${tab.subtabs.map(s=>`<button role="tab" data-subtab="${s.k}" aria-selected="${s.k===sk}" class="${s.k===sk?"on":""}">${esc(s.l)}</button>`).join("")}</div>`;
+    if(tab.id==="emprestimos"){const o=subOf(tab).own,n=t=>(data.emprestimos||[]).filter(r=>ownOf(r)===o&&(r.tipo||"Saída")===t).length;h+=`<div class="seg subtabs" role="tablist" aria-label="Saídas ou entradas">${[["Saída","Saídas"],["Entrada","Entradas"]].map(([t,l])=>`<button role="tab" data-emptipo="${t}" aria-selected="${state.empTipo===t}" class="${state.empTipo===t?"on":""}">${l} <span style="opacity:.7;font-weight:500">${n(t)}</span></button>`).join("")}</div>`}}
   if(tab.matrix||tab.reports||tab.id==="repasses"){const ys=[...new Set([new Date().getFullYear()-1,new Date().getFullYear(),new Date().getFullYear()+1,state.year])].filter(a=>tab.id!=="repasses"||a>=2026).sort();h+=`<label class="sr" for="fyr">Ano</label><select class="sel" id="fyr" data-year>${ys.map(a=>`<option ${a===state.year?"selected":""}>${a}</option>`).join("")}</select>`}
   const inl=isList&&!multi;if(inl){const fl=state.filters[first.id]||{};const act=Object.keys(fl).some(k=>fl[k]&&k!=="_sem"&&k!=="_pend"&&!(first.id==="assinaturas"&&k==="_mes"));h+=filtersHTML(first)+(act?`<button class="btn sm" data-fclear="${first.id}">Limpar filtros</button>`:"")+pendBtns(first,fl)}
   h+=`<span class="grow"></span>`+srch;
@@ -1647,7 +1648,7 @@ document.addEventListener("click",async e=>{
   const pr=e.target.closest("[data-encpickrow]");if(pr&&state.encSel){encPickRow(pr.dataset.encpickrow,pr);encPickPaint();return}
   if(e.target.closest("[data-encpickall]")&&state.encSel){const S=state.encSel.cells,ks=encVisKeys();if(ks.length&&ks.every(k=>S.has(k)))S.clear();else ks.forEach(k=>S.add(k));encPickPaint();return}
   const er=e.target.closest("[data-encreopen]");if(er){encReabrir(er.dataset.encreopen);return}
-  const b=e.target.closest("[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
+  const b=e.target.closest("[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-emptipo],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
   if(!b)return;const d=b.dataset;
   if(d.navopen!==undefined){$("#app").classList.add("nav-open");return}
   if(d.navclose!==undefined){$("#app").classList.remove("nav-open");return}
@@ -1665,6 +1666,7 @@ document.addEventListener("click",async e=>{
     return saveAtt(fAtt.list.filter(x=>x.id!==a.id),"Anexo removido")}
   if(d.kopen){closeFicha();if(window.CS)window.CS.openTask(d.kopen);return}
   if(d.subtab){state.subs[state.tab.id]=d.subtab;return render()}
+  if(d.emptipo){state.empTipo=d.emptipo;return render()}
   if(d.view){state.cronView=d.view;store.set("pgf.view",d.view);if(d.view==="list"){const f=state.filters.cronograma;if(f&&f._dia&&+f._dia!==new Date().getDate())delete f._dia;}return render()}
   if(d.cgroup){const f=(state.filters.cronograma=state.filters.cronograma||{});const v=d.cgroup==="mes"?"semana":d.cgroup;f._sem="";if(v==="hoje"){f._dia=String(new Date().getDate())}else{if(+f._dia===new Date().getDate()&&v!=="hoje")f._dia="";if(v==="atual")f._sem="1";else{state.cronGroup=v;store.set("pgf.cgroup",v)}}return render()}
   if(d.open){const[t,id]=d.open.split("|");return openFicha(t,id,false)}
