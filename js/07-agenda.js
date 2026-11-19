@@ -27,9 +27,10 @@ Object.assign(REC,{
     {k:'ambito',l:'Interno ou externo',opts:['Interno','Externo']},
     {k:'palestrante',l:'Palestrante?',opts:['Não','Sim']},
     {k:'local',l:'Local'},
-    {k:'status',l:'Feito?',opts:['Previsto','Sim','Não compareceu','Cancelado']},
+    {k:'status',l:'Feito?',opts:['Previsto','Sim','Só Fernando foi','Só Leticia foi','Não compareceu','Cancelado'],hint:'Em eventos de ambos, dá para marcar que só um dos dois foi.'},
     {k:'obs',l:'Observações',long:true},
-    {k:'anexos',l:'Convite e materiais',t:'files'}]}
+    {k:'anexos',l:'Convite e materiais',t:'files'}],
+    after:()=>evSoSync()}
 });
 ['age-rot','age-ev'].forEach(k=>{S.rec[k]=S.rec[k]||[];});
 Object.assign(S,{ageTab:'geral',ageMes:'',ageEvAll:false});
@@ -51,6 +52,11 @@ function rotMesStats(rots,ym,t0){t0=t0||todayISO();const o={previstas:0,ocorrida
   rots.forEach(r=>mesWeeks(ym).forEach(w=>{if(!rotPrev(r,w,ym))return;o.previstas++;if(rotData(r,w)<=t0)o.ocorridas++;const v=(r.semanas||{})[w]||'';if(v==='ok')o.realizadas++;else if(v==='canc')o.canceladas++;else if(v==='rem')o.remarcadas++;}));
   o.cumprimento=o.ocorridas?Math.round(o.realizadas/o.ocorridas*100):null;return o;}
 const evEnd=e=>e.fim||e.data||'';
+/* "Só Fernando foi" / "Só Leticia foi": só fazem sentido em eventos de ambos */
+const EV_SO=['Só Fernando foi','Só Leticia foi'];
+function evSoSync(){const ex=document.getElementById('rf-executivo'),st=document.getElementById('rf-status');if(!ex||!st)return;const amb=ex.value==='ambos';
+  [...st.options].forEach(o=>{if(EV_SO.includes(o.value)){o.hidden=!amb;o.disabled=!amb;}});if(!amb&&EV_SO.includes(st.value))st.value='Sim';}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='rf-executivo'&&dr&&dr.rt==='age-ev')evSoSync();});
 const evOff=e=>['Cancelado','Não compareceu'].includes(e.status||'');
 IC.age='<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
 /* atendimentos a famílias (Negócios › Camino School) que pediram agendamento aparecem também aqui, sem duplicar a demanda */
@@ -123,13 +129,13 @@ function ageEv(evs){
   const up=evs.filter(e=>evEnd(e)>=t0).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
   const past=evs.filter(e=>evEnd(e)<t0).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
   const wd=iso=>{const d=new Date(iso+'T12:00:00');return DIAS_SEM[(d.getDay()+6)%7].replace('-feira','');};
-  const exIc=ex=>ex==='ambos'?'<span class="ex-ics" title="'+esc(EXEC.ambos)+'"><span class="ex-ic ex-f">F</span><span class="ex-ic ex-l">L</span></span>':ex?'<span class="ex-ic ex-'+(ex==='fernando'?'f':'l')+'" title="'+esc(EXEC[ex]||'')+'">'+(ex==='fernando'?'F':'L')+'</span>':'<span class="mut">·</span>';
-  const row=e=>{const off=evOff(e);const feito=e.status==='Sim';
+  const exIc=ex=>ex==='ambos'?'<span class="ex-who" title="'+esc(EXEC.ambos)+'"><i class="ex-f"></i><i class="ex-l ex-2"></i>Ambos</span>':ex?'<span class="ex-who" title="'+esc(EXEC[ex]||'')+'"><i class="ex-'+(ex==='fernando'?'f':'l')+'"></i>'+(ex==='fernando'?'Fernando':'Leticia')+'</span>':'<span class="mut">·</span>';
+  const row=e=>{const off=evOff(e);const feito=e.status==='Sim'||EV_SO.includes(e.status);
     const pe=e.pessoa&&personById(e.pessoa)?'<span class="tag pess">'+esc(personById(e.pessoa).nome.split(' ')[0])+'</span>':'';const bo=e.board&&boardById(e.board)?'<span class="tag">'+esc(boardById(e.board).nome)+'</span>':'';
     const dt=esc(fmtDate(e.data))+(e.fim&&e.fim!==e.data?' a '+esc(fmtDate(e.fim)):'');
     return '<tr class="'+(off?'off':'')+'"><td class="ex">'+exIc(e.executivo)+'</td><td class="l"><button class="rot-n" data-rec="age-ev:'+esc(e.id)+'">'+esc(e.titulo)+'</button>'+(e.tema?' <span class="mut">· '+esc(e.tema)+'</span>':'')+pe+bo+(e.palestrante==='Sim'?'<span class="tag warn">Palestrante</span>':'')+filesHtml(e.anexos)+'</td>'+
       '<td class="l">'+dt+(e.fim&&e.fim!==e.data?'':' <span class="mut">'+esc(wd(e.data))+'</span>')+'</td><td class="l mut">'+esc(e.horario||'')+'</td><td class="l mut">'+esc([e.formato,e.ambito].filter(Boolean).join(' · '))+'</td><td class="l mut">'+esc(e.local||'')+'</td>'+
-      '<td class="l">'+(off||feito?'<span class="tag '+(off?'bad':'ok')+'">'+esc(feito?'Feito':e.status)+'</span>':'<span class="mut">'+esc(e.status||'Previsto')+'</span>')+'</td></tr>';};
+      '<td class="l">'+(off||feito?'<span class="tag '+(off?'bad':'ok')+'">'+esc(e.status==='Sim'?'Feito':e.status)+'</span>':'<span class="mut">'+esc(e.status||'Previsto')+'</span>')+'</td></tr>';};
   const byMonth=list=>{const g=new Map();list.forEach(e=>{const k=String(e.data||'').slice(0,7);if(!g.has(k))g.set(k,[]);g.get(k).push(e);});
     let h='';for(const [k,l] of g)h+='<div><div class="sec-h"><h3>'+esc(k?MES_N[+k.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+' de '+k.slice(0,4):'Sem data')+'</h3><span class="cnt">'+l.length+'</span></div><div class="rot-wrap"><table class="rot-t ev-t"><thead><tr><th></th><th class="l">Evento</th><th class="l">Data</th><th class="l">Horário</th><th class="l">Formato</th><th class="l">Local</th><th class="l">Situação</th></tr></thead><tbody>'+l.map(row).join('')+'</tbody></table></div></div>';return h;};
   let h=up.length?byMonth(up):'<ul class="list"><li><div class="empty"><b>Nenhum evento à frente</b></div></li></ul>';

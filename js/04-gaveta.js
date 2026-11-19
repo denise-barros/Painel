@@ -42,6 +42,7 @@ function openRec(type,id,pre){
   const cut=t=>{t=String(t||'').split('\n')[0];return t.length>70?t.slice(0,68).trim()+'…':t;};
   const title=r?(r.titulo||r.nome||(r.pessoa?refName('equipe',r.pessoa)+' · '+(r.tipo||R.one)+(r.data?' · '+fmtDateFull(r.data):''):'')||cut(r.descricao)||r.emissor||R.one):(R.fem?'Nova ':'Novo ')+R.one;
   drawerShell(title,body,(r?'<button class="btn danger" id="rf-del">Excluir</button>':'')+extra+'<span class="grow"></span><button class="btn" data-close>Cancelar</button><button class="btn primary" id="rf-save">'+(r?'Salvar':'Registrar')+'</button>',!!r);
+  if(R.after)try{R.after(r);}catch(e){}
 }
 function filesEdit(){return (dr.upl||[]).map(n=>'<span class="file up">'+esc(n)+' · enviando…</span>').join('')+(dr.files||[]).map((a,i)=>'<span class="file"><a href="'+(a.url?esc(a.url):'/_blob/'+encodeURIComponent(a.id))+'" target="_blank" rel="noopener">'+esc(a.name||'arquivo')+'</a><button class="x" data-unfile="'+i+'" aria-label="Remover '+esc(a.name||'arquivo')+'">×</button></span>').join('');}
 function drawerVals(){const v={};['pessoa','ativo','empresa','board','viagem'].forEach(k=>{const el=$('#rf-'+k);if(el)v[k]=el.value;});return v;}
