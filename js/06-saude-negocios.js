@@ -218,7 +218,7 @@ function renderNeg(){
   const tasksAll=negTasks().filter(t=>(ns?ns.has(taskEmp(t)):(!S.exec||taskExec(t))));const tasks=tasksAll.filter(isOpen);
   const obr=obrList().filter(o=>negScope(o.empresa));const docs=recs('neg-doc').filter(d=>negScope(d.empresa));
   let h='<div class="wrap"><div class="side-layout">'+negMenu(emps)+'<div class="side-main">'+(sel?'<div class="back-row"><button class="back-home" data-neg-e="">‹ Voltar para todas as empresas</button></div>':'');
-  h+='<div class="plan-hero"><div><h2>'+esc(sel?sel.nome:'Negócios')+'</h2><p>'+(sel?esc([sel.pai?'Unidade de negócio da '+((empById(sel.pai)||{}).nome||''):'',empChildren(sel.id).length?'Unidades: '+empChildren(sel.id).sort(empOrd).map(e=>e.nome).join(', '):'',sel.situacao,sel.executivo?EXEC[sel.executivo]:''].filter(Boolean).join(' · ')):'O que precisa de atenção hoje e as demandas de todas as empresas.')+'</p></div>'+
+  h+='<div class="plan-hero"><div><h2>'+esc(sel?sel.nome:'Negócios')+'</h2><p>'+(sel?esc([sel.pai?'Unidade de negócio da '+((empById(sel.pai)||{}).nome||''):'',empChildren(sel.id).length?'Unidades: '+empChildren(sel.id).sort(empOrd).map(e=>e.nome).join(', '):'',sel.situacao,sel.executivo?EXEC[sel.executivo]:''].filter(Boolean).join(' · ')):'Assinaturas, famílias, follow-ups, obrigações e as demandas de todas as empresas.')+'</p></div>'+
     '<div class="acts">'+(sel?subDrive(sel,'neg'):'')+'</div></div>';
   const late=obr.filter(obrLate).length,soon=obr.filter(o=>!o.encerrada&&o.proxima&&o.proxima>=todayISO()&&o.proxima<=addDays(todayISO(),30)).length;
   const asPend=negKind('assinatura').filter(isOpen).length,faPend=negKind('familia').filter(isOpen).length;
@@ -268,14 +268,8 @@ function negHome(empsIn){
     rows.push('<tr><td class="emp'+(dm?' clk':'')+'"'+(dm?' data-task="'+esc(dm.id)+'" title="Abrir a demanda de renovação"':'')+'>'+esc(e.nome)+'</td><td class="cnpj">'+(e.cnpj?esc(e.cnpj):'<span class="none">—</span>')+'</td><td><select class="cert-in" data-cert-rep="'+esc(e.id)+'" aria-label="Representante legal">'+['fernando','leticia'].concat(e.certRep==='outro'?['outro']:[]).map(k=>'<option value="'+k+'"'+(certRepOf(e)===k?' selected':'')+'>'+esc(k==='outro'?(e.certRepNome||'Outra pessoa'):EXEC[k])+'</option>').join('')+'</select></td><td><input class="cert-in" type="date" data-cert-due="'+esc(e.id)+'" value="'+esc(v)+'" aria-label="Vencimento"></td><td>'+(n==null?'<span class="none">Sem data</span>':'<span class="tag '+cl+'">'+(n<0?'Vencido há '+(-n)+' dias':n===0?'Vence hoje':n+' dias')+'</span>')+'</td></tr>');});
   const ceH='<table class="cert-t"><thead><tr><th>Empresa</th><th>CNPJ</th><th>Representante legal</th><th>Vencimento</th><th>Situação</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
   const ceN=certEmps().filter(e=>e.certVenc&&e.certVenc<=addDays(t0,30)),ceLate=ceN.filter(e=>e.certVenc<t0);
-  /* Atenção: só o que está atrasado, de todos os tipos */
-  const att='<ul class="list">'+[].concat(as.filter(t=>t.due&&t.due<t0).map(asR),fa.filter(t=>dayBetween(base(t),t0)>=3).map(faR),em.filter(t=>t.due&&t.due<t0).map(emR)).join('')
-    +(obr.some(obrLate)?negObr(obr.filter(obrLate)).replace(/^<ul class="list">|<\/ul>$/g,''):'')
-    +ceLate.map(e=>'<li><div class="item bad"><span class="sev"></span><button class="item-main" data-neg-ov="cert"><span class="tt">Certificado digital · '+esc(e.nome)+'</span><span class="mm"><span class="tag bad">Vencido há '+dayBetween(e.certVenc,t0)+' dias</span></span></button></div></li>').join('')+'</ul>';
-  const nAtt=as.filter(t=>t.due&&t.due<t0).length+fa.filter(t=>dayBetween(base(t),t0)>=3).length+em.filter(t=>t.due&&t.due<t0).length+obr.filter(obrLate).length+ceLate.length;
   const TABS=[
-    ['att','Atenção',nAtt,nAtt?'neg':'',nAtt?'atrasados':'nada atrasado',()=>nAtt?att:none('Nada atrasado. Tudo em dia.')],
-    ['ass','Assinaturas',as.length,as.length?'warn':'','pendentes',()=>ul(as,asR,'Nenhuma assinatura pendente.')],
+    ['ass','Assinaturas',as.length,as.filter(t=>t.due&&t.due<t0).length?'neg':as.length?'warn':'','pendentes',()=>ul(as,asR,'Nenhuma assinatura pendente.')],
     ['fam','Famílias',fa.length,fa.length?'warn':'','aguardando retorno',()=>ul(fa,faR,'Nenhuma família aguardando retorno.')],
     ['em','Follow-ups',em.length,'','de e-mail',()=>ul(em,emR,'Nenhum follow-up pendente.')],
     ['imp','Impressões',im.length?imDone+'/'+im.length:'0','','do dia',()=>ul(im,imR,'Nenhuma impressão para hoje.')],
