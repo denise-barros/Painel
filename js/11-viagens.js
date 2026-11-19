@@ -464,6 +464,8 @@ function resetModule(id){
 }
 function homeFrame(id){const f=frames[id];if(!f)return;try{const w=f.contentWindow;if(w&&typeof w.__home==='function')w.__home();}catch(e){}}
 function scrollHome(id){const v=document.getElementById('v-'+id)||document.getElementById('v-mod');if(!v)return;const z=()=>{v.scrollTop=0;v.querySelectorAll('*').forEach(x=>{if(x.scrollTop)x.scrollTop=0;});};z();requestAnimationFrame(z);}
+/* entrar num módulo vindo de outro lugar (menu, cartões da Capa, volta ao Painel): sempre pela aba inicial */
+function goHome(id){resetModule(id);go(id);homeFrame(id);scrollHome(id);}
 function go(id){
   if(!NAV.some(n=>n.id===id))id='capa';
   S.view=id;saveUi();renderNav();
@@ -768,8 +770,8 @@ document.addEventListener('click',e=>{
   if(t.id==='syncDrive')return syncAllDrive(t);
   if(t.id==='rf-save')return saveRec();
   if(t.id==='rf-del')return delRec();
-  if(t.dataset.nav!=null){const nid=t.dataset.nav;resetModule(nid);go(nid);homeFrame(nid);scrollHome(nid);return;}
-  if(t.dataset.go!=null)return go(t.dataset.go);
+  if(t.dataset.nav!=null)return goHome(t.dataset.nav);
+  if(t.dataset.go!=null){const gid=t.dataset.go;if(gid===S.view)return go(gid);return goHome(gid);}
   if(t.dataset.exec!=null){S.exec=t.dataset.exec;saveUi();return renderCurrent();}
   if(t.dataset.cadTab!=null){S.cadTab=t.dataset.cadTab;saveUi();if(S.view!=='cad')return go('cad');return renderCad();}
   if(t.dataset.edit!=null){const[c,id]=t.dataset.edit.split(':');return openCad(c,id);}

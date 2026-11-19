@@ -9,6 +9,10 @@ function phase2Capa(attention,upcoming,t0,horizon){
   // DP: férias e afastamentos começando
   recs('dp-mov').forEach(m=>{if(!(m.tipo==='Férias'||m.tipo==='Afastamento'))return;const pe=personById(m.pessoa);if(pe&&!ownerOk(pe.executivo))return;
     if(m.data>=t0&&m.data<=horizon)upcoming.push({date:m.data,kind:'DP',title:refName('equipe',m.pessoa)+' · início de '+m.tipo.toLowerCase(),meta:[m.dataFim?['','Até '+fmtDate(m.dataFim)]:null],right:'',go:'dp',sev:'info'});});
+  // DP: os mesmos avisos da Visão geral do DP (pagamentos vencidos ou a vencer já entram acima, um por um)
+  dpAvisos().forEach(a=>{if(a.ym&&a.st!=='nodate')return;
+    if(a.p&&!ownerOk(a.p.executivo))return;if(a.ps&&!a.ps.some(id=>{const pe=personById(id);return !pe||ownerOk(pe.executivo);}))return;
+    attention.push({sev:a.bad?'bad':'warn',kind:'DP',title:a.t,meta:[[a.bad?'bad':'warn',a.bad?'Atenção':'Aviso']],right:'',go:'dp',sort:a.d||t0});});
   // Facilities: vencimentos
   recs('fac-rec').forEach(r=>{if(r.encerrada||!r.proxima)return;const a=ativoById(r.ativo);if(a&&!ownerOk(a.executivo))return;
     const nm=r.titulo+(a?' · '+a.nome:'');
