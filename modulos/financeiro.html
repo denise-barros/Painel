@@ -1667,7 +1667,10 @@ document.addEventListener("change",async e=>{const t=e.target;if(!t.dataset||!t.
 });
 
 /* ---------- início ---------- */
-state.tab=tabById("visao");
+/* atualizar a página mantém a aba e a sub-aba; abrir de novo começa pela Visão geral */
+{let sn=null;try{sn=JSON.parse(sessionStorage.getItem("fin-snap")||"null")}catch(e){}state.tab=tabById(sn&&sn.tab||"visao");if(sn&&sn.subs)state.subs=sn.subs;if(sn&&sn.encV)state.encV=sn.encV}
+const finSnap=()=>{try{sessionStorage.setItem("fin-snap",JSON.stringify({tab:state.tab&&state.tab.id,subs:state.subs,encV:state.encV}))}catch(e){}};
+window.addEventListener("pagehide",finSnap);document.addEventListener("visibilitychange",()=>{if(document.hidden)finSnap()});
 window.FIN={
   navHTML,go,
   tabs:()=>TABS.map(t=>t.id),
