@@ -46,7 +46,7 @@ const NAV=[
   {id:'capa',l:'Capa'},
   {sep:true},
   {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=7'},
-  {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=405'},
+  {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=406'},
   {id:'dp',l:'DP',native:true},
   {id:'fac',l:'Facilities',native:true},
   {id:'sau',l:'Saúde',native:true},
@@ -206,7 +206,7 @@ async function boot(){
   const legado=o=>{if(o.reembolso==='Pedir reembolso')o.reembolso='Com reembolso';if(o.convenio==='Particular (pedir reembolso)')o.convenio='Particular (com reembolso)';return o;};
   /* pessoas: o antigo campo único "contato" virou telefone + e-mail */
   const legadoPessoa=o=>{if(o.contato&&!o.telefone&&!o.email){const v=String(o.contato).trim();if(/@/.test(v))o.email=v;else o.telefone=v;}delete o.contato;return o;};
-  Object.keys(S.rec).forEach(t=>db.collection(REC[t].col).onSnapshot(s=>{S.rec[t]=s.docs.map(d=>legado({id:d.id,...d.data()}));schedule();},()=>{}));
+  Object.keys(S.rec).forEach(t=>db.collection(REC[t].col).onSnapshot(s=>{S.rec[t]=s.docs.map(d=>legado({id:d.id,...d.data()}));schedule();if(t==='dp-emp'){try{finNotify('dp-emp');}catch(e){}}},()=>{}));
   Object.keys(CAD).forEach(c=>db.collection(CAD[c].col).onSnapshot(s=>{S.cad[c]=s.docs.map(d=>{const o=legado({id:d.id,...d.data()});return c==='pessoas'?legadoPessoa(o):o;}).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt'));schedule();autoDriveSync();},()=>{}));
 }
 

@@ -233,7 +233,7 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   if(t.dataset.dpMvg!=null)S.dpMvG=t.dataset.dpMvg;else if(t.dataset.dpOcano!=null)S.dpOcAno=t.dataset.dpOcano;else S.dpOcTipo=t.dataset.dpOctipo;renderDP();});
 document.addEventListener('change',e=>{if(e.target&&e.target.id==='dp-mv-all'){S.dpMvAll=e.target.checked;renderDP();}});
 function dpEmpSaldo(r){return Math.max(0,(+r.valor||0)-(+r.pago||0));}
-function dpEmpAberto(r){return r.status!=='Quitado'&&dpEmpSaldo(r)>0;}
+function dpEmpAberto(r){return r.status!=='Quitado'&&r.status!=='Não será cobrado'&&dpEmpSaldo(r)>0;}
 function dpEmpRow(r,nome){const sal=dpEmpSaldo(r);const ab=dpEmpAberto(r);
   return rowBtn('dp-emp',r,'<span style="min-width:0"><span class="tt">'+(nome?esc(refName('equipe',r.pessoa))+' · ':'')+esc(fmtMoney(r.valor))+'</span><span class="mm"><span class="tag">'+esc(fmtDateFull(r.data))+'</span>'+(+r.parcelas?'<span class="tag">'+esc(r.parcelas)+'x'+(+r.valorParcela?' de '+esc(fmtMoney(r.valorParcela)):'')+'</span>':'')+(ab?'<span class="tag warn">Saldo '+esc(fmtMoney(sal))+'</span>':'<span class="tag ok">Quitado</span>')+filesHtml(r.anexos)+'</span>'+(r.descricao?'<span class="desc-line">'+esc(String(r.descricao).split('\n')[0])+'</span>':'')+'</span><span class="rr"></span>',ab?'warn':'ok');}
 function dpEmp(ids,SEARCH){

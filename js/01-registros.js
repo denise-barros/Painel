@@ -46,7 +46,9 @@ const REC={
     {k:'inicioDesc',l:'Começa a descontar em',t:'month',hint:'Mês da primeira parcela (desconto na folha ou devolução).'},
     {k:'forma',l:'Como será devolvido',opts:['','Desconto na folha','Pix / transferência','Dinheiro','Outro']},
     {k:'pago',l:'Já devolvido',t:'money',hint:'Total devolvido até agora. O saldo é calculado sozinho.'},
-    {k:'status',l:'Situação',opts:['Em aberto','Quitado']},
+    {k:'status',l:'Situação',opts:['Em aberto','Quitado','Não será cobrado']},
+    {k:'datadev',l:'Quitado em',t:'date',hint:'Data em que o empréstimo foi quitado.'},
+    {k:'titular',l:'Quem emprestou',opts:['Leticia','Fernando'],hint:'Aparece também na aba Empréstimos do Financeiro.'},
     {k:'descricao',l:'Motivo / observações',long:true},
     {k:'anexos',l:'Comprovantes e recibos',t:'files'}]},
   'fac-ch':{one:'chamado',col:'fac-ch',fem:false,fields:[
