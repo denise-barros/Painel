@@ -17,6 +17,9 @@ const finOk=(ex,v)=>!ex||finDono(v)===ex;
 const FDC_DONO={'fdc-leticia':'leticia','fdc-luciano':'fernando','fdc-fernando':'fernando','fdc-camburi':'leticia','fdc-criancas':'leticia'};
 const FDC_NOME={'fdc-leticia':'Leticia','fdc-luciano':'Luciano','fdc-fernando':'Fernando','fdc-camburi':'Camburi','fdc-criancas':'Crianças'};
 const FDC_DESP={'fdc-leticia':['fix','var'],'fdc-luciano':['fix','var'],'fdc-fernando':['desp','cart'],'fdc-camburi':['sai'],'fdc-criancas':['leticia']};
+/* empréstimos à equipe ficam no DP (dp-emp) e aparecem também no Financeiro, no formato das linhas de lá */
+const nomeCurto=n=>{const p=String(n||'').trim().split(/\s+/);return p.length>1?p[0]+' '+p[p.length-1]:p[0]||'';};
+function dpEmpFin(){return (S.rec['dp-emp']||[]).map(r=>({id:'dp:'+r.id,_dp:true,titular:r.titular||'Leticia',tipo:'Saída',destino:'Pessoal',razao:nomeCurto(refName('equipe',r.pessoa)),valor:r.valor,data:r.data,devolvido:r.pago,datadev:r.datadev||'',status:r.status==='Quitado'||r.status==='Não será cobrado'?r.status:'Em aberto',obs:r.descricao||'',anexos:r.anexos||[]}));}
 /* empréstimos: titular da linha; linhas antigas sem titular são da Leticia */
 const empDono=r=>finDono(r.titular)||'leticia';
 /* periodicidade do cronograma: vazio = mensal; os demais contam a partir do mês de referência */
@@ -88,7 +91,7 @@ function finEmprest(ym,ex,t0){
   t0=t0||todayISO();
   /* empréstimo entre os dois executivos: a receber para quem emprestou é a pagar para quem tomou */
   const flip=r=>!!ex&&empDono(r)!==ex&&finDono(r.razao)===ex;
-  const rows=(S.fin.emprestimos||[]).filter(r=>(r.razao||r.valor)&&(!ex||empDono(r)===ex||flip(r)));
+  const rows=(S.fin.emprestimos||[]).concat(dpEmpFin()).filter(r=>(r.razao||r.valor)&&(!ex||empDono(r)===ex||flip(r)));
   const side=r=>{const p=r.tipo==='Entrada'?'pagar':'receber';return flip(r)?(p==='pagar'?'receber':'pagar'):p;};
   const blank=()=>({v:0,n:0,venc:{n:0,v:0},d30:0,d60:0,d90:0,semPrev:{n:0,v:0},porContra:{}});
   const o={has:rows.length>0,receber:blank(),pagar:blank(),mes:{recebido:0,pago:0,concedido:0,tomado:0},ant:{receber:0,pagar:0},items:[]};
@@ -186,4 +189,6 @@ const finWatch=new Set();
 function finNotify(t){finWatch.forEach(fn=>{try{fn(t);}catch(e){}});}
 window.CEFIN={despGroups:id=>FDC_DESP[id]||[],metrics:finMetrics,crono:finCrono,despesas:finDespesas,dono:finDono,due:cronoDue,empDono,
   has:t=>Object.prototype.hasOwnProperty.call(S.fin,t),rows:t=>S.fin[t]||[],ready:t=>!!S.finOk[t],failed:t=>!!S.finErr[t],
-  watch:fn=>{finWatch.add(fn);return ()=>finWatch.delete(fn);}};
+  watch:fn=>{finWatch.add(fn);return ()=>finWatch.delete(fn);},
+  dpEmp:()=>dpEmpFin(),openDpEmp:id=>openRec('dp-emp',id),
+  updDpEmp:(id,p)=>{if(!S.db)return Promise.reject(new Error('sem banco'));const r=(S.rec['dp-emp']||[]).find(x=>x.id===id);if(!r)return Promise.reject(new Error('não encontrado'));const o=Object.assign({},r,JSON.parse(JSON.stringify(p)),{atualizadoEm:new Date().toISOString()});delete o.id;return S.db.doc('dp-emp/'+id).set(o);}};
