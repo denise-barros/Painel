@@ -856,7 +856,7 @@ function listHTML(tb,ctx,multi){
       const op=grpOpen["emp-hist"]===true;
       h+=`<details class="emp-hist" data-emphist ${op?"open":""}><summary><span class="car">▸</span><b>Histórico</b> <span class="cnt">${fe.length}</span><span class="mutc">quitados e não cobrados · total pago ${fmtMoney(sm(fe,r=>pago(r)||0))}</span></summary>`+
         tbl(`<th>Data</th><th>Razão social / pessoa</th><th>Tipo</th><th>Emprestado</th><th>Total pago</th><th>Quitado em</th><th>Diferença</th><th>Status</th>`,
-        fe.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td>${nome(r)}<td>${esc(r.destino||"Pessoal")}</td><td>${mv(cmb(r))}</td><td>${r.status==="Quitado"?(mv(r.devolvido)||`<span class="mutc">a informar</span>`):"—"}</td><td>${dd(r.datadev)||"—"}</td><td>${dif(r)}</td><td>${qs(r,"status")}</td></tr>`).join(""))+`</details>`}
+        fe.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td>${nome(r)}<td>${esc(r.destino||"Pessoal")}</td><td>${mv(cmb(r))}</td><td>${r.status==="Quitado"?(mv(r.devolvido)||"—"):"—"}</td><td>${dd(r.datadev)||"—"}</td><td>${dif(r)}</td><td>${qs(r,"status")}</td></tr>`).join(""))+`</details>`}
     return h+`<div class="foot"><span>${rows.length} de ${all.length} lançamento${all.length===1?"":"s"}</span><span>Clique numa linha para abrir</span></div></section>`}
   if(tb.id==="parcelas"){/* Cartão de crédito: uma tabela por mês. Mês atual: parcelas ao vivo (planilha sincronizada). Meses anteriores: foto salva em abas/faturas. */
     subscribe("faturas");const atual=ccMes(),rs=rows,CARTOES=["Itaú The One","Itaú LATAM","Itaú Personnalité","Santander Black","C6 Bank"];
