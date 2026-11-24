@@ -73,7 +73,7 @@ function relBuild(){
     ['Reembolsos a receber',RB.aReceber==null?'—':fmtMoney(RB.aReceber),'',(RB.aReceber==null?'nenhum registrado':(RB.corp.n+RB.med.n)+' item(ns) · recebido '+fmtMoney(FMs.reduce((s,f)=>s+f.reemb.recebidoMes,0)))+(RB.aPagar!=null?' · a pagar '+fmtMoney(RB.aPagar):'')],
     ['Empréstimos: a receber · a pagar',EM.has?fmtMoney(EM.receber.v)+' · '+fmtMoney(EM.pagar.v):'—','',EM.has?(EM.receber.n+EM.pagar.n)+' em aberto'+(EM.receber.venc.n+EM.pagar.venc.n?' · '+(EM.receber.venc.n+EM.pagar.venc.n)+' vencido(s)':''):'nenhum registrado']],
     ['Item','Situação','Valor'],fRows,
-    'Despesas: prestação de contas (fluxos de cada pessoa), competência '+per+'. Recorrentes: só os pagamentos recorrentes cadastrados no cronograma; não representam o total de despesas nem de pagamentos do período'+(EX.n?' (pagamentos extraordinários no período: '+fmtMoney(EX.v)+')':'')+'. Reembolsos, empréstimos e parcelas: saldos de hoje.');
+    'Despesas: prestação de contas (fluxos de cada pessoa), competência '+per+'. Recorrentes: só os pagamentos recorrentes cadastrados no mapa de contas; não representam o total de despesas nem de pagamentos do período'+(EX.n?' (pagamentos extraordinários no período: '+fmtMoney(EX.v)+')':'')+'. Reembolsos, empréstimos e parcelas: saldos de hoje.');
   // DP
   const pOk=pid=>{const p=personById(pid);return !p||ownerOk(p.executivo);};
   const pg=recs('dp-pag').filter(p=>pOk(p.pessoa)&&inR(p.dataPag,a,b));const pgPago=pg.filter(p=>p.status==='Pago');
