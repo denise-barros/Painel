@@ -723,6 +723,8 @@ const state={empV:{},empBase:null,tab:null,month:today(),year:new Date().getFull
   cronView:store.get("pgf.view")||"list",cronGroup:"semana",subs:{},encV:{},encSel:null,encDevOpen:{},encDevEdit:null,fxOpen:{},qs:{},filters:{},paste:null,confirm:null,editing:false,banner:null,advance:false};
 const grpOpen={};
 const asnMon=(all,fl)=>{if(fl._mes!==undefined)return fl._mes;return today()};
+/* mês de uma solicitação de pagamento: o da data do pedido (ou o da criação, se a data estiver em branco) */
+const solMes=r=>(r.data||"").slice(0,7)||(r.criado?new Date(r.criado).toISOString().slice(0,7):"");
 let rq=false; function scheduleRender(){if(state.editing)return; if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;render()})}
 
 /* ---------- navegação ---------- */
@@ -781,6 +783,7 @@ function visibleRows(tb,ctx,noPeriod){
   const fl=state.filters[tb.id]||{};
   for(const k in fl){if(fl[k]&&k!=="_dia"&&k!=="_sem"&&k!=="_pend"&&k!=="_gestor"&&k!=="_mes"){const col=tb.cols.find(c=>c.k===k);rows=rows.filter(r=>((col&&col.month?getVal(r,col,ctx||ctxFor()):r[k])||"")===fl[k])}}
   if(tb.id==="assinaturas"&&!q){const m=asnMon(data[tb.id]||[],fl);if(m)rows=rows.filter(r=>(r.data||"").slice(0,7)===m)}
+  if(tb.id==="solicitacoes"&&!q){const m=asnMon(data[tb.id]||[],fl);if(m)rows=rows.filter(r=>solMes(r)===m)}
   if(fl._gestor&&tb.id==="assinaturas")rows=rows.filter(r=>String(r.gestor||"").split(/\s*\/\s*/).includes(fl._gestor));
   if(tb.id==="cronograma"){const m=(ctx&&ctx.month)||state.month;rows=rows.filter(r=>cronoDue(r,m))}
   if(noPeriod)return rows;
@@ -846,7 +849,7 @@ function filtersHTML(tb){
   const all=data[tb.id]||[],fl=state.filters[tb.id]||{};
   const diaF=tb.id==="cronograma"&&state.cronView==="cal"?(()=>{const hj=new Date().getDate();return `<label class="sr" for="f-dia">Vencimento (dia)</label><select class="sel" id="f-dia" data-f="${tb.id}|_dia"><option value="">Vence no dia: todos</option>${Array.from({length:31},(_,i)=>i+1).map(d=>`<option value="${d}" ${+fl._dia===d?"selected":""}>Dia ${d}${d===hj?" (hoje)":""}</option>`).join("")}</select>`})():"";
   const gestF=tb.id==="assinaturas"?(()=>{const gs=[...new Set(all.flatMap(r=>String(r.gestor||"").split(/\s*\/\s*/)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"));return `<label class="sr" for="f-gest">Gestor</label><select class="sel" id="f-gest" data-f="${tb.id}|_gestor"><option value="">Gestor: todos</option>${gs.map(o=>`<option ${fl._gestor===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`})():"";
-  const mesF=tb.id==="assinaturas"?(()=>{const ms=[...new Set(all.map(r=>(r.data||"").slice(0,7)).filter(Boolean).concat([today()]))].sort().reverse();const cur=asnMon(all,fl);return `<label class="sr" for="f-mes">Mês</label><select class="sel" id="f-mes" data-f="${tb.id}|_mes"><option value="" ${cur===""?"selected":""}>Todos os meses</option>${ms.map(m=>`<option value="${m}" ${cur===m?"selected":""}>${esc(fmtMonth(m))}</option>`).join("")}</select>`})():"";
+  const mesF=tb.id==="assinaturas"||tb.id==="solicitacoes"?(()=>{const ms=[...new Set(all.map(r=>tb.id==="solicitacoes"?solMes(r):(r.data||"").slice(0,7)).filter(Boolean).concat([today()]))].sort().reverse();const cur=asnMon(all,fl);return `<label class="sr" for="f-mes">Mês</label><select class="sel" id="f-mes" data-f="${tb.id}|_mes"><option value="" ${cur===""?"selected":""}>Todos os meses</option>${ms.map(m=>`<option value="${m}" ${cur===m?"selected":""}>${esc(fmtMonth(m))}</option>`).join("")}</select>`})():"";
   if(tb.id==="assinaturas")return mesF+gestF;
   return diaF+mesF+gestF+tb.cols.filter(c=>c.f&&c.t==="select").map(c=>{const vals=[...new Set(all.map(r=>c.month?getVal(r,c,ctxFor()):r[c.k]).filter(Boolean))];const opts=[...new Set([...c.opts,...vals])];
     return `<label class="sr" for="f-${tb.id}-${c.k}">${esc(c.l)}</label><select class="sel" id="f-${tb.id}-${c.k}" data-f="${tb.id}|${c.k}"><option value="">${esc(c.l)}: todos</option>${opts.map(o=>`<option ${fl[c.k]===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`}).join("");
@@ -964,6 +967,9 @@ function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
       <td class="c">${e.off?"":`<button type="button" class="sol-apb ${apOk?"on":""}" data-solap="${r.id}" aria-pressed="${apOk}" title="${apOk?"Aprovada"+(r.aprovEm?" em "+esc(fmtStampShort(r.aprovEm)):"")+" · clique para desfazer":"Clique para confirmar a aprovação de "+esc(r.pagador||"quem paga")}">${apOk?"✓":""}</button>`}</td>
       <td class="a-v">${hasV(r.valor)?fmtMoney(r.valor):""}</td><td class="sol-vc ${e.vencida?"bad":""}">${r.venc?esc(dm(r.venc)):""}</td><td class="c">${e.off?"":ok(r,"nf","Documento")}</td><td class="c">${e.off?"":ok(r,"comp","Comprovante")}</td>
       <td class="sol-rb">${rbH}</td><td${tip?` title="${esc(tip)}"`:""}>${solDots(e,r)}</td></tr>`};
+  {const fl=state.filters.solicitacoes||{},sel=asnMon(data.solicitacoes||[],fl),q=(state.qs[state.tab.id]||"").trim();
+    if(sel&&!q){const ant=(data.solicitacoes||[]).filter(r=>execOk(r)&&solMes(r)&&solMes(r)<sel&&["recebida","pronta"].includes(solEtapa(r).k)),tv=ant.reduce((n,r)=>n+(+r.valor||0),0);
+      if(ant.length)h+=`<p class="sumline sol-prev"><span>Em aberto de meses anteriores <b class="neg">${ant.length}${tv?" · "+fmtMoney(tv):""}</b></span><button type="button" class="sol-togb" data-solall>Ver todos os meses</button></p>`}}
   return ppSections(tb,h,{rows,own:r=>ownP(r.pagador),isOpen:pend,val:r=>{const k=E.get(r.id).k;return k==="recebida"||k==="pronta"?r.valor:0},tr,vi:4,concL:"Concluídas",addL:"+ Nova solicitação",
     head:["Data","Descrição","Solicitante","Aprovada","Valor","Vencimento","Documento","Comprovante","Reembolso","Etapa"],
     emptyAb:pn=>"Nenhuma solicitação em aberto de "+pn+".",emptyCo:pn=>"Nenhuma solicitação concluída de "+pn+"."})}
@@ -1221,7 +1227,7 @@ async function saveFicha(tid,id){
   const tb=tbById(tid),ctx=ctxFor();const r=id?(data[tid]||[]).find(x=>x.id===id):null;
   if(tid==="reemb-med"){const so=document.getElementById("fi-solicitante"),pc0=document.getElementById("fi-paciente"),t0=document.getElementById("fi-titular");if(so&&!so.value){if(isCris(pc0&&pc0.value))so.value="Cristiana";else if(t0&&t0.value)so.value=t0.value}if(t0&&!t0.value&&isCris(pc0&&pc0.value))t0.value="Fernando"}
   if(tid==="reemb-med"){const t=document.getElementById("fi-titular"),pc=document.getElementById("fi-paciente");if(t&&pc&&!t.value&&pc.value){const prev=(data["reemb-med"]||[]).find(x=>x.titular&&String(x.paciente||"").trim().toLowerCase()===pc.value.trim().toLowerCase());if(prev)t.value=prev.titular}}
-  if(tid==="solicitacoes"){const g=k=>document.getElementById("fi-"+k);const ap=g("aprovacao"),st=g("status"),dp=g("dtpg");
+  if(tid==="solicitacoes"){const g=k=>document.getElementById("fi-"+k);const ap=g("aprovacao"),st=g("status"),dp=g("dtpg"),dt=g("data");if(dt&&!dt.value)dt.value=new Date().toISOString().slice(0,10);
     if(ap&&!ap.value)ap.value="Aguardando";if(st&&!st.value)st.value="Pendente";
     if(st&&dp&&st.value==="Pago"&&!dp.value)dp.value=new Date().toISOString().slice(0,10)}
   const out={},mm={};
@@ -1594,7 +1600,7 @@ function topHTML(tab){
   if(tab.subtabs){const sk=subOf(tab).k;h+=`<div class="seg subtabs" role="tablist" aria-label="Seções">${tab.subtabs.map(s=>`<button role="tab" data-subtab="${s.k}" aria-selected="${s.k===sk}" class="${s.k===sk?"on":""}">${esc(s.l)}</button>`).join("")}</div>`;
   }
   if(tab.matrix||tab.reports||tab.id==="repasses"){const ys=[...new Set([new Date().getFullYear()-1,new Date().getFullYear(),new Date().getFullYear()+1,state.year])].filter(a=>tab.id!=="repasses"||a>=2026).sort();h+=`<label class="sr" for="fyr">Ano</label><select class="sel" id="fyr" data-year>${ys.map(a=>`<option ${a===state.year?"selected":""}>${a}</option>`).join("")}</select>`}
-  const inl=isList&&!multi;if(inl){const fl=state.filters[first.id]||{};const act=Object.keys(fl).some(k=>fl[k]&&k!=="_sem"&&k!=="_pend"&&!(first.id==="assinaturas"&&k==="_mes"));h+=filtersHTML(first)+(act?`<button class="btn sm" data-fclear="${first.id}">Limpar filtros</button>`:"")+pendBtns(first,fl)}
+  const inl=isList&&!multi;if(inl){const fl=state.filters[first.id]||{};const act=Object.keys(fl).some(k=>fl[k]&&k!=="_sem"&&k!=="_pend"&&!((first.id==="assinaturas"||first.id==="solicitacoes")&&k==="_mes"));h+=filtersHTML(first)+(act?`<button class="btn sm" data-fclear="${first.id}">Limpar filtros</button>`:"")+pendBtns(first,fl)}
   h+=`<span class="grow"></span>`+srch;
   const more=[];
   if(isList&&!multi&&!tab.parcelas)more.push(tableTools(first));
@@ -1857,8 +1863,9 @@ document.addEventListener("click",async e=>{
   const pr=e.target.closest("[data-encpickrow]");if(pr&&state.encSel){encPickRow(pr.dataset.encpickrow,pr);encPickPaint();return}
   if(e.target.closest("[data-encpickall]")&&state.encSel){const S=state.encSel.cells,ks=encVisKeys();if(ks.length&&ks.every(k=>S.has(k)))S.clear();else ks.forEach(k=>S.add(k));encPickPaint();return}
   const er=e.target.closest("[data-encreopen]");if(er){encReabrir(er.dataset.encreopen);return}
-  const b=e.target.closest("[data-ppv],[data-ppadd],[data-tk],[data-rbst],[data-rbtog],[data-soltk],[data-solpg],[data-soltog],[data-solap],[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-emptipo],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
+  const b=e.target.closest("[data-solall],[data-ppv],[data-ppadd],[data-tk],[data-rbst],[data-rbtog],[data-soltk],[data-solpg],[data-soltog],[data-solap],[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-emptipo],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
   if(!b)return;const d=b.dataset;
+  if(d.solall!==undefined){state.filters.solicitacoes=Object.assign(state.filters.solicitacoes||{},{_mes:""});render();return}
   if(d.ppv){const[t,p,k]=d.ppv.split("|");ppV[t+p]=k;render();return}
   if(d.ppadd){const[t,p]=d.ppadd.split("|");openFicha(t,null);const set=(k,v)=>{const el=document.getElementById("fi-"+k);if(el)el.value=v};
     if(t==="reemb-med"){set("titular",p==="leticia"?"Leticia":"Fernando");set("solicitante",p==="cristiana"?"Cristiana":p==="fernando"?"Fernando":"Leticia")}
