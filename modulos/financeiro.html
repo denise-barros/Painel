@@ -556,8 +556,8 @@ const ENC_LADOS=["Fernando deve","Leticia deve"];
 const encF=r=>!String(r.lado||"").startsWith("Leticia");
 const ENC_ST=["Devolver","Cobrança","Recusado","Devolvido"];const encRec=r=>r.status==="Recusado";const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
 const ENC_REF={k:"ref",l:"Referente a",t:"select",f:true,get opts(){return["Saldo geral",...[...new Set((data["rep-contas"]||[]).filter(r=>!state.encRef||encF(r)===(state.encRef==="F")).map(r=>r.item).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"))]}};
-const TB_CONTRATOS={id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
-    kpis:rows=>{let n=0,v=0;rows.forEach(r=>{if(!r.quit){n++;v+=+r.valor||0}});return n?[{l:"Contratos em aberto",v:n+" · "+fmtMoney(v)}]:[]}};
+const TB_CONTRATOS={id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),SE("empresa","Empresa",["CS","KIND","CLOE","CGE","Seeds","IC"]),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
+    kpis:rows=>{let n=0,v=0;rows.forEach(r=>{if(!solHas(r,"quit")){n++;v+=+r.valor||0}});return n?[{l:"Contratos em aberto",v:n+" · "+fmtMoney(v)}]:[]}};
 const TABS=[
  {id:"cronograma",g:"Pagamentos",l:"Cronograma de pagamentos",desc:"Pagamentos recorrentes, vencimentos e acessos, com o valor pago e o status de cada mês.",
   src:[["Calendário de pagamentos",DRIVE+"1t8drdAiTy-QYSP2_F4CL85Vzki1NlswVDkcRkEiIEq4/edit"]],monthly:true,
@@ -1012,11 +1012,11 @@ function ctSel(r){const p=ownP(r.pessoa),cur=ctNum(r.contrato),L=ctOf(p).slice()
 function ctHTML(tb,rows,h){subscribe("reemb-corp");const G=data["reemb-corp"]||[];
   const gs=c=>G.filter(g=>ownP(g.pessoa)===ownP(c.pessoa)&&ctNum(g.contrato)&&ctNum(g.contrato)===ctNum(c.numero));
   const tr=c=>{const l=gs(c),t=l.reduce((a,g)=>a+(+g.brl||0),0),dif=l.length&&hasV(c.valor)&&Math.abs(t-(+c.valor||0))>0.005;
-    return `<tr class="atr" data-open="${tb.id}|${c.id}" tabindex="0"><td><b>${esc(ctNum(c.numero))}</b></td><td class="a-t">${esc(c.nome||"")}</td><td>${hasV(c.valor)?fmtMoney(c.valor):""}</td>
-      <td class="${dif?"ct-dif":""}" title="${l.length?l.length+" gasto"+(l.length>1?"s":"")+" vinculado"+(l.length>1?"s":"")+(dif?" · a soma é diferente do valor do contrato":""):"Nenhum gasto vinculado ainda"}">${l.length?fmtMoney(t)+` <span class="ct-n">(${l.length})</span>`:"–"}</td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`};
-  return ppSections(tb,h,{rows,own:c=>ownP(c.pessoa),isOpen:c=>!c.quit,val:c=>c.valor,tr,vi:2,concL:"Quitados",addL:"+ Novo contrato",cls:"ct",
+    return `<tr class="atr" data-open="${tb.id}|${c.id}" tabindex="0"><td><b>${esc(ctNum(c.numero))}</b></td><td class="a-t">${esc(c.nome||"")}</td><td>${esc(c.empresa||"")}</td><td>${hasV(c.valor)?fmtMoney(c.valor):""}</td>
+      <td class="${dif?"ct-dif":""}" title="${l.length?l.length+" gasto"+(l.length>1?"s":"")+" vinculado"+(l.length>1?"s":"")+(dif?" · a soma é diferente do valor do contrato":""):"Nenhum gasto vinculado ainda"}">${l.length?fmtMoney(t)+` <span class="ct-n">(${l.length})</span>`:"–"}</td><td class="c"><button type="button" class="sol-apb ${solHas(c,"quit")?"on":""}" data-tk="reemb-contratos|${c.id}|quit" aria-pressed="${solHas(c,"quit")}" title="${solHas(c,"quit")?"Quitado · clique para desfazer":"Clique para marcar como quitado (a data da quitação é opcional)"}">${solHas(c,"quit")?"✓":""}</button></td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`};
+  return ppSections(tb,h,{rows,own:c=>ownP(c.pessoa),isOpen:c=>!solHas(c,"quit"),val:c=>c.valor,tr,vi:3,concL:"Quitados",addL:"+ Novo contrato",cls:"ct",
     srt:l=>l.slice().sort((a,b)=>ctNum(b.numero).localeCompare(ctNum(a.numero),"pt",{numeric:true})),
-    head:["Número do contrato","Contrato","Valor","Gastos vinculados","Data da quitação"],
+    head:["Número do contrato","Contrato","Empresa","Valor","Gastos vinculados","Quitado","Data da quitação"],
     emptyAb:pn=>"Nenhum contrato em aberto de "+pn+".",emptyCo:pn=>"Nenhum contrato quitado de "+pn+"."})}
 function listHTML(tb,ctx,multi){
   const L=LIST[tb.id];const all=secRows(tb,srcRows(tb));const rows=visibleRows(tb,ctx);
