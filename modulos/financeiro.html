@@ -268,7 +268,7 @@ button{cursor:pointer}
 .atb.sol th.c,.atb.sol td.c{text-align:center;width:46px}.atb.sol td.a-t{white-space:normal;min-width:120px}.atb.sol td.sol-rb{white-space:normal}.atb.sol td.sol-vc{color:var(--muted)}.atb.sol td.sol-vc.bad{color:var(--neg);font-weight:700}.atb.sol .a-o{max-width:none;white-space:normal;font-size:10px}
 .sol-av{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.sol-av .pill{font-size:9.5px;padding:1px 7px;white-space:normal}.atb.sol td.a-d{width:44px}
 .sol-ic{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent);font-size:10px;font-weight:700}.sol-ic.no{background:var(--sunk);color:var(--faint)}
-.sol-apb{width:22px;height:22px;border-radius:6px;border:2px solid var(--line-strong);background:var(--surface);color:var(--on-accent);font-weight:700;font-size:12px;cursor:pointer;display:inline-grid;place-items:center;padding:0}.sol-apb.on{background:var(--accent);border-color:var(--accent)}.sol-apb:hover{border-color:var(--accent)}
+.sol-apb{width:22px;height:22px;border-radius:6px;border:2px solid var(--line-strong);background:var(--surface);color:var(--on-accent);font-weight:700;font-size:12px;cursor:pointer;display:inline-grid;place-items:center;padding:0}.sol-apb.on{background:var(--accent);border-color:var(--accent)}.sol-apb:not(.ro):hover{border-color:var(--accent)}.sol-apb.ro{cursor:inherit;vertical-align:middle}
 .sol-ok{color:var(--accent);font-weight:700;font-size:12px}.sol-al{display:block;margin-top:3px;font-size:9.5px;font-weight:600;color:var(--muted)}.sol-al.warn{color:var(--warn)}.sol-al.bad{color:var(--neg)}
 .sol-rbl{cursor:pointer}.sol-rbl:hover{text-decoration:underline;text-underline-offset:2px}.sol-tog td{text-align:center!important;background:var(--surface)}.sol-togb{border:0;background:none;color:var(--accent);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;padding:4px 8px}.sol-none{text-align:center!important;color:var(--muted);padding:18px!important}
 .sol-s{display:block;font-size:9.5px;font-weight:600;color:var(--muted)}.sol-s.ok{color:var(--pos)}.sol-s.warn{color:var(--warn)}.sol-s.bad{color:var(--neg)}.sol-s.info{color:var(--info)}
@@ -936,7 +936,7 @@ function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
   const hasQ=!!(state.qs[state.tab.id]||"").trim(),all=solAll||hasQ;
   const rs=rows.slice().sort((a,b)=>(aberta(b)-aberta(a))||String(b.data||"").localeCompare(String(a.data||"")));
   const vis=all?rs:rs.filter(pend),nConc=rs.length-rs.filter(pend).length;
-  const ok=b=>b?`<span class="sol-ok">✓</span>`:"";
+  const ok=(b,t)=>`<span class="sol-apb ro ${b?"on":""}" title="${b?esc(t)+" registrado":"Sem "+esc(t.toLowerCase())}">${b?"✓":""}</span>`;
   const ab=rs.filter(aberta),tot=ab.reduce((a,r)=>a+(+r.valor||0),0);
   const tr=r=>{const e=E.get(r.id),rb=e.rb,apOk=r.aprovacao==="Aprovada";
     const rbH=rb?`<span class="${rb.id?"sol-rbl":""}"${rb.id?` data-open="${rb.tid}|${esc(rb.id)}"`:""} title="Reembolso: ${esc(rb.l)}${rb.id?" · clique para abrir":""}">${esc(r.reemb)}</span>`:"";
@@ -945,7 +945,7 @@ function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
       <td class="a-t"><b>${esc(r.descr||"Sem descrição")}</b></td>
       <td>${esc(r.solic||"")}</td><td>${esc(r.pagador||"")}</td>
       <td class="c">${e.off?"":`<button type="button" class="sol-apb ${apOk?"on":""}" data-solap="${r.id}" aria-pressed="${apOk}" title="${apOk?"Aprovada"+(r.aprovEm?" em "+esc(fmtStampShort(r.aprovEm)):"")+" · clique para desfazer":"Clique para confirmar a aprovação de "+esc(r.pagador||"quem paga")}">${apOk?"✓":""}</button>`}</td>
-      <td class="a-v">${hasV(r.valor)?fmtMoney(r.valor):""}</td><td class="sol-vc ${e.vencida?"bad":""}">${r.venc?esc(dm(r.venc)):""}</td><td class="c">${e.off?"":ok(r.nf)}</td><td class="c">${e.off?"":ok(r.comp)}</td>
+      <td class="a-v">${hasV(r.valor)?fmtMoney(r.valor):""}</td><td class="sol-vc ${e.vencida?"bad":""}">${r.venc?esc(dm(r.venc)):""}</td><td class="c">${e.off?"":ok(r.nf,"Documento")}</td><td class="c">${e.off?"":ok(r.comp,"Comprovante")}</td>
       <td class="sol-rb">${rbH}</td><td${tip?` title="${esc(tip)}"`:""}>${solDots(e,r)}</td></tr>`};
   const tog=nConc&&!hasQ?`<tr class="sol-tog"><td colspan="11"><button type="button" class="sol-togb" data-soltog>${solAll?"Esconder concluídas":"Mostrar "+nConc+" concluída"+(nConc>1?"s":"")}</button></td></tr>`:"";
   h+=`<div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb sol"><thead><tr><th>Data do pedido</th><th>Descrição</th><th>Solicitante</th><th>Pagador</th><th class="c">Aprovada</th><th class="r">Valor</th><th>Vencimento</th><th class="c">Documento</th><th class="c">Comprovante</th><th>Reembolso</th><th>Etapa</th></tr></thead>
