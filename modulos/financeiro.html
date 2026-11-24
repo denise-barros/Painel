@@ -555,7 +555,7 @@ const ENC_LADOS=["Fernando deve","Leticia deve"];
 const encF=r=>!String(r.lado||"").startsWith("Leticia");
 const ENC_ST=["Devolver","Cobrança","Recusado","Devolvido"];const encRec=r=>r.status==="Recusado";const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
 const ENC_REF={k:"ref",l:"Referente a",t:"select",f:true,get opts(){return["Saldo geral",...[...new Set((data["rep-contas"]||[]).filter(r=>!state.encRef||encF(r)===(state.encRef==="F")).map(r=>r.item).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"))]}};
-const TB_CONTRATOS={id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),SE("empresa","Empresa",["CS","KIND","CLOE","CGE","Seeds","IC"]),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
+const TB_CONTRATOS={id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),SE("empresa","Empresa",["CS","KIND","CLOE","CGE","Seeds","Associação"]),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
     kpis:rows=>{let n=0,v=0;rows.forEach(r=>{if(!solHas(r,"quit")){n++;v+=+r.valor||0}});return n?[{l:"Contratos em aberto",v:n+" · "+fmtMoney(v)}]:[]}};
 const TABS=[
  {id:"cronograma",g:"Pagamentos",l:"Cronograma de pagamentos",desc:"Pagamentos recorrentes, vencimentos e acessos, com o valor pago e o status de cada mês.",
