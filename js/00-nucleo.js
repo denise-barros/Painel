@@ -46,7 +46,7 @@ const NAV=[
   {id:'capa',l:'Capa'},
   {sep:true},
   {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=8'},
-  {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=434'},
+  {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=435'},
   {id:'dp',l:'DP',native:true},
   {id:'fac',l:'Facilities',native:true},
   {id:'sau',l:'Saúde',native:true},
@@ -151,7 +151,7 @@ const showVal=(c,k,v)=>{const f=fieldOf(c,k);if(f&&f.t==='money')return v===''||
 
 /* ---------- estado ---------- */
 const S={view:'capa',exec:'',cadTab:'pessoas',tasks:new Map(),cats:[],staleDays:3,
-  fin:{cronograma:[],solicitacoes:[],'reemb-corp':[],'reemb-med':[],'reemb-pagar':[],parcelas:[],faturas:[],emprestimos:[],assinaturas:[],'rep-fech':[],'rep-transf':[],'rep-contas':[],'rep-dev':[],'fdc-leticia':[],'fdc-luciano':[],'fdc-fernando':[],'fdc-camburi':[],'fdc-criancas':[]},
+  fin:{cronograma:[],contas:[],solicitacoes:[],'reemb-corp':[],'reemb-med':[],'reemb-pagar':[],parcelas:[],faturas:[],emprestimos:[],assinaturas:[],'rep-fech':[],'rep-transf':[],'rep-contas':[],'rep-dev':[],'fdc-leticia':[],'fdc-luciano':[],'fdc-fernando':[],'fdc-camburi':[],'fdc-criancas':[]},
   finOk:{},finErr:{},cad:{pessoas:[],ativos:[],empresas:[],fornecedores:[],prestadores:[],medicos:[]},loaded:false,db:null,dbState:'loading',assets:null,
   rec:{'dp-pag':[],'dp-mov':[],'dp-esc':[],'dp-oc':[],'dp-emp':[],'fac-ch':[],'fac-rec':[]},
   dpTab:'ind',dpF:{vinculo:'',funcao:'',local:'',exec:'',ativos:'sim',q:''},dpMonth:ymOf(todayISO()),dpWeek:'',dpPagView:'mes',dpOcTipo:'',dpEmpSt:'',dpPerson:null,

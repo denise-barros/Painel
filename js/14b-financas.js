@@ -39,12 +39,19 @@ function fatCardOf(r){if(!/^fatura\b/i.test(String(r.despesa||'')))return null;c
   const f=(S.fin.faturas||[]).find(x=>x.cartao===hit[1]);const dono=f?finDono(f.titular):null;return dono&&finDono(r.quem)===dono?hit[1]:null;}
 
 /* A. Cronograma: compromissos recorrentes da competência */
+/* a partir de nov/2026 o check do mês fica em Contas a pagar (tabela contas: <conta>_<AAAA-MM>_<dia>);
+   antes disso, nos meses do próprio cronograma. Só controle não conta; sob demanda só quando lançada. */
+const FIN_CP_INI='2026-11';
+function finCpMes(r,ym){if(ym<FIN_CP_INI)return (r.meses||{})[ym]||{};const t=r.tipo||'Fixa';if(t==='Só controle')return{skip:true};
+  const K=(S.fin.contas||[]).filter(k=>k.cr===r.id&&k.mes===ym);if(t==='Sob demanda'&&!K.length)return{skip:true};
+  if(!K.length)return{};const all=K.every(k=>k.pago),vs=K.map(k=>k.valor).filter(v=>v!=null&&v!=='');
+  return{s:all?'Pago':'',v:vs.length?vs.reduce((a,b)=>a+(+b||0),0):undefined};}
 function finCrono(ym,ex,t0){
   t0=t0||todayISO();
   const o={ym,n:0,naoAplica:0,previsto:0,prevSemValor:0,pago:0,pagoN:0,pagoSemValor:0,cartoes:0,
     venc:{n:0,v:0,semValor:0,items:[]},aVencer:{n:0,v:0,semValor:0,items:[]},semData:{n:0,v:0,semValor:0,items:[]},pend:[]};
   (S.fin.cronograma||[]).filter(r=>r.despesa&&finOk(ex,r.quem)).forEach(r=>{
-    const x=(r.meses||{})[ym]||{};if(x.s==='Não se aplica'||!cronoDue(r,ym)){o.naoAplica++;return;}
+    const x=finCpMes(r,ym);if(x.skip||x.s==='Não se aplica'||!cronoDue(r,ym)){o.naoAplica++;return;}
     o.n++;const med=fnum(r.medio),pv=fnum(x.v),paid=x.s==='Pago'||x.s==='Emitido';
     const prev=med>0?med:(paid&&pv>0?pv:null);
     if(prev==null)o.prevSemValor++;else{o.previsto+=prev;if(fatCardOf(r))o.cartoes+=prev;}
