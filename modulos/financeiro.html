@@ -536,7 +536,7 @@ const PARC_SHEET="https://docs.google.com/spreadsheets/d/1LikhaZJokuFEG1foFxGp6K
 const CC_PASTA="https://drive.google.com/drive/folders/17Vjh2tzFVVdZq6HAUkWZHdSiTTtJO323";
 const CC_MESES={"2026-10":{nome:"outubro de 2026",pasta:"https://drive.google.com/drive/folders/1-QVm-wsd4C1mfz6cVT1H5-zvp-NiJQCE",planilha:PARC_SHEET}};
 const ccMes=()=>Object.keys(CC_MESES).sort().pop();
-const CR_TIPOS=["Fixa","Sob demanda","Só controle","Fatura de cartão"];
+const CR_TIPOS=["Fixa","Sob demanda","Parcelado","Só controle","Fatura de cartão"];
 const crEnc=r=>!!r.encerra&&r.encerra<today();
 const crEncTab=()=>state.tab&&state.tab.id==="cronograma"&&subOf(state.tab).k==="encerradas";
 const QUEM=["Leticia","Fernando","Luciano","Camburi","Crianças","Mindset","Mistaria","Serengetti","Camino School","Mauá","Todos"];
@@ -573,7 +573,7 @@ const TABS=[
   tables:[{id:"cronograma",title:"Despesas recorrentes",sort:"venc",cols:[
     TX("despesa","Despesa",{w:170}),SE("quem","Quem",QUEM),TX("endereco","Endereço",{w:160}),
     {k:"venc",l:"Vencimento (dia)",t:"num",w:70},SE("period","Periodicidade",["Mensal","Semanal","Bimestral","Trimestral","Semestral","Anual","Única"]),SE("tipo","Tipo",CR_TIPOS),SE("criancas","Crianças",["Sim","Não"],{f:false}),{k:"mesref",l:"Mês de referência",t:"month",w:90},SE("forma","Forma de pagamento",["Pix","Boleto","Débito automático","Cartão de crédito","Transferência"]),
-    LG("acesso","Acesso pelo site",{w:180}),LG("chave","Dados bancários / chave Pix",{w:200}),LG("obs","Observações",{w:220}),{k:"encerra",l:"Último mês (se encerrada)",t:"month",w:90},
+    LG("acesso","Acesso pelo site",{w:180}),LG("chave","Dados bancários / chave Pix",{w:200}),LG("obs","Observações",{w:220}),{k:"encerra",l:"Último mês (encerrada ou última parcela)",t:"month",w:90},
     M("medio","Valor médio")],
     kpis:null}]},
  ...Object.entries(FLUXOS).map(([id,f])=>({id,g:"Fluxos de caixa e prestação de contas",l:f.l,title:"Fluxo de caixa · "+f.l,desc:f.desc,src:f.src,matrix:f})),
