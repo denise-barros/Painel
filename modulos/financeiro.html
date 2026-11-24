@@ -271,7 +271,7 @@ button{cursor:pointer}
 .sol-apb{width:18px;height:18px;border-radius:5px;border:0;background:none;color:var(--faint);font:inherit;font-weight:700;font-size:12px;cursor:pointer;display:inline-grid;place-items:center;padding:0;vertical-align:middle}.sol-apb.on{color:var(--accent)}.sol-apb:hover{background:var(--sunk)}.sol-apb:not(.on)::after{content:"–"}.sol-dot.pgb{-webkit-appearance:none;appearance:none;margin:0;border:0;background:none;padding:0;justify-content:flex-start;font:inherit;font-size:9.5px;line-height:1.25;cursor:pointer}.sol-dot.pgb:hover span{border-color:var(--accent);transform:scale(1.08)}
 .sol-ok{color:var(--accent);font-weight:700;font-size:12px}.sol-al{display:block;margin-top:3px;font-size:9.5px;font-weight:600;color:var(--muted)}.sol-al.warn{color:var(--warn)}.sol-al.bad{color:var(--neg)}
 .sol-rbl{cursor:pointer}.sol-rbl:hover{text-decoration:underline;text-underline-offset:2px}.sol-tog td{text-align:center!important;background:var(--surface)}.sol-togb{border:0;background:none;color:var(--accent);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;padding:4px 8px}.sol-none{text-align:center!important;color:var(--muted);padding:18px!important}
-.grid.atb.sol.rb td{white-space:normal}.grid.atb.sol.rb td:first-child{white-space:nowrap}.atb.rb .rb-pr{font-size:9.5px;color:var(--muted)}.sol-st.rb3{grid-template-columns:repeat(3,58px)}.sol-st.rb3 .sol-dot.ln::before{width:36px}
+.grid.atb.sol.rb td.a-t{min-width:70px}.grid.atb.sol.rb td{white-space:normal}.grid.atb.sol.rb td:first-child{white-space:nowrap}.atb.rb .rb-pr{font-size:9.5px;color:var(--muted)}.sol-st.rb3{grid-template-columns:repeat(3,58px)}.sol-st.rb3 .sol-dot.ln::before{width:36px}
 .ct-sel{font:inherit;font-size:10.5px;border:1px solid transparent;background:transparent;color:var(--faint);border-radius:6px;padding:2px 4px;cursor:pointer;max-width:90px}.ct-sel.on{color:var(--ink);font-weight:600}.ct-sel:hover{border-color:var(--line-strong);background:var(--surface)}
 .grid.atb.sol select.ct-sel{-webkit-appearance:none;appearance:none;background-image:none;width:auto;min-width:40px;max-width:70px;height:auto;padding:2px 6px;text-align:center;text-align-last:center;box-shadow:none}
 .ct-dif{color:var(--warn);font-weight:600}.ct-n{color:var(--muted);font-weight:400;font-size:9.5px}
@@ -592,10 +592,10 @@ const TABS=[
     SE("formapg","Forma de pagamento",["C6","Itaú The One","Itaú LATAM","Itaú Personnalité","Santander","Pix"]),TX("comp","Comprovante",{w:140}),TX("contrato","Contrato (número)",{w:90}),
     SE("status","Status",["A solicitar","Solicitado","Pago","Negado"]),DT("datareemb","Data do reembolso"),LG("coment","Comentários",{w:160})],
     kpis:rows=>{const t={};rows.forEach(r=>{const k=r.status||"A solicitar";t[k]=(t[k]||0)+(+r.brl||0)});return[["A solicitar","A solicitar"],["Solicitado","Solicitado"],["Pago","Reembolsado"]].filter(([k])=>t[k]).map(([k,l])=>({l,v:fmtMoney(t[k]),c:k==="Pago"?"pos":""}))}},TB_CONTRATOS]},
- {id:"reemb-med",g:"Controles",l:"Reembolsos médicos",desc:"Solicitações e acompanhamento de reembolsos da SulAmérica de Leticia, Fernando e Cristiana.",
+ {id:"reemb-med",g:"Controles",l:"Reembolsos médicos",desc:"Reembolsos da SulAmérica. Os planos são da Leticia e do Fernando; a Cristiana é dependente do plano do Fernando. Indique quem solicita cada reembolso: o valor é pago na conta dessa pessoa.",
   src:[["SulAmérica | Leticia",DRIVE+"1E3WQB8UAmYMNzRtC8tS4xGvPYhzUlgbExG8w9pgDZHQ/edit"],["SulAmérica | Fernando",DRIVE+"1J5vDaIDg5IWxNS31I2BBZHLO-axLbJ1sYjZZalF2T9M/edit"],["SulAmérica | Kiki",DRIVE+"1mgAt0QfoMBX2A6RZ2j75SKusJ6tLBW1zBMCfY--Tn0o/edit"]],
   tables:[{id:"reemb-med",title:"Solicitações SulAmérica",sort:"data",cols:[
-    SE("titular","Titular",["Leticia","Fernando","Cristiana"],{f:false}),TX("paciente","Paciente",{f:true}),SE("cat","Categoria",["Consultas","Exames","Procedimentos médicos","Terapias"]),
+    SE("titular","Titular do plano",["Leticia","Fernando"],{f:false}),TX("paciente","Paciente",{f:true}),SE("solicitante","Solicitado por",["Leticia","Fernando","Cristiana"]),SE("cat","Categoria",["Consultas","Exames","Procedimentos médicos","Terapias"]),
     TX("descr","Especialidade",{w:160}),DT("data","Data da nota fiscal"),TX("nf","Nota fiscal",{w:160}),M("valor","Valor"),TX("comp","Comprovante de pagamento",{w:160}),
     SE("status","Status",["Pendente","Em análise","Pago","Negado"]),TX("protocolo","Protocolo concierge",{w:170}),TX("sr","Número da SR"),DT("datasol","Data da solicitação"),
     DT("datareemb","Data do reembolso"),M("vreemb","Valor do reembolso"),LG("coment","Comentários",{w:160})],
@@ -931,7 +931,7 @@ function solDots(e,r){const nm=["Recebida","Pronta","Paga","Reembolso"];if(e.off
 /* quando a solicitação é paga e tem reembolso, cria o lançamento na aba de reembolsos e guarda o vínculo */
 async function solSync(r){try{const tid=SOL_RB[r.reemb];if(!tid||r.status!=="Pago"||!r.id)return;subscribe(tid);
   const base={descr:r.descr||"",data:r.dtpg||r.data||"",comp:r.comp||"",sol:r.id};
-  if(tid==="reemb-med")Object.assign(base,{titular:solPessoa(r),paciente:r.paciente||"",nf:r.nf||"",valor:hasV(r.valor)?+r.valor:null,status:"Pendente",coment:"Criado a partir de Novas solicitações de pagamento"});
+  if(tid==="reemb-med")Object.assign(base,{titular:isCris(r.paciente)?"Fernando":solPessoa(r),solicitante:isCris(r.paciente)?"Cristiana":solPessoa(r),paciente:r.paciente||"",nf:r.nf||"",valor:hasV(r.valor)?+r.valor:null,status:"Pendente",coment:"Criado a partir de Novas solicitações de pagamento"});
   else Object.assign(base,{pessoa:solPessoa(r),moeda:"BRL",brl:hasV(r.valor)?+r.valor:null,status:"A solicitar",coment:"Criado a partir de Novas solicitações de pagamento"});
   const x=r.reembId?(data[tid]||[]).find(y=>y.id===r.reembId):null;
   if(r.reembId&&x){const up={};for(const k in base){if(k==="status"||k==="coment"||k==="sol")continue;const v=base[k];if(hasV(v)&&!hasV(x[k]))up[k]=v}if(Object.keys(up).length)await updRow(tid,x.id,up);return}
@@ -948,7 +948,7 @@ function ppSections(tb,h,C){const tid=tb.id,hasQ=!!(state.qs[state.tab.id]||"").
     if(gExec&&gExec!=="ambos"&&gExec!==p)return;
     const mine=C.rows.filter(r=>C.own(r)===p),ab=srt(mine.filter(C.isOpen)),co=srt(mine.filter(r=>!C.isOpen(r)));
     const v=ppV[tid+p]==="co"?"co":"ab",cur=hasQ?srt(mine):v==="co"?co:ab,tot=ab.reduce((n,r)=>n+(+C.val(r)||0),0),nc=C.head.length;
-    h+=`<section class="tbl enc-side emp-side"><div class="enc-side-h"><h3>${pn}</h3><div class="seg" role="tablist" aria-label="${pn}">${[["ab","Em aberto",ab.length],["co",ICO_OK+" "+C.concL,co.length]].map(([k,l,n])=>`<button role="tab" data-ppv="${tid}|${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${tot>0?"neg":""}">${fmtMoney(tot)}</b></span><span class="grow"></span><button class="btn sm primary" data-ppadd="${tid}|${p}">${C.addL}</button></div>`;
+    h+=`<section class="tbl enc-side emp-side"><div class="enc-side-h"><h3>${pn}</h3><div class="seg" role="tablist" aria-label="${pn}">${[["ab","Em aberto",ab.length],["co",ICO_OK+" "+C.concL,co.length]].map(([k,l,n])=>`<button role="tab" data-ppv="${tid}|${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${tot>0?"neg":""}">${fmtMoney(tot)}</b></span>${C.brk?C.brk(p,v,ab,co):""}<span class="grow"></span><button class="btn sm primary" data-ppadd="${tid}|${p}">${C.addL}</button></div>`;
     h+=`<div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb sol ${C.cls||""}"><thead><tr>${C.head.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${cur.length?cur.map(C.tr).join(""):`<tr><td colspan="${nc}" class="sol-none">${filt?"Nada corresponde à busca ou aos filtros.":v==="co"?C.emptyCo(pn):C.emptyAb(pn)}</td></tr>`}</tbody>${v==="ab"&&!hasQ&&ab.length?`<tfoot><tr><td colspan="${C.vi}">Total em aberto</td><td>${fmtMoney(tot)}</td><td colspan="${nc-C.vi-1}"></td></tr></tfoot>`:""}</table></div></div></section>`});
   return h}
 const ownP=v=>/fernando|shayer/i.test(v||"")?"fernando":"leticia";
@@ -967,7 +967,12 @@ function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
   return ppSections(tb,h,{rows,own:r=>ownP(r.pagador),isOpen:pend,val:r=>{const k=E.get(r.id).k;return k==="recebida"||k==="pronta"?r.valor:0},tr,vi:4,concL:"Concluídas",addL:"+ Nova solicitação",
     head:["Data","Descrição","Solicitante","Aprovada","Valor","Vencimento","Documento","Comprovante","Reembolso","Etapa"],
     emptyAb:pn=>"Nenhuma solicitação em aberto de "+pn+".",emptyCo:pn=>"Nenhuma solicitação concluída de "+pn+"."})}
-/* ---------- reembolsos (corporativos e médicos): tabela no padrão do Painel ---------- */
+/* reembolsos médicos: o plano é da Leticia ou do Fernando (a Cristiana é dependente dele); quem solicita recebe o valor na conta dela/dele */
+const isCris=v=>/cristiana|kiki/i.test(v||"");
+const ownMed=r=>/fernando|shayer/i.test(r.titular||"")||isCris(r.titular)||isCris(r.paciente)&&!/let[ií]cia/i.test(r.titular||"")?"fernando":"leticia";
+const medSol=r=>r.solicitante||(isCris(r.paciente)||isCris(r.titular)?"Cristiana":/fernando|shayer/i.test(r.titular||"")?"Fernando":/let[ií]cia/i.test(r.titular||"")?"Leticia":"");
+const medSolOpts=p=>p==="fernando"?["Fernando","Cristiana"]:["Leticia","Fernando"];
+/* reembolsos (corporativos e médicos): tabela no padrão do Painel */
 const RB_CFG={
  "reemb-corp":{S:["A solicitar","Solicitado","Pago"],nm:["Lançado","Solicitado","Reembolsado"],dt:"datareemb",val:"brl"},
  "reemb-med":{S:["Pendente","Em análise","Pago"],nm:["Lançado","Em análise","Reembolsado"],dt:"datareemb",val:"valor"}};
@@ -979,17 +984,23 @@ function rbBar(tid,r){const C=RB_CFG[tid],n=rbN(tid,r),off=n<0;let h="";
     h+=`<${tag} ${ck?`type="button" data-rbst="${tid}|${r.id}|${i}" title="${esc(tip)}" `:""}class="sol-dot ${on?"on":cur?"cur":""}${i?" ln":""}${ln?" lnon":""}${ck?" pgb":""}"><span>${on?"✓":""}</span>${esc(lab).replace("&lt;br&gt;","<br>")}</${tag}>`}
   return `<div class="sol-st rb3${off?" off":""}">${h}</div>`}
 function tkBtn(tid,r,k,t){const b=solHas(r,k);return `<button type="button" class="sol-apb ${b?"on":""}" data-tk="${tid}|${r.id}|${k}" aria-pressed="${b}" title="${b?esc(t)+" recebido · clique para desmarcar":"Clique para marcar "+esc(t.toLowerCase())+" como recebido"}">${b?"✓":""}</button>`}
+function solBy(r){const own=ownMed(r),o=medSolOpts(own),cur=medSol(r);if(!o.includes(cur)&&cur)o.push(cur);
+  return `<label class="sr" for="sb-${r.id}">Solicitado por</label><select id="sb-${r.id}" class="ct-sel on" data-fset="reemb-med|${r.id}|solicitante" title="Quem solicitou o reembolso à SulAmérica. O valor é pago na conta dessa pessoa.">${o.map(n=>`<option ${n===cur?"selected":""}>${esc(n)}</option>`).join("")}</select>`}
+function medBrk(p,v,ab,co){if(p!=="fernando")return"";const by={},src=v==="co"?co.filter(r=>r.status==="Pago"):ab,f=r=>v==="co"?+r.vreemb||0:+r.valor||0;
+  src.forEach(r=>{const k=medSol(r)||"Sem solicitante";by[k]=(by[k]||0)+f(r)});
+  const it=Object.entries(by).filter(([,x])=>x>0);if(!it.length)return"";
+  return `<span class="enc-n">${v==="co"?"Reembolsado":"A receber"} · ${it.map(([k,x])=>`${esc(k)} <b>${fmtMoney(x)}</b>`).join(" · ")}</span>`}
 function rbHTML(tb,rows,h){const tid=tb.id,med=tid==="reemb-med";if(!med)subscribe("reemb-contratos");
   const aberto=r=>{const n=rbN(tid,r);return n>0&&n<3},mv=v=>hasV(v)?fmtMoney(v):"";
-  const head=med?["Data","Paciente","Especialidade","Categoria","Valor pago","Reembolsado","% reembolsado","Nota fiscal","Comprovante","Etapa"]
+  const head=med?["Data","Paciente","Solicitado por","Especialidade","Categoria","Valor pago","Reembolsado","% reembolsado","Nota fiscal","Comprovante","Etapa"]
     :["Data","Descrição","Categoria","Referência","Valor em R$","Forma de pagamento","Contrato","Comprovante","Etapa"];
   const tr=r=>{const off=rbN(tid,r)<0;
-    const cells=med?[esc(dm(r.data)||""),`<b>${esc(r.paciente||"")}</b>`,esc(r.descr||""),esc(r.cat||""),mv(r.valor),mv(r.vreemb),
+    const cells=med?[esc(dm(r.data)||""),`<b>${esc(r.paciente||"")}</b>`,solBy(r),esc(r.descr||""),esc(r.cat||""),mv(r.valor),mv(r.vreemb),
         hasV(r.vreemb)&&+r.valor?Math.round(r.vreemb/r.valor*100)+"%":"",off?"":tkBtn(tid,r,"nf","Nota fiscal"),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)]
       :[esc(dm(r.data)||""),`<b>${esc(r.descr||r.cat||"Sem descrição")}</b>`,esc(r.cat||""),esc(r.ref||""),mv(r.brl),esc(r.formapg||""),ctSel(r),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)];
     const tip=med&&(r.protocolo||r.sr)?[r.protocolo?"Protocolo "+r.protocolo:"",r.sr?"SR "+r.sr:""].filter(Boolean).join(" · "):"";
     return `<tr class="atr ${off?"off":""}" data-open="${tid}|${r.id}" tabindex="0">${cells.map((c,i)=>`<td${i===1?' class="a-t"':""}${i===cells.length-1&&tip?` title="${esc(tip)}"`:""}>${c}</td>`).join("")}</tr>`};
-  return ppSections(tb,h,{rows,own:r=>ownP(med?r.titular:r.pessoa),isOpen:aberto,val:r=>r[RB_CFG[tid].val],tr,vi:med?4:4,concL:"Concluídos",addL:"+ Novo reembolso",head,cls:"rb",
+  return ppSections(tb,h,{rows,own:r=>med?ownMed(r):ownP(r.pessoa),isOpen:aberto,val:r=>r[RB_CFG[tid].val],tr,vi:med?5:4,brk:med?medBrk:null,concL:"Concluídos",addL:"+ Novo reembolso",head,cls:"rb",
     emptyAb:pn=>"Nenhum reembolso em aberto de "+pn+".",emptyCo:pn=>"Nenhum reembolso concluído de "+pn+"."})}
 /* contratos de reembolso corporativo: vínculo dos gastos ao número do contrato */
 const ctNum=v=>String(v||"").replace(/^\s*contrato\s*/i,"").trim();
@@ -1213,6 +1224,7 @@ async function saveCellFicha(tid,id,i){
 function closeFicha(){const d=$("#fin-drawer");d.hidden=true;d.innerHTML=""}
 async function saveFicha(tid,id){
   const tb=tbById(tid),ctx=ctxFor();const r=id?(data[tid]||[]).find(x=>x.id===id):null;
+  if(tid==="reemb-med"){const so=document.getElementById("fi-solicitante"),pc0=document.getElementById("fi-paciente"),t0=document.getElementById("fi-titular");if(so&&!so.value){if(isCris(pc0&&pc0.value))so.value="Cristiana";else if(t0&&t0.value)so.value=t0.value}if(t0&&!t0.value&&isCris(pc0&&pc0.value))t0.value="Fernando"}
   if(tid==="reemb-med"){const t=document.getElementById("fi-titular"),pc=document.getElementById("fi-paciente");if(t&&pc&&!t.value&&pc.value){const prev=(data["reemb-med"]||[]).find(x=>x.titular&&String(x.paciente||"").trim().toLowerCase()===pc.value.trim().toLowerCase());if(prev)t.value=prev.titular}}
   if(tid==="solicitacoes"){const g=k=>document.getElementById("fi-"+k);const ap=g("aprovacao"),st=g("status"),dp=g("dtpg");
     if(ap&&!ap.value)ap.value="Aguardando";if(st&&!st.value)st.value="Pendente";
@@ -1921,7 +1933,8 @@ document.addEventListener("keydown",e=>{
   if(e.target.id==="dv-linkurl"){if(e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-dvlinkgo]");if(b)b.click()}else if(e.key==="Escape"){dvAtt.link=null;state.editing=false;render()}}
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details[data-ccm]"))grpOpen["cc:"+d.dataset.ccm]=d.open;if(d&&d.matches&&d.matches("details[data-ench]"))grpOpen[d.dataset.ench]=d.open;if(d&&d.matches&&d.matches("details[data-emphist]"))grpOpen["emp-hist"]=d.open;if(d&&d.matches&&d.matches("details[data-empyr]"))grpOpen["emp-yr-"+d.dataset.empyr]=d.open},true);
-document.addEventListener("change",async e=>{const t=e.target;if(t.matches&&t.matches("[data-ctset]")){try{await updRow("reemb-corp",t.dataset.ctset,{contrato:t.value});toast(t.value?"Gasto vinculado ao contrato "+t.value:"Vínculo removido")}catch(x){toast("Não foi possível salvar.")}return}});
+document.addEventListener("change",async e=>{const t=e.target;if(t.matches&&t.matches("[data-fset]")){const[ft,fid,fk]=t.dataset.fset.split("|");try{await updRow(ft,fid,{[fk]:t.value});toast("Salvo")}catch(x){toast("Não foi possível salvar.")}return}
+  if(t.matches&&t.matches("[data-ctset]")){try{await updRow("reemb-corp",t.dataset.ctset,{contrato:t.value});toast(t.value?"Gasto vinculado ao contrato "+t.value:"Vínculo removido")}catch(x){toast("Não foi possível salvar.")}return}});
 document.addEventListener("change",async e=>{const t=e.target;if(!t.matches||!t.matches("[data-fat]"))return;const [mes,c]=t.dataset.fat.split("|"),v=parseNum(t.value),id=(mes+"_"+c).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9_-]+/g,"-");
   const obj={mes,cartao:c,total:v==null?null:Math.round(v*100)/100,atualizadoEm:Date.now()};
   try{const ja=(data.faturas||[]).some(x=>x.id===id);if(db){const ref=db.collection("abas/faturas/linhas").doc(id);await track(ja?ref.update(obj):ref.set(obj))}else{const a=(data.faturas=data.faturas||[]);const k=a.findIndex(x=>x.id===id);if(k>-1)Object.assign(a[k],obj);else a.push(Object.assign({id},obj));render()}toast(v==null?"Total da fatura apagado":"Total da fatura salvo")}catch(err){toast("Não foi possível salvar o total da fatura.")}});
