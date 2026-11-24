@@ -1122,8 +1122,10 @@ async function cpSave(key,patch){const m=key.split("_").slice(-2)[0];const cur=(
   if(cur)return updRow("contas",key,patch);const p=key.split("_"),d=p.pop(),mes=p.pop(),cr=p.join("_");return setRow("contas",key,Object.assign({cr,mes,dia:+d},patch))}
 function diaSel(k,dias,m){const cur=state[k]||"";if(cur&&!dias.includes(+cur))dias=dias.concat(+cur).sort((a,b)=>a-b);const mm=m?"/"+m.slice(5,7):"";
   return `<label class="sr" for="fd-${k}">Dia de vencimento</label><select class="sel dsel" id="fd-${k}" data-diasel="${k}"><option value="">Vencimento: todos</option>${dias.map(d=>`<option value="${d}" ${String(d)===String(cur)?"selected":""}>Dia ${String(d).padStart(2,"0")}${mm}</option>`).join("")}</select>`}
-function quemSeg(tid){const k=tid==="contas"?"cpQuem":"crQuem",cur=state[k]||"";
-  return `<div class="seg subtabs" role="tablist" aria-label="Centro de custo">${[""].concat(CP_QUEM).map(q=>`<button role="tab" data-qseg="${k}|${esc(q)}" class="${q===cur?"on":""}" aria-selected="${q===cur}">${esc(q||"Todos")}</button>`).join("")}</div>`}
+/* filtro do cabeçalho (Todos / Fernando / Leticia): Fernando = Fernando e Luciano; Leticia = Leticia, Camburi, Mauá, Mindset e Mistaria */
+const qOk=q=>!gExec||gExec==="ambos"||!q||!(PF&&PF.dono)||PF.dono(q)===gExec;
+function quemSeg(tid){const k=tid==="contas"?"cpQuem":"crQuem";if(state[k]&&!qOk(state[k]))state[k]="";const cur=state[k]||"";
+  return `<div class="seg subtabs" role="tablist" aria-label="Centro de custo">${[""].concat(CP_QUEM.filter(qOk)).map(q=>`<button role="tab" data-qseg="${k}|${esc(q)}" class="${q===cur?"on":""}" aria-selected="${q===cur}">${esc(q||"Todos")}</button>`).join("")}</div>`}
 const ckB=(on,attr,lbl)=>`<button type="button" class="sol-apb ${on?"on":""}" ${attr} aria-label="${esc(lbl)}" title="${esc(lbl)}">${on?"✓":""}</button>`;
 function crHTML(tb,rows,h){const all=data.cronograma||[];if(!all.length)return h+`<div class="empty-big"><b>Nenhuma conta ainda</b></div></section>`;
   const qi=r=>CP_QUEM.indexOf(r.quem)<0?9:CP_QUEM.indexOf(r.quem);
@@ -1136,7 +1138,7 @@ function crHTML(tb,rows,h){const all=data.cronograma||[];if(!all.length)return h
   return h+`</tbody></table></div><div class="foot"><span>${rs.length} conta${rs.length===1?"":"s"}</span><span>Clique numa conta para ver acessos, dados bancários e observações</span></div></section>`}
 function cpHTML(tb,h){const m=state.month,q=state.cpQuem||"",todos=!q;
   if(m<CP_INI)return h+`<div class="empty-big"><b>O Contas a pagar começa em novembro de 2026.</b>Os pagamentos anteriores ficam no histórico de cada conta do cronograma.</div></section>`;
-  let L=cpLines(m);if(q)L=L.filter(x=>x.quem===q);const cdias=[...new Set(L.map(x=>x.d).filter(Boolean))].sort((a,b)=>a-b);if(state.cpDia)L=L.filter(x=>x.d===+state.cpDia);
+  let L=cpLines(m).filter(x=>qOk(x.quem));if(q)L=L.filter(x=>x.quem===q);const cdias=[...new Set(L.map(x=>x.d).filter(Boolean))].sort((a,b)=>a-b);if(state.cpDia)L=L.filter(x=>x.d===+state.cpDia);
   const onlyOpen=!!state.cpOpen;const now=new Date(),cur=today(),late=x=>!x.pago&&x.d&&(m<cur||(m===cur&&x.d<now.getDate()));
   const C=L.filter(x=>!x.fat),F=L.filter(x=>x.fat),sum=l=>l.reduce((n,x)=>n+(+x.valor||0),0);
   const tot=sum(L),pg=sum(L.filter(x=>x.pago)),at=L.filter(late);
@@ -1695,7 +1697,7 @@ function topHTML(tab){
   if(tab.monthly)h+=`<div class="seg" role="group" aria-label="Visualização"><button data-view="list" class="${state.cronView!=="cal"?"on":""}">Lista</button><button data-view="cal" class="${state.cronView==="cal"?"on":""}">Calendário</button></div>`;
   if(tab.id==="contas"||tab.id==="cronograma"){h+=quemSeg(tab.id);
     if(tab.id==="cronograma"){const tbc=tab.tables[0];const ds=[...new Set(visibleRows(tbc,ctxFor()).map(r=>parseInt(r.venc)).filter(Boolean))].sort((a,b)=>a-b);h+=diaSel("crDia",ds)}
-    else if(state.month>=CP_INI){let L=cpLines(state.month);if(state.cpQuem)L=L.filter(x=>x.quem===state.cpQuem);h+=diaSel("cpDia",[...new Set(L.map(x=>x.d).filter(Boolean))].sort((a,b)=>a-b),state.month)}}
+    else if(state.month>=CP_INI){let L=cpLines(state.month).filter(x=>qOk(x.quem));if(state.cpQuem)L=L.filter(x=>x.quem===state.cpQuem);h+=diaSel("cpDia",[...new Set(L.map(x=>x.d).filter(Boolean))].sort((a,b)=>a-b),state.month)}}
   if(tab.subtabs){const sk=subOf(tab).k;h+=`<div class="seg subtabs" role="tablist" aria-label="Seções">${tab.subtabs.map(s=>`<button role="tab" data-subtab="${s.k}" aria-selected="${s.k===sk}" class="${s.k===sk?"on":""}">${esc(s.l)}</button>`).join("")}</div>`;
   }
   if(tab.matrix||tab.reports||tab.id==="repasses"){const ys=[...new Set([new Date().getFullYear()-1,new Date().getFullYear(),new Date().getFullYear()+1,state.year])].filter(a=>tab.id!=="repasses"||a>=2026).sort();h+=`<label class="sr" for="fyr">Ano</label><select class="sel" id="fyr" data-year>${ys.map(a=>`<option ${a===state.year?"selected":""}>${a}</option>`).join("")}</select>`}
