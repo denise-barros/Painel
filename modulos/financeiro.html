@@ -535,6 +535,9 @@ const PARC_SHEET="https://docs.google.com/spreadsheets/d/1LikhaZJokuFEG1foFxGp6K
 const CC_PASTA="https://drive.google.com/drive/folders/17Vjh2tzFVVdZq6HAUkWZHdSiTTtJO323";
 const CC_MESES={"2026-10":{nome:"outubro de 2026",pasta:"https://drive.google.com/drive/folders/1-QVm-wsd4C1mfz6cVT1H5-zvp-NiJQCE",planilha:PARC_SHEET}};
 const ccMes=()=>Object.keys(CC_MESES).sort().pop();
+const CR_TIPOS=["Fixa","Sob demanda","Só controle","Fatura de cartão"];
+const crEnc=r=>!!r.encerra&&r.encerra<today();
+const crEncTab=()=>state.tab&&state.tab.id==="cronograma"&&subOf(state.tab).k==="encerradas";
 const QUEM=["Leticia","Fernando","Luciano","Camburi","Crianças","Mindset","Mistaria","Serengetti","Camino School","Mauá","Todos"];
 const SOL_CAT=["Médicos","Terapeutas","Prestadores de serviços","Funcionários","Casa","Compras","Viagens","Escola","Devolução","Outros"];
 const DRIVE="https://docs.google.com/spreadsheets/d/";
@@ -560,10 +563,11 @@ const TB_CONTRATOS={id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[S
 const TABS=[
  {id:"cronograma",g:"Pagamentos",l:"Cronograma de pagamentos",desc:"Pagamentos recorrentes, vencimentos e acessos, com o valor pago e o status de cada mês.",
   src:[["Calendário de pagamentos",DRIVE+"1t8drdAiTy-QYSP2_F4CL85Vzki1NlswVDkcRkEiIEq4/edit"]],monthly:true,
+  solo:true,subtabs:[{k:"ativas",l:"Ativas",tables:["cronograma"]},{k:"encerradas",l:"Encerradas",tables:["cronograma"]}],
   tables:[{id:"cronograma",title:"Despesas recorrentes",sort:"venc",cols:[
     TX("despesa","Despesa",{w:170}),SE("quem","Quem",QUEM),TX("endereco","Endereço",{w:160}),
-    {k:"venc",l:"Venc. (dia)",t:"num",w:70},SE("period","Periodicidade",["Mensal","Bimestral","Trimestral","Semestral","Anual","Única"]),{k:"mesref",l:"Mês de referência",t:"month",w:90},SE("forma","Forma de pagamento",["Pix","Boleto","Débito automático","Cartão de crédito","Transferência"]),
-    LG("acesso","Acesso pelo site",{w:180}),LG("chave","Dados bancários / chave Pix",{w:200}),LG("obs","Observações",{w:220}),
+    {k:"venc",l:"Venc. (dia)",t:"num",w:70},SE("period","Periodicidade",["Mensal","Semanal","Bimestral","Trimestral","Semestral","Anual","Única"]),SE("tipo","Tipo",CR_TIPOS),SE("criancas","Crianças",["Sim","Não"],{f:false}),{k:"mesref",l:"Mês de referência",t:"month",w:90},SE("forma","Forma de pagamento",["Pix","Boleto","Débito automático","Cartão de crédito","Transferência"]),
+    LG("acesso","Acesso pelo site",{w:180}),LG("chave","Dados bancários / chave Pix",{w:200}),LG("obs","Observações",{w:220}),{k:"encerra",l:"Último mês (se encerrada)",t:"month",w:90},
     M("medio","Valor médio"),
     M("pago","Valor pago no mês",{month:"v"}),SE("st","Status do mês",["Pago","Pendente","Emitido","Verificar","Não se aplica"],{month:"s"})],
     kpis:(rows,ctx)=>{const m=ctx.month;let prev=0,pago=0,pend=0;rows.forEach(r=>{prev+=+r.medio||0;const x=(r.meses||{})[m]||{};if(x.s==="Pago"||x.s==="Emitido")pago+=+x.v||0;else if(x.s!=="Não se aplica")pend++});
@@ -751,7 +755,7 @@ function ctxFor(){return{month:state.month,ref:cfg.parcelasRef,year:state.year}}
 let gExec="";window.__setExec=v=>{gExec=v||"";try{render()}catch(e){}};
 const NOMES={fernando:["fernando","shayer"],leticia:["leticia","letícia","lyle"]};
 function execOk(r){if(!gExec||gExec==="ambos")return true;if(PF){if("razao" in r)return PF.empDono(r)===gExec;const c=[r.titular,r.quem,r.pessoa,r.pagador,r.cartao].filter(Boolean);if(!c.length)return true;return c.some(v=>PF.dono(v)===gExec)}if("vparc" in r&&r.titular)return gExec==="ambos"||(gExec==="fernando"?/fernando|shayer/i:/let[ií]cia/i).test(r.titular);const s=[r.pessoa,r.quem,r.titular,r.pagador,r.cartao,r.dequem,r.solic].filter(Boolean).join(" ").toLowerCase();if(!s)return true;const f=NOMES.fernando.some(n=>s.includes(n)),l=NOMES.leticia.some(n=>s.includes(n));if(!f&&!l)return true;return gExec==="fernando"?f:l}
-const cronoDue=(r,m)=>{try{return PF?PF.due(r,m):true}catch(e){return true}};
+const cronoDue=(r,m)=>{if(r.encerra&&m>r.encerra)return false;try{return PF?PF.due(r,m):true}catch(e){return true}};
 /* quitar empréstimo: pergunta a data e o valor total pago (quitação antecipada pode ter desconto) */
 function empQuitar(id){const r=empAll().find(x=>x.id===id);if(!r)return;const cmb=(+r.valor||0)+(+r.juros||0),sug=hasV(r.devolvido)&&+r.devolvido>=cmb?+r.devolvido:cmb;
   let m=document.getElementById("emp-q");if(m)m.remove();m=document.createElement("div");m.id="emp-q";m.className="emp-q";
@@ -784,6 +788,7 @@ function visibleRows(tb,ctx,noPeriod){
   if(tb.id==="assinaturas"&&!q){const m=asnMon(data[tb.id]||[],fl);if(m)rows=rows.filter(r=>(r.data||"").slice(0,7)===m)}
   if(tb.id==="solicitacoes"&&!q){const m=asnMon(data[tb.id]||[],fl);if(m)rows=rows.filter(r=>solMes(r)===m)}
   if(fl._gestor&&tb.id==="assinaturas")rows=rows.filter(r=>String(r.gestor||"").split(/\s*\/\s*/).includes(fl._gestor));
+  if(tb.id==="cronograma"&&crEncTab())return rows.filter(crEnc);
   if(tb.id==="cronograma"){const m=(ctx&&ctx.month)||state.month;rows=rows.filter(r=>cronoDue(r,m))}
   if(noPeriod)return rows;
   if(tb.id==="cronograma"&&fl._pend){const m=(ctx&&ctx.month)||state.month;rows=rows.filter(r=>(pendAnt(r,m).length>0)===(fl._pend==="1"))}
@@ -806,7 +811,7 @@ const LIST={
     const a=Math.max(1,dd-dow),b=Math.min(last,dd+(6-dow));const now=new Date();const cur=now.getFullYear()===y&&now.getMonth()+1===mo&&now.getDate()>=a&&now.getDate()<=b;
     return{k:String(a).padStart(2,"0"),l:(a===b?"Dia "+a:"Semana de "+a+" a "+b)+" de "+MESL[mo-1].toLowerCase()+(cur?" · esta semana":"")}},
   order:r=>+r.venc||99,lead:r=>r.venc?"dia "+String(r.venc).padStart(2,"0"):"—",title:r=>r.despesa,
-  tags:(r,c)=>{const pa=pendAnt(r,c.month);return[T(r.quem,"info"),T(r.forma),pa.length?T(pa.length+(pa.length>1?" meses":" mês")+" em aberto: "+pa.map(fmtMonth).join(", "),"bad"):null]},
+  tags:(r,c)=>{const pa=pendAnt(r,c.month);return[T(r.quem,"info"),T(r.forma),r.tipo&&r.tipo!=="Fixa"?T(r.tipo,r.tipo==="Fatura de cartão"?"info":""):null,r.criancas==="Sim"?T("Crianças"):null,r.encerra?T((crEnc(r)?"encerrada em ":"encerra em ")+fmtMonth(r.encerra),"warn"):null,pa.length?T(pa.length+(pa.length>1?" meses":" mês")+" em aberto: "+pa.map(fmtMonth).join(", "),"bad"):null]},
   value:(r,c)=>hasV(mon(r,c).v)?mon(r,c).v:r.medio,
   badge:(r,c)=>{const s=mon(r,c).s;if(s)return s;const d=parseInt(r.venc);if(!d)return"";const now=new Date(),cur=today();if(c.month<cur||(c.month===cur&&d<now.getDate()))return"Vencido";return""},
   done:(r,c)=>["Pago","Emitido","Não se aplica"].includes(mon(r,c).s),stamp:(r,c)=>mon(r,c).pagoEm,
