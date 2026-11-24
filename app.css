@@ -861,3 +861,6 @@ td.dp-desc{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:elli
 /* cabeçalho congelado nas tabelas que ainda não tinham (Férias, Agenda, Relatórios, Certificados) */
 .fer-tw,.rot-wrap,.rel-tbl{overflow:auto;max-height:calc(100vh - 230px)}
 .fer-tw thead th,.rot-wrap thead th,.rel-tbl thead th,.cert-t thead th{position:sticky;top:0;z-index:2;background:var(--surface);box-shadow:0 1px 0 var(--line)}
+
+/* todas as tabelas do Painel: títulos e conteúdo centralizados (pedido da Denise, 24/11/2026) */
+table th,table td{text-align:center!important}
