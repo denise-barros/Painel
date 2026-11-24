@@ -126,7 +126,7 @@ function finRepasses(ym){
 /* D. Reembolsos (devidos ao executivo) e assinaturas */
 function finReemb(ym,ex,t0){
   t0=t0||todayISO();
-  const rc=(S.fin['reemb-corp']||[]).filter(r=>(r.descr||r.brl)&&finOk(ex,r.pessoa)),rm=(S.fin['reemb-med']||[]).filter(r=>(r.descr||r.valor||r.paciente)&&finOk(ex,r.titular));
+  const rc=(S.fin['reemb-corp']||[]).filter(r=>(r.descr||r.brl)&&finOk(ex,r.pessoa)),rm=(S.fin['reemb-med']||[]).filter(r=>(r.descr||r.valor||r.paciente)&&finOk(ex,/cristiana|kiki/i.test(r.titular||'')||/cristiana|kiki/i.test(r.paciente||'')&&!r.titular?'Fernando':r.titular));
   const opC=rc.filter(r=>r.status!=='Pago'&&r.status!=='Negado'),opM=rm.filter(r=>r.status!=='Pago'&&r.status!=='Negado');
   const sm=(l,k)=>l.reduce((a,r)=>a+(fnum(r[k])||0),0);
   const o={has:rc.length+rm.length>0,
