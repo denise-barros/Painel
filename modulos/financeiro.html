@@ -583,8 +583,8 @@ const TABS=[
       const cl=e?"neg":"pos";return e?[{l:"A pagar · pessoal",v:fmtMoney(p),c:cl},{l:"A pagar · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]:[{l:"A receber · pessoal",v:fmtMoney(p),c:cl},{l:"A receber · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]}},TB_CONTRATOS]},
  {id:"reemb-corp",g:"Controles",l:"Reembolsos corporativos",desc:"Despesas de viagem e trabalho de Leticia e Fernando a reembolsar. Apurações com Daniel todo dia 03.",
   src:[["Reembolsos | Leticia",DRIVE+"1wLIT4EwtX28UUVc8nGwKhuYTJIM5rGsHH8tHLcMqYHk/edit"],["Reembolsos | Shayer",DRIVE+"1S7y0fKPuMFt6bi7G1N-Pw-q6q9pJcbuqrpbJc6oPdCc/edit"],["Base para reembolsos",DRIVE+"1t58x-alGZcLDutbojaWQgkhWSOAbkBWxlxGWvcbeqUs/edit"]],
-  solo:true,subtabs:[{k:"gastos",l:"Solicitações",tables:["reemb-corp"]},{k:"contratos",l:"Contratos",tables:["reemb-contratos"]}],
-  tables:[{id:"reemb-corp",title:"Solicitações",sort:"data",cols:[
+  solo:true,subtabs:[{k:"gastos",l:"Gastos",tables:["reemb-corp"]},{k:"contratos",l:"Contratos",tables:["reemb-contratos"]}],
+  tables:[{id:"reemb-corp",title:"Gastos",sort:"data",cols:[
     SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("ref","Referência e mês",{w:160,f:true,t:"text"}),
     SE("cat","Categoria",["Hotel","Aéreo","Aluguel de veículos","Alimentação","Rodoviário","Material de trabalho","Estacionamento","Pedágio","Postagens","Táxi","Assinatura de software"]),
     TX("descr","Descrição",{w:170}),DT("data","Data de emissão"),SE("moeda","Moeda",["BRL","USD","EUR","GBP"],{f:false}),
@@ -1002,15 +1002,15 @@ const ctNum=v=>String(v||"").replace(/^\s*contrato\s*/i,"").trim();
 function ctOf(p){return (data["reemb-contratos"]||[]).filter(c=>ownP(c.pessoa)===p&&ctNum(c.numero))}
 function ctSel(r){const p=ownP(r.pessoa),cur=ctNum(r.contrato),L=ctOf(p).slice().sort((a,b)=>ctNum(a.numero).localeCompare(ctNum(b.numero),"pt",{numeric:true}));
   const opts=L.map(c=>ctNum(c.numero));if(cur&&!opts.includes(cur))opts.push(cur);
-  return `<label class="sr" for="ct-${r.id}">Contrato</label><select id="ct-${r.id}" class="ct-sel ${cur?"on":""}" data-ctset="${r.id}" title="${L.length?"Escolha o contrato em que esta solicitação entra":"Cadastre os contratos na aba Contratos"}"><option value="">–</option>${opts.map(n=>{const c=L.find(x=>ctNum(x.numero)===n);return `<option value="${esc(n)}" ${n===cur?"selected":""}>${esc(n)}${c&&c.quit?" (quitado)":""}</option>`}).join("")}</select>`}
+  return `<label class="sr" for="ct-${r.id}">Contrato</label><select id="ct-${r.id}" class="ct-sel ${cur?"on":""}" data-ctset="${r.id}" title="${L.length?"Escolha o contrato em que este gasto entra":"Cadastre os contratos na aba Contratos"}"><option value="">–</option>${opts.map(n=>{const c=L.find(x=>ctNum(x.numero)===n);return `<option value="${esc(n)}" ${n===cur?"selected":""}>${esc(n)}${c&&c.quit?" (quitado)":""}</option>`}).join("")}</select>`}
 function ctHTML(tb,rows,h){subscribe("reemb-corp");const G=data["reemb-corp"]||[];
   const gs=c=>G.filter(g=>ownP(g.pessoa)===ownP(c.pessoa)&&ctNum(g.contrato)&&ctNum(g.contrato)===ctNum(c.numero));
   const tr=c=>{const l=gs(c),t=l.reduce((a,g)=>a+(+g.brl||0),0),dif=l.length&&hasV(c.valor)&&Math.abs(t-(+c.valor||0))>0.005;
     return `<tr class="atr" data-open="${tb.id}|${c.id}" tabindex="0"><td><b>${esc(ctNum(c.numero))}</b></td><td class="a-t">${esc(c.nome||"")}</td><td>${hasV(c.valor)?fmtMoney(c.valor):""}</td>
-      <td class="${dif?"ct-dif":""}" title="${l.length?l.length+" solicitaç"+(l.length>1?"ões":"ão")+" vinculada"+(l.length>1?"s":"")+(dif?" · a soma é diferente do valor do contrato":""):"Nenhuma solicitação vinculada ainda"}">${l.length?fmtMoney(t)+` <span class="ct-n">(${l.length})</span>`:"–"}</td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`};
+      <td class="${dif?"ct-dif":""}" title="${l.length?l.length+" gasto"+(l.length>1?"s":"")+" vinculado"+(l.length>1?"s":"")+(dif?" · a soma é diferente do valor do contrato":""):"Nenhum gasto vinculado ainda"}">${l.length?fmtMoney(t)+` <span class="ct-n">(${l.length})</span>`:"–"}</td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`};
   return ppSections(tb,h,{rows,own:c=>ownP(c.pessoa),isOpen:c=>!c.quit,val:c=>c.valor,tr,vi:2,concL:"Quitados",addL:"+ Novo contrato",cls:"ct",
     srt:l=>l.slice().sort((a,b)=>ctNum(b.numero).localeCompare(ctNum(a.numero),"pt",{numeric:true})),
-    head:["Número do contrato","Contrato","Valor","Solicitações vinculadas","Data da quitação"],
+    head:["Número do contrato","Contrato","Valor","Gastos vinculados","Data da quitação"],
     emptyAb:pn=>"Nenhum contrato em aberto de "+pn+".",emptyCo:pn=>"Nenhum contrato quitado de "+pn+"."})}
 function listHTML(tb,ctx,multi){
   const L=LIST[tb.id];const all=secRows(tb,srcRows(tb));const rows=visibleRows(tb,ctx);
@@ -1931,7 +1931,7 @@ document.addEventListener("keydown",e=>{
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details[data-ccm]"))grpOpen["cc:"+d.dataset.ccm]=d.open;if(d&&d.matches&&d.matches("details[data-ench]"))grpOpen[d.dataset.ench]=d.open;if(d&&d.matches&&d.matches("details[data-emphist]"))grpOpen["emp-hist"]=d.open;if(d&&d.matches&&d.matches("details[data-empyr]"))grpOpen["emp-yr-"+d.dataset.empyr]=d.open},true);
 document.addEventListener("change",async e=>{const t=e.target;if(t.matches&&t.matches("[data-fset]")){const[ft,fid,fk]=t.dataset.fset.split("|");try{await updRow(ft,fid,{[fk]:t.value});toast("Salvo")}catch(x){toast("Não foi possível salvar.")}return}
-  if(t.matches&&t.matches("[data-ctset]")){try{await updRow("reemb-corp",t.dataset.ctset,{contrato:t.value});toast(t.value?"Solicitação vinculada ao contrato "+t.value:"Vínculo removido")}catch(x){toast("Não foi possível salvar.")}return}});
+  if(t.matches&&t.matches("[data-ctset]")){try{await updRow("reemb-corp",t.dataset.ctset,{contrato:t.value});toast(t.value?"Gasto vinculado ao contrato "+t.value:"Vínculo removido")}catch(x){toast("Não foi possível salvar.")}return}});
 document.addEventListener("change",async e=>{const t=e.target;if(!t.matches||!t.matches("[data-fat]"))return;const [mes,c]=t.dataset.fat.split("|"),v=parseNum(t.value),id=(mes+"_"+c).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9_-]+/g,"-");
   const obj={mes,cartao:c,total:v==null?null:Math.round(v*100)/100,atualizadoEm:Date.now()};
   try{const ja=(data.faturas||[]).some(x=>x.id===id);if(db){const ref=db.collection("abas/faturas/linhas").doc(id);await track(ja?ref.update(obj):ref.set(obj))}else{const a=(data.faturas=data.faturas||[]);const k=a.findIndex(x=>x.id===id);if(k>-1)Object.assign(a[k],obj);else a.push(Object.assign({id},obj));render()}toast(v==null?"Total da fatura apagado":"Total da fatura salvo")}catch(err){toast("Não foi possível salvar o total da fatura.")}});
