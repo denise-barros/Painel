@@ -640,9 +640,6 @@ const GROUPS=[
  {k:"sol",l:"Novas solicitações de pagamentos",d:"Registro, aprovação e controle de status das solicitações.",t:"t-rose",tabs:["solicitacoes"]}];
 const groupOf=id=>GROUPS.find(g=>g.tabs.includes(id));
 
-TABS.push({id:"relatorios",l:"Relatórios",title:"Relatórios",desc:"Totais do ano: pagamentos, reembolsos, empréstimos, repasses, assinaturas e despesas (prestação de contas).",src:[],reports:true,tables:[]});
-IC.rel='<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>';
-GROUPS.push({k:"rel",l:"Relatórios",d:"Totais do ano por área.",t:"t-slate",tabs:["relatorios"]});
 
 /* ---------- camada de dados ---------- */
 let db=null, downloads=null, userNs=null, myId=null, pending=0;
@@ -846,26 +843,28 @@ function empHTML(tb,ctx,all,rows,h){
   [["F","Fernando"],["L","Leticia"]].forEach(([p,pn])=>{
     if(gExec&&gExec!=="ambos"&&gExec!==(p==="F"?"fernando":"leticia"))return;
     const mine=rows.filter(r=>ownOf(r)===(p==="F"?"fernando":"leticia"));
-    const rec=srt(abOf(mine,false)),pag=srt(abOf(mine,true)),fe=mine.filter(empFech);
-    const v=["rec","pag","quit"].includes(state.empV[p])?state.empV[p]:"rec",cur=v==="pag"?pag:rec;
-    h+=`<section class="tbl enc-side emp-side"><div class="enc-side-h"><h3>${pn}</h3><div class="seg" role="tablist" aria-label="${pn}">${[["rec","A receber",rec.length],["pag","A pagar",pag.length],["quit",ICO_OK+" Quitados",fe.length]].map(([k,l,n])=>`<button role="tab" data-empv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div>${v==="quit"?"":`<span class="enc-n">Em aberto <b class="${sm(cur,L.value)>0?(v==="pag"?"neg":"pos"):""}">${fmtMoney(sm(cur,L.value))}</b></span>`}<span class="grow"></span><button class="btn sm primary" data-empadd="${p}|${v==="pag"?"Entrada":"Saída"}">Registrar empréstimo</button></div>`;
-    if(v!=="quit"){const tp=v==="pag"?"Entrada":"Saída";
+    const rec=srt(abOf(mine,false)),pag=srt(abOf(mine,true)),qt=mine.filter(r=>r.status==="Quitado"),nc=mine.filter(r=>r.status==="Não será cobrado");
+    const v=["rec","pag","quit","nc"].includes(state.empV[p])?state.empV[p]:"rec",cur=v==="pag"?pag:rec,fe=v==="nc"?nc:qt,fech=v==="quit"||v==="nc";
+    h+=`<section class="tbl enc-side emp-side"><div class="enc-side-h"><h3>${pn}</h3><div class="seg" role="tablist" aria-label="${pn}">${[["rec","A receber",rec.length],["pag","A pagar",pag.length],["quit",ICO_OK+" Quitados",qt.length],["nc","Não serão cobrados",nc.length]].map(([k,l,n])=>`<button role="tab" data-empv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div>${fech?"":`<span class="enc-n">Em aberto <b class="${sm(cur,L.value)>0?(v==="pag"?"neg":"pos"):""}">${fmtMoney(sm(cur,L.value))}</b></span>`}<span class="grow"></span><button class="btn sm primary" data-empadd="${p}|${v==="pag"?"Entrada":"Saída"}">Registrar empréstimo</button></div>`;
+    if(!fech){const tp=v==="pag"?"Entrada":"Saída";
       h+=tbl(`<th>Data</th><th>Razão social / pessoa</th><th>Tipo</th><th>Emprestado</th><th>Devolvido até agora</th><th>Saldo</th><th>Status</th>`,
         (cur.length?"":`<tr><td colspan="7" class="mutc emp-vz">${filt?"Nada corresponde à busca ou aos filtros.":v==="pag"?pn+" não tem empréstimos a pagar.":pn+" não tem empréstimos a receber."}</td></tr>`)+
         cur.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td>${nome(r)}<td>${esc(r.destino||"Pessoal")}</td><td>${mv(cmb(r))}${hasV(r.juros)&&+r.juros?`<span class="a-o">com juros de ${fmtMoney(r.juros)}</span>`:""}</td><td>${mv(r.devolvido)||"—"}</td><td><b>${fmtMoney(L.value(r))}</b></td><td>${qs(r,"status")}</td></tr>`).join("")+
         `<tr><td colspan="7"><button class="addcat" data-empadd="${p}|${tp}">+ Adicionar empréstimo</button></td></tr>`+
         `<tr class="emg"><td></td><td><b>Total em aberto</b></td><td></td><td><b>${fmtMoney(sm(cur,cmb))}</b></td><td><b>${mv(sm(cur,r=>r.devolvido))||"—"}</b></td><td><b>${fmtMoney(sm(cur,L.value))}</b></td><td></td></tr>`)}
-    else if(!fe.length)h+=`<div class="empty-big">${filt?"Nada corresponde à busca ou aos filtros.":"Nenhum empréstimo quitado ou não cobrado."}</div>`;
+    else if(!fe.length)h+=`<div class="empty-big">${filt?"Nada corresponde à busca ou aos filtros.":(v==="nc"?"Nenhum empréstimo marcado como não será cobrado.":"Nenhum empréstimo quitado.")}</div>`;
     else{const pago=r=>r.status==="Quitado"?(hasV(r.devolvido)?+r.devolvido:null):0;
       const dif=r=>{const pg=pago(r);if(r.status!=="Quitado")return `<span class="mutc">não cobrado</span>`;if(pg==null)return "—";const d=pg-cmb(r);if(Math.abs(d)<0.005)return `<span class="mutc">sem diferença</span>`;return d<0?`<span class="pos">desconto ${fmtMoney(-d)}</span>`:`<span class="neg">juros ${fmtMoney(d)}</span>`};
       const yk=r=>(r.datadev||"").slice(0,4)||"sem";
       const ys=[...new Set(fe.map(yk))].sort((x,y)=>x==="sem"?1:y==="sem"?-1:y.localeCompare(x));const ult=ys.filter(y=>y!=="sem")[0];
-      h+=`<h4 class="enc-h">Quitados <span>${fe.length} · quitados e não cobrados, separados pelo ano em que foram quitados</span></h4>`+
-        ys.map(y=>{const l=fe.filter(r=>yk(r)===y).sort((a,b)=>String(a.datadev||"").localeCompare(String(b.datadev||""))||String(a.data||"").localeCompare(String(b.data||"")));const k="emp-yr-"+p+y,yo=k in grpOpen?grpOpen[k]:y===ult;
-          return `<details class="emp-yr" data-empyr="${p}${y}" ${yo?"open":""}><summary><span class="car">▸</span><b>${y==="sem"?"Sem data de quitação":"Quitados em "+y}</b> <span class="cnt">${l.length}</span><span class="mutc">${fmtMoney(sm(l,cmb))} emprestados</span></summary>`+
-          tbl(`<th>Data</th><th>Razão social / pessoa</th><th>Tipo</th><th>Emprestado</th><th>Total pago</th><th>Quitado em</th><th>Diferença</th><th>Status</th>`,
+      h+=`<h4 class="enc-h">${v==="nc"?"Não serão cobrados":"Quitados"} <span>${fe.length} · ${v==="nc"?"empréstimos que não serão cobrados, separados pelo ano em que foram encerrados":"separados pelo ano em que foram quitados"}</span></h4>`+
+        ys.map(y=>{const l=fe.filter(r=>yk(r)===y).sort((a,b)=>String(a.datadev||"").localeCompare(String(b.datadev||""))||String(a.data||"").localeCompare(String(b.data||"")));const k="emp-yr-"+p+v+y,yo=k in grpOpen?grpOpen[k]:y===ult;
+          return `<details class="emp-yr" data-empyr="${p}${v}${y}" ${yo?"open":""}><summary><span class="car">▸</span><b>${y==="sem"?(v==="nc"?"Sem data":"Sem data de quitação"):(v==="nc"?"Encerrados em ":"Quitados em ")+y}</b> <span class="cnt">${l.length}</span><span class="mutc">${fmtMoney(sm(l,cmb))} emprestados</span></summary>`+
+                    (v==="nc"?tbl(`<th>Data</th><th>Razão social / pessoa</th><th>Tipo</th><th>Emprestado</th><th>Encerrado em</th><th>Status</th>`,
+          l.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td>${nome(r)}<td>${esc(r.destino||"Pessoal")}${ent(r)?` <span class="mutc">· a pagar</span>`:""}</td><td>${mv(cmb(r))}</td><td>${dd(r.datadev)||"—"}</td><td>${qs(r,"status")}</td></tr>`).join("")+
+          `<tr class="emg"><td></td><td><b>Total não cobrado</b></td><td></td><td><b>${fmtMoney(sm(l,cmb))}</b></td><td></td><td></td></tr>`):tbl(`<th>Data</th><th>Razão social / pessoa</th><th>Tipo</th><th>Emprestado</th><th>Total pago</th><th>Quitado em</th><th>Diferença</th><th>Status</th>`,
           l.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${dd(r.data)||"—"}</td>${nome(r)}<td>${esc(r.destino||"Pessoal")}${ent(r)?` <span class="mutc">· a pagar</span>`:""}</td><td>${mv(cmb(r))}</td><td>${r.status==="Quitado"?(mv(r.devolvido)||"—"):"—"}</td><td>${dd(r.datadev)||"—"}</td><td>${dif(r)}</td><td>${qs(r,"status")}</td></tr>`).join("")+
-          `<tr class="emg"><td></td><td><b>Total emprestado</b></td><td></td><td><b>${fmtMoney(sm(l,cmb))}</b></td><td></td><td></td><td></td><td></td></tr>`)+`</details>`}).join("")}
+          `<tr class="emg"><td></td><td><b>Total emprestado</b></td><td></td><td><b>${fmtMoney(sm(l,cmb))}</b></td><td></td><td></td><td></td><td></td></tr>`))+`</details>`}).join("")}
     h+=`</section>`});
   return h;
 }
