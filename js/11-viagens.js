@@ -510,9 +510,14 @@ let hits=[],hi=0;
 function search(q){
   q=q.trim().toLowerCase();const out=[];if(!q)return out;
   const m=s=>String(s||'').toLowerCase().includes(q);
-  S.tasks.forEach(t=>{if(m(t.title)||m(t.notes))out.push({k:'Demanda',t:(t.num?'#'+t.num+' ':'')+(t.title||''),go:'sec'});});
-  S.fin.cronograma.forEach(r=>{if(m(r.despesa)||m(r.obs))out.push({k:'Pagamento',t:r.despesa,go:'fin'});});
-  S.fin.solicitacoes.forEach(r=>{if(m(r.descr)||m(r.solic))out.push({k:'Solicitação',t:r.descr||r.solic,go:'fin'});});
+  S.tasks.forEach(t=>{if(m(t.title)||m(t.notes))out.push({k:'Demanda',t:(t.num?'#'+t.num+' ':'')+(t.title||''),task:t.id,go:'sec'});});
+  const fq=(r,...ks)=>ks.some(k=>m(r[k]));const fj=(...a)=>a.filter(Boolean).join(' · ');
+  S.fin.cronograma.forEach(r=>{if(r.despesa&&fq(r,'despesa','obs','quem','chave','forma'))out.push({k:'Conta',t:fj(r.despesa,r.quem),fin:'cronograma:'+r.id,go:'fin'});});
+  S.fin.solicitacoes.forEach(r=>{if(fq(r,'descr','solic','fav','obs'))out.push({k:'Solicitação',t:r.descr||r.solic,fin:'solicitacoes:'+r.id,go:'fin'});});
+  (S.fin.emprestimos||[]).forEach(r=>{if(fq(r,'razao','destino','titular','obs'))out.push({k:'Empréstimo',t:fj(r.razao||r.destino,r.titular),fin:'emprestimos:'+r.id,go:'fin'});});
+  (S.fin.assinaturas||[]).forEach(r=>{if(fq(r,'descr','obs','gestor'))out.push({k:'Assinatura',t:fj(r.descr,r.cartao),fin:'assinaturas:'+r.id,go:'fin'});});
+  (S.fin['reemb-corp']||[]).forEach(r=>{if(fq(r,'descr','ref','obs'))out.push({k:'Reembolso',t:fj(r.descr,r.pessoa),fin:'reemb-corp:'+r.id,go:'fin'});});
+  (S.fin['reemb-med']||[]).forEach(r=>{if(fq(r,'descr','paciente','obs'))out.push({k:'Reembolso médico',t:fj(r.descr,r.paciente),fin:'reemb-med:'+r.id,go:'fin'});});
   recs('fac-ch').forEach(r=>{if(m(r.titulo)||m(r.descricao))out.push({k:'Chamado',t:r.titulo,rec:'fac-ch:'+r.id});});
   recs('fac-rec').forEach(r=>{if(m(r.titulo)||m(r.obs))out.push({k:'Vencimento',t:r.titulo,rec:'fac-rec:'+r.id});});
   recs('sau-ev').forEach(r=>{if(m(r.titulo)||m(profOf(r))||m(r.obs))out.push({k:'Saúde',t:r.titulo+' · '+refName('familia',r.pessoa),rec:'sau-ev:'+r.id});});
@@ -539,7 +544,7 @@ function renderResults(){
   box.innerHTML=hits.length?hits.map((x,i)=>'<button data-hit="'+i+'" class="'+(i===hi?'hi':'')+'"><span class="k">'+esc(x.k)+'</span><span class="t">'+esc(x.t)+'</span></button>').join(''):'<div class="none">Nada encontrado para “'+esc(q)+'”.</div>';
   box.hidden=false;
 }
-function openHit(i){const x=hits[i];if(!x)return;$('#q').value='';$('#results').hidden=true;if(x.via){S.viaSel=x.via;go('via');}else if(x.person){S.dpPerson=x.person;go('dp');}else if(x.rec){const[t,id]=x.rec.split(':');go(t.split('-')[0]);openRec(t,id);}else if(x.edit){openCad(...x.edit.split(':'));}else go(x.go);}
+function openHit(i){const x=hits[i];if(!x)return;$('#q').value='';$('#results').hidden=true;if(x.via){S.viaSel=x.via;go('via');}else if(x.person){S.dpPerson=x.person;go('dp');}else if(x.rec){const[t,id]=x.rec.split(':');go(t.split('-')[0]);openRec(t,id);}else if(x.edit){openCad(...x.edit.split(':'));}else if(x.task){go('sec');let n=0;const tryOpen=()=>{const f=frames.sec;const w=f&&f.contentWindow;if(w&&w.__openTask){try{w.__openTask(x.task);}catch(e){}return;}if(++n<50)setTimeout(tryOpen,100);};tryOpen();}else if(x.fin){go('fin');const[t,id]=x.fin.split(':');let n=0;const tryOpen=()=>{const f=frames.fin;const w=f&&f.contentWindow;if(w&&w.__openRec){try{w.__openRec(t,id);}catch(e){}return;}if(++n<50)setTimeout(tryOpen,100);};tryOpen();}else go(x.go);}
 
 /* ---------- gaveta: nova demanda ---------- */
 let dr=null;
