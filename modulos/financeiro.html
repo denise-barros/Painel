@@ -953,7 +953,7 @@ function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
       <td class="a-v">${hasV(r.valor)?fmtMoney(r.valor):""}</td><td class="sol-vc ${e.vencida?"bad":""}">${r.venc?esc(dm(r.venc)):""}</td><td class="c">${e.off?"":ok(r,"nf","Documento")}</td><td class="c">${e.off?"":ok(r,"comp","Comprovante")}</td>
       <td class="sol-rb">${rbH}</td><td${tip?` title="${esc(tip)}"`:""}>${solDots(e,r)}</td></tr>`};
   const tog=nConc&&!hasQ?`<tr class="sol-tog"><td colspan="11"><button type="button" class="sol-togb" data-soltog>${solAll?"Esconder concluídas":"Mostrar "+nConc+" concluída"+(nConc>1?"s":"")}</button></td></tr>`:"";
-  h+=`<div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb sol"><thead><tr><th>Data do pedido</th><th>Descrição</th><th>Solicitante</th><th>Pagador</th><th class="c">Aprovada</th><th class="r">Valor</th><th>Vencimento</th><th class="c">Documento</th><th class="c">Comprovante</th><th>Reembolso</th><th>Etapa</th></tr></thead>
+  h+=`<div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb sol"><thead><tr><th>Data</th><th>Descrição</th><th>Solicitante</th><th>Pagador</th><th class="c">Aprovada</th><th class="r">Valor</th><th>Vencimento</th><th class="c">Documento</th><th class="c">Comprovante</th><th>Reembolso</th><th>Etapa</th></tr></thead>
     <tbody>${vis.length?vis.map(tr).join(""):`<tr><td colspan="11" class="sol-none">Nenhuma solicitação pendente.</td></tr>`}${tog}</tbody><tfoot><tr><td colspan="5">Em aberto: ${ab.length}</td><td class="a-v">${fmtMoney(tot)}</td><td colspan="5"></td></tr></tfoot></table></div></div>`;
   return h+`</section>`}
 function listHTML(tb,ctx,multi){
