@@ -24,7 +24,7 @@ function dpEmpFin(){return (S.rec['dp-emp']||[]).map(r=>({id:'dp:'+r.id,_dp:true
 const empDono=r=>finDono(r.titular)||'leticia';
 /* periodicidade do cronograma: vazio = mensal; os demais contam a partir do mês de referência */
 const PER_N={Mensal:1,Bimestral:2,Trimestral:3,Semestral:6,Anual:12};
-function cronoDue(r,ym){const p=r.period||'Mensal';if(p==='Mensal'||!r.mesref)return true;if(p==='Única')return ym===r.mesref;const n=PER_N[p];if(!n)return true;
+function cronoDue(r,ym){if(r.encerra&&ym>r.encerra)return false;const p=r.period||'Mensal';if(p==='Mensal'||!r.mesref)return true;if(p==='Única')return ym===r.mesref;const n=PER_N[p];if(!n)return true;
   const d=(+ym.slice(0,4)-+r.mesref.slice(0,4))*12+(+ym.slice(5,7)-+r.mesref.slice(5,7));return ((d%n)+n)%n===0;}
 /* linha do cronograma que paga a fatura de cada cartão */
 const FAT_CRONO=[[/the\s*one/i,'Itaú The One'],[/latam/i,'Itaú LATAM'],[/personnalit/i,'Itaú Personnalité'],[/\bc6\b/i,'C6 Bank'],[/\baa\b|aadvantage|santander/i,'Santander Black']];
