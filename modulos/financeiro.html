@@ -219,7 +219,7 @@ button{cursor:pointer}
 .hist{list-style:none;margin:0;padding:0 0 0 12px;display:flex;flex-direction:column;gap:10px;font-size:10px;border-left:2px solid var(--line)}
 .hist li{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;position:relative}
 .hist li::before{content:"";position:absolute;left:-17px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--surface);border:2px solid var(--faint)}
-.hist li:first-child::before{background:var(--accent);border-color:var(--accent)}
+.hist li:last-child::before{background:var(--accent);border-color:var(--accent)}
 .hist time{font-size:9.5px;color:var(--faint)}
 .hist .who{color:var(--muted)}
 .dr-foot{display:flex;align-items:center;gap:8px;padding:12px 20px;border-top:1px solid var(--line)}
@@ -839,7 +839,7 @@ const LIST={
  solicitacoes:{cap:"descr",group:byStatus(["Pendente","Pago","Cancelado"],"Pendente"),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.descr,
   tags:r=>[r.solic||r.pagador?T([r.solic,r.pagador].filter(Boolean).join(" → "),"info"):null,r.venc?T("vence "+fmtDate(r.venc),r.venc<new Date().toISOString().slice(0,10)&&r.status!=="Pago"?"bad":""):null,r.reemb&&r.reemb!=="N/A"?T("reembolso "+r.reemb):null],
   value:r=>r.valor,badge:r=>r.status==="Aguardando transferência"?r.status:"",done:r=>r.status==="Pago",stamp:r=>r.pagoEm,doP:()=>({status:"Pago"}),undoP:()=>({status:"Pendente"})},
- assinaturas:{cap:"descr",group:r=>({k:"~"+(r.data||"").slice(0,7),l:r.data?fmtMonth(r.data.slice(0,7)):"Sem data",desc:true}),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.descr,
+ assinaturas:{cap:"descr",group:r=>({k:"~"+(r.data||"").slice(0,7),l:r.data?fmtMonth(r.data.slice(0,7)):"Sem data"}),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.descr,
   tags:r=>[T(r.gestor,"info"),T(r.rec),T(r.cc),r.cartao?T("cartão "+r.cartao):null,hasV(r.vme)&&r.moeda&&r.moeda!=="BRL"?T(`${r.moeda} ${fmtMoney(r.vme)}`):null],value:r=>r.brl,badge:r=>r.sit&&r.sit!=="Ativa"?r.sit:""},
  pontos:{cap:"prog",group:()=>({k:"1",l:"Programas"}),order:r=>r.prog||"",lead:()=>"",title:r=>r.prog,
   tags:r=>[T(r.login),r.cofre?T("senha: "+r.cofre,"info"):null,r.venc?T("vence "+fmtDate(r.venc),"warn"):null,r.atual?T("atualizado "+dm(r.atual)):null],value:r=>r.pts,num:true}
@@ -852,7 +852,7 @@ function filtersHTML(tb){
   const all=data[tb.id]||[],fl=state.filters[tb.id]||{};
   const diaF=tb.id==="cronograma"&&state.cronView==="cal"?(()=>{const hj=new Date().getDate();return `<label class="sr" for="f-dia">Vencimento (dia)</label><select class="sel" id="f-dia" data-f="${tb.id}|_dia"><option value="">Vence no dia: todos</option>${Array.from({length:31},(_,i)=>i+1).map(d=>`<option value="${d}" ${+fl._dia===d?"selected":""}>Dia ${d}${d===hj?" (hoje)":""}</option>`).join("")}</select>`})():"";
   const gestF=tb.id==="assinaturas"?(()=>{const gs=[...new Set(all.flatMap(r=>String(r.gestor||"").split(/\s*\/\s*/)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"));return `<label class="sr" for="f-gest">Gestor</label><select class="sel" id="f-gest" data-f="${tb.id}|_gestor"><option value="">Gestor: todos</option>${gs.map(o=>`<option ${fl._gestor===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`})():"";
-  const mesF=tb.id==="assinaturas"||tb.id==="solicitacoes"?(()=>{const ms=[...new Set(all.map(r=>tb.id==="solicitacoes"?solMes(r):(r.data||"").slice(0,7)).filter(Boolean).concat([today()]))].sort().reverse();const cur=asnMon(all,fl);return `<label class="sr" for="f-mes">Mês</label><select class="sel" id="f-mes" data-f="${tb.id}|_mes"><option value="" ${cur===""?"selected":""}>Todos os meses</option>${ms.map(m=>`<option value="${m}" ${cur===m?"selected":""}>${esc(fmtMonth(m))}</option>`).join("")}</select>`})():"";
+  const mesF=tb.id==="assinaturas"||tb.id==="solicitacoes"?(()=>{const ms=[...new Set(all.map(r=>tb.id==="solicitacoes"?solMes(r):(r.data||"").slice(0,7)).filter(Boolean).concat([today()]))].sort();const cur=asnMon(all,fl);return `<label class="sr" for="f-mes">Mês</label><select class="sel" id="f-mes" data-f="${tb.id}|_mes"><option value="" ${cur===""?"selected":""}>Todos os meses</option>${ms.map(m=>`<option value="${m}" ${cur===m?"selected":""}>${esc(fmtMonth(m))}</option>`).join("")}</select>`})():"";
   if(tb.id==="assinaturas")return mesF+gestF;
   return diaF+mesF+gestF+tb.cols.filter(c=>c.f&&c.t==="select").map(c=>{const vals=[...new Set(all.map(r=>c.month?getVal(r,c,ctxFor()):r[c.k]).filter(Boolean))];const opts=[...new Set([...c.opts,...vals])];
     return `<label class="sr" for="f-${tb.id}-${c.k}">${esc(c.l)}</label><select class="sel" id="f-${tb.id}-${c.k}" data-f="${tb.id}|${c.k}"><option value="">${esc(c.l)}: todos</option>${opts.map(o=>`<option ${fl[c.k]===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`}).join("");
@@ -948,7 +948,7 @@ async function solSync(r){try{const tid=SOL_RB[r.reemb];if(!tid||r.status!=="Pag
 /* uma seção por pessoa (Fernando e Leticia), como em Empréstimos */
 const ppV={};
 function ppSections(tb,h,C){const tid=tb.id,hasQ=!!(state.qs[state.tab.id]||"").trim(),filt=hasQ||Object.values(state.filters[tid]||{}).some(Boolean);
-  const srt=C.srt||(l=>l.slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||""))));
+  const srt=C.srt||(l=>l.slice().sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))));
   h+=`</section>`;
   (C.secs||[["fernando","Fernando"],["leticia","Leticia"]]).forEach(([p,pn])=>{
     if(gExec&&gExec!=="ambos"&&gExec!==(p==="cristiana"?"fernando":p))return;
@@ -1018,7 +1018,7 @@ function ctHTML(tb,rows,h){subscribe("reemb-corp");const G=data["reemb-corp"]||[
     return `<tr class="atr" data-open="${tb.id}|${c.id}" tabindex="0"><td><b>${esc(ctNum(c.numero))}</b></td><td class="a-t">${esc(c.nome||"")}</td><td>${esc(c.empresa||"")}</td><td>${hasV(c.valor)?fmtMoney(c.valor):""}</td>
       <td class="${dif?"ct-dif":""}" title="${l.length?l.length+" gasto"+(l.length>1?"s":"")+" vinculado"+(l.length>1?"s":"")+(dif?" · a soma é diferente do valor do contrato":""):"Nenhum gasto vinculado ainda"}">${l.length?fmtMoney(t)+` <span class="ct-n">(${l.length})</span>`:"–"}</td><td class="c"><button type="button" class="sol-apb ${solHas(c,"quit")?"on":""}" data-tk="reemb-contratos|${c.id}|quit" aria-pressed="${solHas(c,"quit")}" title="${solHas(c,"quit")?"Quitado · clique para desfazer":"Clique para marcar como quitado (a data da quitação é opcional)"}">${solHas(c,"quit")?"✓":""}</button></td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`};
   return ppSections(tb,h,{rows,own:c=>ownP(c.pessoa),isOpen:c=>!solHas(c,"quit"),val:c=>c.valor,tr,vi:3,concL:"Quitados",addL:"+ Novo contrato",cls:"ct",
-    srt:l=>l.slice().sort((a,b)=>ctNum(b.numero).localeCompare(ctNum(a.numero),"pt",{numeric:true})),
+    srt:l=>l.slice().sort((a,b)=>ctNum(a.numero).localeCompare(ctNum(b.numero),"pt",{numeric:true})),
     head:["Número do contrato","Contrato","Empresa","Valor","Gastos vinculados","Quitado","Data da quitação"],
     emptyAb:pn=>"Nenhum contrato em aberto de "+pn+".",emptyCo:pn=>"Nenhum contrato quitado de "+pn+"."})}
 /* contratos de empréstimo: lista própria (a numeração é separada da dos contratos de reembolso) */
@@ -1026,7 +1026,7 @@ function quitBtn(tid,c){const q=solHas(c,"quit");return `<button type="button" c
 function ectHTML(tb,rows,h){const mv=v=>hasV(v)?fmtMoney(v):"";
   const tr=c=>`<tr class="atr" data-open="${tb.id}|${c.id}" tabindex="0"><td><b>${esc(ctNum(c.numero))}</b></td><td class="a-t">${esc(c.nome||"")}</td><td>${esc(c.empresa||"")}</td><td>${mv(c.valor)}</td><td>${hasV(c.parc)?fmtNum(c.parc):""}</td><td>${mv(c.vparc)}</td><td class="c">${quitBtn(tb.id,c)}</td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`;
   return ppSections(tb,h,{rows,own:c=>ownP(c.pessoa),isOpen:c=>!solHas(c,"quit"),val:c=>c.valor,tr,vi:3,concL:"Quitados",addL:"+ Novo contrato",cls:"ct",
-    srt:l=>l.slice().sort((a,b)=>ctNum(b.numero).localeCompare(ctNum(a.numero),"pt",{numeric:true})),
+    srt:l=>l.slice().sort((a,b)=>ctNum(a.numero).localeCompare(ctNum(b.numero),"pt",{numeric:true})),
     head:["Número do contrato","Contrato","Empresa","Valor do empréstimo","Parcelas","Valor da parcela","Quitado","Data da quitação"],
     emptyAb:pn=>"Nenhum contrato de empréstimo em aberto de "+pn+".",emptyCo:pn=>"Nenhum contrato de empréstimo quitado de "+pn+"."})}
 function listHTML(tb,ctx,multi){
@@ -1044,13 +1044,13 @@ function listHTML(tb,ctx,multi){
   if(!rows.length)return h+`<div class="empty-big">Nada corresponde à busca ou aos filtros.</div></section>`;
   if(tb.id==="pontos"){const rs=rows.slice().sort((x,y)=>String(x.prog||"").localeCompare(String(y.prog||""),"pt")),hj=new Date().toISOString().slice(0,10),lim=new Date(Date.now()+30*864e5).toISOString().slice(0,10);
     h+=`<p class="sumline"><span>Programas <b>${rs.length}</b></span><span>Com saldo <b>${rs.filter(r=>+r.pts>0).length}</b></span></p><div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb pt"><thead><tr><th>Programa</th><th>Titular</th><th>Login</th><th class="r">Pontuação</th><th>Vencimento</th><th>Atualizado</th><th>Parcerias</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-t"><b>${esc(r.prog||"Sem nome")}</b>${r.codigo?`<span class="a-o">${esc(r.codigo)}</span>`:""}${r.obs?`<span class="a-o" title="${esc(r.obs)}">${esc(r.obs)}</span>`:""}</td><td>${esc(r.titular||"")}</td><td>${esc(r.login||"")}</td><td class="a-v">${hasV(r.pts)?fmtNum(r.pts):""}</td><td>${r.venc?`<span class="pill ${r.venc<hj?"bad":r.venc<=lim?"warn":""}">${esc(fmtDate(r.venc))}</span>`:""}</td><td class="mutc">${r.atual?esc(fmtDate(r.atual)):""}</td><td class="a-p">${esc(r.parc||"")}</td></tr>`).join("")}</tbody></table></div></div></section>`;return h}
-  if(tb.id==="assinaturas"){const rs=rows.slice().sort((x,y)=>String(y.data||"").localeCompare(String(x.data||""))||String(x.descr||"").localeCompare(String(y.descr||""),"pt")),tot=rs.filter(r=>r.sit!=="Cancelada").reduce((n,r)=>n+(+r.brl||0),0);
+  if(tb.id==="assinaturas"){const rs=rows.slice().sort((x,y)=>String(x.data||"").localeCompare(String(y.data||""))||String(x.descr||"").localeCompare(String(y.descr||""),"pt")),tot=rs.filter(r=>r.sit!=="Cancelada").reduce((n,r)=>n+(+r.brl||0),0);
     h+=`<p class="sumline"><span>Cobranças <b>${rs.length}</b></span><span>Total <b>${fmtMoney(tot)}</b></span></p><div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb"><thead><tr><th>Data</th><th>Serviço</th><th>Gestor</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${esc(dm(r.data)||"—")}</td><td class="a-t"><b>${esc(r.descr||"Sem descrição")}</b>${r.sit&&r.sit!=="Ativa"?` <span class="pill ${badgeTone(r.sit)}">${esc(r.sit)}</span>`:""}</td><td>${esc(r.gestor||"")}</td><td>${r.rec?`<span class="tag ${r.rec==="Mensal"?"info":""}">${esc(r.rec)}</span>`:""}</td><td class="a-v">${hasV(r.brl)?fmtMoney(r.brl):""}</td></tr>`).join("")}</tbody></table></div></div></section>`;return h}
   if(tb.id==="parcelas"){/* Cartão de crédito: uma tabela por mês. Mês atual: parcelas ao vivo (planilha sincronizada). Meses anteriores: foto salva em abas/faturas. */
     subscribe("faturas");const atual=ccMes(),rs=rows,CARTOES=["Itaú The One","Itaú LATAM","Itaú Personnalité","Santander Black","C6 Bank"];
     const R="text-align:right;white-space:nowrap",okT=t=>!gExec||gExec==="ambos"||(gExec==="fernando"?/fernando|shayer/i:/let[ií]cia/i).test(t||"");
     const FAT=(data.faturas||[]).filter(f=>f.mes&&okT(f.titular));
-    const meses=[...new Set(Object.keys(CC_MESES).concat(FAT.map(f=>f.mes)))].sort().reverse();
+    const meses=[...new Set(Object.keys(CC_MESES).concat(FAT.map(f=>f.mes)))].sort();
     const nomeMes=m=>CC_MESES[m]?CC_MESES[m].nome:fmtMonth(m),curto=m=>nomeMes(m).split(" ")[0];
     const aPagar=l=>l.reduce((n,r)=>n+(+r.vparc||0),0),falta=l=>l.reduce((n,r)=>n+(+r.vparc||0)*Math.max(0,(+r.total||0)-(+r.atual||0)),0),enc=l=>l.filter(r=>r.total&&(+r.atual||0)>=+r.total).length;
     const ordem=c=>{const k=CARTOES.indexOf(c);return k<0?99:k};
@@ -1201,7 +1201,7 @@ function openFicha(tid,id,focusFirst){
       ${(()=>{const kt=r?kTask(tid,r,ctx):null;return `<div class="kbox"><label class="kchk"><input type="checkbox" id="fi-kanban" ${kt?"checked":""}> É uma demanda minha: mostrar na Operação</label>${kt?`<span class="tag info">D-${pad4(kt.num)} · ${esc(kt.status==="concluido"?"Concluída":kt.status==="andamento"?"Em andamento":kt.status==="aguardando"?"Aguardando":"Nova demanda")}</span><button type="button" class="btn sm" data-kopen="${kt.id}">Abrir na Operação</button>`:`<span class="hint-k">Marque para criar um cartão${tid==="cronograma"?" deste mês":""} na Operação.</span>`}</div>`})()}
       <div id="fi-att"></div>
       ${r&&calc.length?`<div><p class="sec-h">Calculado</p><div class="calcs">${calc.map(c=>{const v=c.calc(r,ctx);const t=c.ct||"text";return `<div>${esc(c.l)}<b>${t==="money"?fmtMoney(v):esc(v||"—")}</b></div>`}).join("")}</div></div>`:""}
-      ${hs.length?`<div><p class="sec-h">Histórico de status${tid==="cronograma"?" · "+fmtMonth(ctx.month):""}</p><ul class="hist" style="margin-top:10px">${hs.slice().reverse().map(x=>`<li><time>${fmtStampBR(x.at)}</time><span><span class="pill ${TONE[x.s]||""}">${esc(x.s)}</span> ${x.by?`<span class="who" data-uid="${esc(x.by)}"></span>`:""}</span></li>`).join("")}</ul></div>`:""}
+      ${hs.length?`<div><p class="sec-h">Histórico de status${tid==="cronograma"?" · "+fmtMonth(ctx.month):""}</p><ul class="hist" style="margin-top:10px">${hs.slice().map(x=>`<li><time>${fmtStampBR(x.at)}</time><span><span class="pill ${TONE[x.s]||""}">${esc(x.s)}</span> ${x.by?`<span class="who" data-uid="${esc(x.by)}"></span>`:""}</span></li>`).join("")}</ul></div>`:""}
       <button type="submit" hidden></button></form>
     <div class="dr-foot">${r?`<button class="btn danger" id="fdel" data-fdel>Excluir</button>`:""}<span class="grow"></span><button class="btn" data-fclose>Cancelar</button><button class="btn primary" data-fsave="${tid}|${id||""}">Salvar</button></div></aside>`;
   d.hidden=false;
@@ -1390,7 +1390,7 @@ function finDemBlock(){
   const row=t=>{const dn=t.status==="concluido";const late=!dn&&t.due&&t.due<td;const tod=!dn&&t.due===td;
     const st=t.status||"nova";const stSel=`<select class="fdem-st st-${esc(st)}" data-fdem-st="${esc(t.id)}" aria-label="Etapa da demanda">${[["nova","A fazer"],["andamento","Em andamento"],["aguardando","Aguardando"],["concluido","Concluído"]].map(([k,l])=>`<option value="${k}"${st===k?" selected":""}>${l}</option>`).join("")}</select>`;
     return `<div class="fdem-row${dn?" done":""}"><span class="fdem-sev ${dn?"ok":late?"bad":""}"></span><button class="fdem-main fdem-open" data-kopen="${esc(t.id)}"><b>${esc(t.title||"(sem título)")}</b><span class="fdem-tags">${t.executive&&FEX[t.executive]?`<span class="tag exec">${FEX[t.executive]}</span>`:""}<span class="tag area">${esc(cname(t.categoryId))}</span></span></button>${dn?`<span class="fdem-due ok">Concluída ${fmtDate(doneAt(t)).toLowerCase()}</span>`:`<span class="fdem-due${late||tod?" bad":""}${t.due?"":" none"}">${t.due?(late?"Venceu "+fmtDate(t.due).toLowerCase():fmtDate(t.due)):"Sem prazo"}</span>`}${stSel}</div>`};
-  const months=()=>{const cur=td.slice(0,7);const g=new Map();done.slice().sort((a,b)=>doneAt(b).localeCompare(doneAt(a))).forEach(t=>{const k=doneAt(t).slice(0,7)||"—";if(!g.has(k))g.set(k,[]);g.get(k).push(t)});
+  const months=()=>{const cur=td.slice(0,7);const g=new Map();done.slice().sort((a,b)=>doneAt(a).localeCompare(doneAt(b))).forEach(t=>{const k=doneAt(t).slice(0,7)||"—";if(!g.has(k))g.set(k,[]);g.get(k).push(t)});
     let h="";for(const [ym,l] of g){const op=ym in finDemMon?finDemMon[ym]:ym===cur;const lbl=ym==="—"?"Sem data":FMES[+ym.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+" de "+ym.slice(0,4)+(ym===cur?" · mês atual":"");
       h+=`<div class="fdem-mon"><button class="fdem-mon-h" data-fdem-mon="${ym}" aria-expanded="${op}"><span class="car">${op?"▾":"▸"}</span>${esc(lbl)}<span class="cnt">${l.length}</span></button>${op?`<div class="fdem-list">${l.map(row).join("")}</div>`:""}</div>`}return h};
   const empty=(b,txt)=>`<div class="fdem-empty"><b>${b}${finDemSub?" nesta subcategoria":""}</b>${txt}</div>`;
@@ -1686,7 +1686,7 @@ function encontroHTML(tb){
     const all=items.filter(r=>encF(r)===f),rec=all.filter(encRec);
     const emd=all.filter(r=>!encRec(r)&&!encQuit(r,P)&&encEmDia(r,P));
     const rows=all.filter(r=>!encRec(r)&&!encQuit(r,P)&&!encEmDia(r,P)).sort((a,b)=>(a.ordem||0)-(b.ordem||0)||String(a.item||"").localeCompare(String(b.item||""),"pt"));
-    const devs=(data["rep-dev"]||[]).filter(execOk).filter(d=>(d.quem!=="Leticia")===f).concat(all.filter(r=>encDone(r)&&encDevItem(r,encPaidMap())>=encTotal(r)-EPS&&!(data["rep-dev"]||[]).some(d=>(d.cob||[]).some(c=>c.id===r.id))).map(r=>({id:"man-"+r.id,man:r,data:r.devolvidoEm||"",obs:"Marcado como devolvido, sem registro do pagamento",valor:encTotal(r)}))).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+    const devs=(data["rep-dev"]||[]).filter(execOk).filter(d=>(d.quem!=="Leticia")===f).concat(all.filter(r=>encDone(r)&&encDevItem(r,encPaidMap())>=encTotal(r)-EPS&&!(data["rep-dev"]||[]).some(d=>(d.cob||[]).some(c=>c.id===r.id))).map(r=>({id:"man-"+r.id,man:r,data:r.devolvidoEm||"",obs:"Marcado como devolvido, sem registro do pagamento",valor:encTotal(r)}))).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")));
     const sel=SEL&&SEL.p===p,v=sel?"deve":encV(p);const recT=rec.reduce((a,r)=>a+encTotal(r)-encDevItem(r,P),0);
     h+=`<section class="tbl enc-side"><div class="enc-side-h"><h3>${nome}</h3><div class="seg" role="tablist" aria-label="${nome}">${[["deve","Deve",rows.length],["emdia",ICO_OK+" Em dia",emd.length],["dev","Devolveu",devs.length],["rec","Recusado",rec.length]].map(([k,l,n])=>`<button role="tab" data-encv="${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}" ${k==="emdia"?'title="Nada vencido em aberto até o último mês fechado"':""}>${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${S.ab>0?"neg":""}">${fmtMoney(S.ab)}</b></span><span class="grow"></span>${sel?"":`<button class="btn sm primary" data-encsel="${p}">Registrar devolução</button>`}</div>`;
     if(sel){const s=encSelSum();
