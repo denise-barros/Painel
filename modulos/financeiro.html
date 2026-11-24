@@ -592,7 +592,7 @@ const TABS=[
     SE("formapg","Forma de pagamento",["C6","Itaú The One","Itaú LATAM","Itaú Personnalité","Santander","Pix"]),TX("comp","Comprovante",{w:140}),TX("contrato","Contrato (número)",{w:90}),
     SE("status","Status",["A solicitar","Solicitado","Pago","Negado"]),DT("datareemb","Data do reembolso"),LG("coment","Comentários",{w:160})],
     kpis:rows=>{const t={};rows.forEach(r=>{const k=r.status||"A solicitar";t[k]=(t[k]||0)+(+r.brl||0)});return[["A solicitar","A solicitar"],["Solicitado","Solicitado"],["Pago","Reembolsado"]].filter(([k])=>t[k]).map(([k,l])=>({l,v:fmtMoney(t[k]),c:k==="Pago"?"pos":""}))}},TB_CONTRATOS]},
- {id:"reemb-med",g:"Controles",l:"Reembolsos médicos",desc:"Reembolsos da SulAmérica. Os planos são da Leticia e do Fernando; a Cristiana é dependente do plano do Fernando. Indique quem solicita cada reembolso: o valor é pago na conta dessa pessoa.",
+ {id:"reemb-med",g:"Controles",l:"Reembolsos médicos",desc:"Reembolsos da SulAmérica. Os planos são da Leticia e do Fernando; a Cristiana é dependente do plano do Fernando e tem a própria tabela. Cada reembolso fica na tabela de quem o solicitou, porque o valor é pago na conta dessa pessoa.",
   src:[["SulAmérica | Leticia",DRIVE+"1E3WQB8UAmYMNzRtC8tS4xGvPYhzUlgbExG8w9pgDZHQ/edit"],["SulAmérica | Fernando",DRIVE+"1J5vDaIDg5IWxNS31I2BBZHLO-axLbJ1sYjZZalF2T9M/edit"],["SulAmérica | Kiki",DRIVE+"1mgAt0QfoMBX2A6RZ2j75SKusJ6tLBW1zBMCfY--Tn0o/edit"]],
   tables:[{id:"reemb-med",title:"Solicitações SulAmérica",sort:"data",cols:[
     SE("titular","Titular do plano",["Leticia","Fernando"],{f:false}),TX("paciente","Paciente",{f:true}),SE("solicitante","Solicitado por",["Leticia","Fernando","Cristiana"]),SE("cat","Categoria",["Consultas","Exames","Procedimentos médicos","Terapias"]),
@@ -944,8 +944,8 @@ const ppV={};
 function ppSections(tb,h,C){const tid=tb.id,hasQ=!!(state.qs[state.tab.id]||"").trim(),filt=hasQ||Object.values(state.filters[tid]||{}).some(Boolean);
   const srt=C.srt||(l=>l.slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||""))));
   h+=`</section>`;
-  [["fernando","Fernando"],["leticia","Leticia"]].forEach(([p,pn])=>{
-    if(gExec&&gExec!=="ambos"&&gExec!==p)return;
+  (C.secs||[["fernando","Fernando"],["leticia","Leticia"]]).forEach(([p,pn])=>{
+    if(gExec&&gExec!=="ambos"&&gExec!==(p==="cristiana"?"fernando":p))return;
     const mine=C.rows.filter(r=>C.own(r)===p),ab=srt(mine.filter(C.isOpen)),co=srt(mine.filter(r=>!C.isOpen(r)));
     const v=ppV[tid+p]==="co"?"co":"ab",cur=hasQ?srt(mine):v==="co"?co:ab,tot=ab.reduce((n,r)=>n+(+C.val(r)||0),0),nc=C.head.length;
     h+=`<section class="tbl enc-side emp-side"><div class="enc-side-h"><h3>${pn}</h3><div class="seg" role="tablist" aria-label="${pn}">${[["ab","Em aberto",ab.length],["co",ICO_OK+" "+C.concL,co.length]].map(([k,l,n])=>`<button role="tab" data-ppv="${tid}|${p}|${k}" aria-selected="${k===v}" class="${k===v?"on":""}">${l} <span class="n">${n}</span></button>`).join("")}</div><span class="enc-n">Em aberto <b class="${tot>0?"neg":""}">${fmtMoney(tot)}</b></span>${C.brk?C.brk(p,v,ab,co):""}<span class="grow"></span><button class="btn sm primary" data-ppadd="${tid}|${p}">${C.addL}</button></div>`;
@@ -969,9 +969,10 @@ function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
     emptyAb:pn=>"Nenhuma solicitação em aberto de "+pn+".",emptyCo:pn=>"Nenhuma solicitação concluída de "+pn+"."})}
 /* reembolsos médicos: o plano é da Leticia ou do Fernando (a Cristiana é dependente dele); quem solicita recebe o valor na conta dela/dele */
 const isCris=v=>/cristiana|kiki/i.test(v||"");
-const ownMed=r=>/fernando|shayer/i.test(r.titular||"")||isCris(r.titular)||isCris(r.paciente)&&!/let[ií]cia/i.test(r.titular||"")?"fernando":"leticia";
+const planMed=r=>/fernando|shayer/i.test(r.titular||"")||isCris(r.titular)||isCris(r.paciente)&&!/let[ií]cia/i.test(r.titular||"")?"fernando":"leticia";
 const medSol=r=>r.solicitante||(isCris(r.paciente)||isCris(r.titular)?"Cristiana":/fernando|shayer/i.test(r.titular||"")?"Fernando":/let[ií]cia/i.test(r.titular||"")?"Leticia":"");
-const medSolOpts=p=>p==="fernando"?["Fernando","Cristiana"]:["Leticia","Fernando"];
+/* cada reembolso fica na tabela de quem o solicitou (é na conta dessa pessoa que o valor cai) */
+const ownMed=r=>{const so=medSol(r);return so==="Cristiana"?"cristiana":so==="Fernando"?"fernando":so==="Leticia"?"leticia":planMed(r)};
 /* reembolsos (corporativos e médicos): tabela no padrão do Painel */
 const RB_CFG={
  "reemb-corp":{S:["A solicitar","Solicitado","Pago"],nm:["Lançado","Solicitado","Reembolsado"],dt:"datareemb",val:"brl"},
@@ -984,23 +985,17 @@ function rbBar(tid,r){const C=RB_CFG[tid],n=rbN(tid,r),off=n<0;let h="";
     h+=`<${tag} ${ck?`type="button" data-rbst="${tid}|${r.id}|${i}" title="${esc(tip)}" `:""}class="sol-dot ${on?"on":cur?"cur":""}${i?" ln":""}${ln?" lnon":""}${ck?" pgb":""}"><span>${on?"✓":""}</span>${esc(lab).replace("&lt;br&gt;","<br>")}</${tag}>`}
   return `<div class="sol-st rb3${off?" off":""}">${h}</div>`}
 function tkBtn(tid,r,k,t){const b=solHas(r,k);return `<button type="button" class="sol-apb ${b?"on":""}" data-tk="${tid}|${r.id}|${k}" aria-pressed="${b}" title="${b?esc(t)+" recebido · clique para desmarcar":"Clique para marcar "+esc(t.toLowerCase())+" como recebido"}">${b?"✓":""}</button>`}
-function solBy(r){const own=ownMed(r),o=medSolOpts(own),cur=medSol(r);if(!o.includes(cur)&&cur)o.push(cur);
-  return `<label class="sr" for="sb-${r.id}">Solicitado por</label><select id="sb-${r.id}" class="ct-sel on" data-fset="reemb-med|${r.id}|solicitante" title="Quem solicitou o reembolso à SulAmérica. O valor é pago na conta dessa pessoa.">${o.map(n=>`<option ${n===cur?"selected":""}>${esc(n)}</option>`).join("")}</select>`}
-function medBrk(p,v,ab,co){if(p!=="fernando")return"";const by={},src=v==="co"?co.filter(r=>r.status==="Pago"):ab,f=r=>v==="co"?+r.vreemb||0:+r.valor||0;
-  src.forEach(r=>{const k=medSol(r)||"Sem solicitante";by[k]=(by[k]||0)+f(r)});
-  const it=Object.entries(by).filter(([,x])=>x>0);if(!it.length)return"";
-  return `<span class="enc-n">${v==="co"?"Reembolsado":"A receber"} · ${it.map(([k,x])=>`${esc(k)} <b>${fmtMoney(x)}</b>`).join(" · ")}</span>`}
 function rbHTML(tb,rows,h){const tid=tb.id,med=tid==="reemb-med";if(!med)subscribe("reemb-contratos");
   const aberto=r=>{const n=rbN(tid,r);return n>0&&n<3},mv=v=>hasV(v)?fmtMoney(v):"";
-  const head=med?["Data","Paciente","Solicitado por","Especialidade","Categoria","Valor pago","Reembolsado","% reembolsado","Nota fiscal","Comprovante","Etapa"]
+  const head=med?["Data","Paciente","Especialidade","Categoria","Valor pago","Reembolsado","% reembolsado","Nota fiscal","Comprovante","Etapa"]
     :["Data","Descrição","Categoria","Referência","Valor em R$","Forma de pagamento","Contrato","Comprovante","Etapa"];
   const tr=r=>{const off=rbN(tid,r)<0;
-    const cells=med?[esc(dm(r.data)||""),`<b>${esc(r.paciente||"")}</b>`,solBy(r),esc(r.descr||""),esc(r.cat||""),mv(r.valor),mv(r.vreemb),
+    const cells=med?[esc(dm(r.data)||""),`<b>${esc(r.paciente||"")}</b>`,esc(r.descr||""),esc(r.cat||""),mv(r.valor),mv(r.vreemb),
         hasV(r.vreemb)&&+r.valor?Math.round(r.vreemb/r.valor*100)+"%":"",off?"":tkBtn(tid,r,"nf","Nota fiscal"),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)]
       :[esc(dm(r.data)||""),`<b>${esc(r.descr||r.cat||"Sem descrição")}</b>`,esc(r.cat||""),esc(r.ref||""),mv(r.brl),esc(r.formapg||""),ctSel(r),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)];
     const tip=med&&(r.protocolo||r.sr)?[r.protocolo?"Protocolo "+r.protocolo:"",r.sr?"SR "+r.sr:""].filter(Boolean).join(" · "):"";
     return `<tr class="atr ${off?"off":""}" data-open="${tid}|${r.id}" tabindex="0">${cells.map((c,i)=>`<td${i===1?' class="a-t"':""}${i===cells.length-1&&tip?` title="${esc(tip)}"`:""}>${c}</td>`).join("")}</tr>`};
-  return ppSections(tb,h,{rows,own:r=>med?ownMed(r):ownP(r.pessoa),isOpen:aberto,val:r=>r[RB_CFG[tid].val],tr,vi:med?5:4,brk:med?medBrk:null,concL:"Concluídos",addL:"+ Novo reembolso",head,cls:"rb",
+  return ppSections(tb,h,{rows,own:r=>med?ownMed(r):ownP(r.pessoa),isOpen:aberto,val:r=>r[RB_CFG[tid].val],tr,vi:4,secs:med?[["fernando","Fernando"],["cristiana","Cristiana"],["leticia","Leticia"]]:null,concL:"Concluídos",addL:"+ Novo reembolso",head,cls:"rb",
     emptyAb:pn=>"Nenhum reembolso em aberto de "+pn+".",emptyCo:pn=>"Nenhum reembolso concluído de "+pn+"."})}
 /* contratos de reembolso corporativo: vínculo dos gastos ao número do contrato */
 const ctNum=v=>String(v||"").replace(/^\s*contrato\s*/i,"").trim();
@@ -1865,7 +1860,9 @@ document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-ppv],[data-ppadd],[data-tk],[data-rbst],[data-rbtog],[data-soltk],[data-solpg],[data-soltog],[data-solap],[data-attfile],[data-attlink],[data-attlinkno],[data-attlinkgo],[data-attdel],[data-attdelno],[data-attdelyes],[data-kopen],[data-check],[data-view],[data-subtab],[data-emptipo],[data-cgroup],[data-open],[data-fclose],[data-fsave],[data-fdel],[data-tab],[data-add],[data-new],[data-del],[data-delyes],[data-delno],[data-csv],[data-pend],[data-fclear],[data-paste],[data-pastego],[data-pastecancel],[data-addcat],[data-advance],[data-advyes],[data-advno],[data-navopen],[data-navclose]");
   if(!b)return;const d=b.dataset;
   if(d.ppv){const[t,p,k]=d.ppv.split("|");ppV[t+p]=k;render();return}
-  if(d.ppadd){const[t,p]=d.ppadd.split("|");openFicha(t,null);const F=PP_FIELD[t];if(F){const el=document.getElementById("fi-"+F[0]);if(el)el.value=p==="fernando"?F[1]:"Leticia"}return}
+  if(d.ppadd){const[t,p]=d.ppadd.split("|");openFicha(t,null);const set=(k,v)=>{const el=document.getElementById("fi-"+k);if(el)el.value=v};
+    if(t==="reemb-med"){set("titular",p==="leticia"?"Leticia":"Fernando");set("solicitante",p==="cristiana"?"Cristiana":p==="fernando"?"Fernando":"Leticia")}
+    else{const F=PP_FIELD[t];if(F)set(F[0],p==="fernando"?F[1]:"Leticia")}return}
   if(d.tk){e.stopPropagation();const[t,id,k]=d.tk.split("|");const r=(data[t]||[]).find(x=>x.id===id);if(!r)return;updRow(t,id,{[k+"Ok"]:!solHas(r,k)}).catch(()=>toast("Não foi possível salvar."));return}
   if(d.rbst){e.stopPropagation();const[t,id,si]=d.rbst.split("|");const i=+si,C=RB_CFG[t],r=(data[t]||[]).find(x=>x.id===id);if(!r||!C)return;
     const ns=rbN(t,r)>i?C.S[i-1]:C.S[i];const patch={status:ns};if(ns==="Pago"&&!r[C.dt])patch[C.dt]=new Date().toISOString().slice(0,10);
