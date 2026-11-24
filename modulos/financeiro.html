@@ -417,7 +417,6 @@ table th,table td{text-align:center!important}
     <div class="brand"><div class="brand-mark">GF</div><div><h1>Gestão Financeira</h1><small>Painel de controle</small></div></div>
     <button class="btn-new" id="btnNew" data-new>+ Novo lançamento</button>
     <nav class="side-scroll" id="sideNav"></nav>
-    <div class="side-foot"><span class="sync-dot" id="syncDot"></span><span id="syncText">Conectando…</span></div>
   </aside>
   <main class="main">
     <header class="top" id="fin-top"></header>
@@ -674,7 +673,7 @@ const groupOf=id=>GROUPS.find(g=>g.tabs.includes(id));
 let db=null, downloads=null, userNs=null, myId=null, pending=0;
 const data={}, subs={};
 const cfg={parcelasRef:today()};
-function setSync(){const dot=$("#syncDot"),tx=$("#syncText");dot.className="sync-dot";
+function setSync(){const dot=$("#syncDot"),tx=$("#syncText");if(!dot||!tx)return;dot.className="sync-dot";
   if(!db){dot.classList.add("local");tx.textContent="Alterações não são salvas nesta visualização"}
   else if(pending>0){dot.classList.add("busy");tx.textContent="Salvando…"}
   else{dot.classList.add("ok");tx.textContent="Tudo salvo na nuvem"}}
