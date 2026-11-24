@@ -271,7 +271,10 @@ button{cursor:pointer}
 .sol-apb{width:18px;height:18px;border-radius:5px;border:0;background:none;color:var(--faint);font:inherit;font-weight:700;font-size:12px;cursor:pointer;display:inline-grid;place-items:center;padding:0;vertical-align:middle}.sol-apb.on{color:var(--accent)}.sol-apb:hover{background:var(--sunk)}.sol-apb:not(.on)::after{content:"–"}.sol-dot.pgb{-webkit-appearance:none;appearance:none;margin:0;border:0;background:none;padding:0;justify-content:flex-start;font:inherit;font-size:9.5px;line-height:1.25;cursor:pointer}.sol-dot.pgb:hover span{border-color:var(--accent);transform:scale(1.08)}
 .sol-ok{color:var(--accent);font-weight:700;font-size:12px}.sol-al{display:block;margin-top:3px;font-size:9.5px;font-weight:600;color:var(--muted)}.sol-al.warn{color:var(--warn)}.sol-al.bad{color:var(--neg)}
 .sol-rbl{cursor:pointer}.sol-rbl:hover{text-decoration:underline;text-underline-offset:2px}.sol-tog td{text-align:center!important;background:var(--surface)}.sol-togb{border:0;background:none;color:var(--accent);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;padding:4px 8px}.sol-none{text-align:center!important;color:var(--muted);padding:18px!important}
-.atb.rb .rb-pr{font-size:9.5px;color:var(--muted)}.sol-st.rb3{grid-template-columns:repeat(3,58px)}.sol-st.rb3 .sol-dot.ln::before{width:36px}
+.grid.atb.sol.rb td{white-space:normal}.grid.atb.sol.rb td:first-child{white-space:nowrap}.atb.rb .rb-pr{font-size:9.5px;color:var(--muted)}.sol-st.rb3{grid-template-columns:repeat(3,58px)}.sol-st.rb3 .sol-dot.ln::before{width:36px}
+.ct-sel{font:inherit;font-size:10.5px;border:1px solid transparent;background:transparent;color:var(--faint);border-radius:6px;padding:2px 4px;cursor:pointer;max-width:90px}.ct-sel.on{color:var(--ink);font-weight:600}.ct-sel:hover{border-color:var(--line-strong);background:var(--surface)}
+.grid.atb.sol select.ct-sel{-webkit-appearance:none;appearance:none;background-image:none;width:auto;min-width:40px;max-width:70px;height:auto;padding:2px 6px;text-align:center;text-align-last:center;box-shadow:none}
+.ct-dif{color:var(--warn);font-weight:600}.ct-n{color:var(--muted);font-weight:400;font-size:9.5px}
 .sol-s{display:block;font-size:9.5px;font-weight:600;color:var(--muted)}.sol-s.ok{color:var(--pos)}.sol-s.warn{color:var(--warn)}.sol-s.bad{color:var(--neg)}.sol-s.info{color:var(--info)}
 .sol-rb b{font-weight:600;display:block}.sol-lk{display:inline-block;margin-top:2px;font-size:9.5px;font-weight:600;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .sol-st{display:grid;grid-template-columns:repeat(4,45px);align-items:start}
@@ -577,14 +580,17 @@ const TABS=[
       const cl=e?"neg":"pos";return e?[{l:"A pagar · pessoal",v:fmtMoney(p),c:cl},{l:"A pagar · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]:[{l:"A receber · pessoal",v:fmtMoney(p),c:cl},{l:"A receber · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]}}]},
  {id:"reemb-corp",g:"Controles",l:"Reembolsos corporativos",desc:"Despesas de viagem e trabalho de Leticia e Fernando a reembolsar. Apurações com Daniel todo dia 03.",
   src:[["Reembolsos | Leticia",DRIVE+"1wLIT4EwtX28UUVc8nGwKhuYTJIM5rGsHH8tHLcMqYHk/edit"],["Reembolsos | Shayer",DRIVE+"1S7y0fKPuMFt6bi7G1N-Pw-q6q9pJcbuqrpbJc6oPdCc/edit"],["Base para reembolsos",DRIVE+"1t58x-alGZcLDutbojaWQgkhWSOAbkBWxlxGWvcbeqUs/edit"]],
-  tables:[{id:"reemb-corp",title:"Lançamentos",sort:"data",cols:[
+  subtabs:[{k:"gastos",l:"Gastos",tables:["reemb-corp"]},{k:"contratos",l:"Contratos",tables:["reemb-contratos"]}],
+  tables:[{id:"reemb-corp",title:"Gastos",sort:"data",cols:[
     SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("ref","Referência e mês",{w:160,f:true,t:"text"}),
     SE("cat","Categoria",["Hotel","Aéreo","Aluguel de veículos","Alimentação","Rodoviário","Material de trabalho","Estacionamento","Pedágio","Postagens","Táxi","Assinatura de software"]),
     TX("descr","Descrição",{w:170}),DT("data","Data de emissão"),SE("moeda","Moeda",["BRL","USD","EUR","GBP"],{f:false}),
     M("vme","Valor em moeda estrangeira",{sum:false}),{k:"cot",l:"Cotação",t:"num",w:80},M("brl","Valor em BRL"),
-    SE("formapg","Forma de pagamento",["C6","Itaú The One","Itaú LATAM","Itaú Personnalité","Santander","Pix"]),TX("comp","Comprovante",{w:140}),
+    SE("formapg","Forma de pagamento",["C6","Itaú The One","Itaú LATAM","Itaú Personnalité","Santander","Pix"]),TX("comp","Comprovante",{w:140}),TX("contrato","Contrato (número)",{w:90}),
     SE("status","Status",["A solicitar","Solicitado","Pago","Negado"]),DT("datareemb","Data do reembolso"),LG("coment","Comentários",{w:160})],
-    kpis:rows=>{const t={};rows.forEach(r=>{const k=r.status||"A solicitar";t[k]=(t[k]||0)+(+r.brl||0)});return[["A solicitar","A solicitar"],["Solicitado","Solicitado"],["Pago","Reembolsado"]].filter(([k])=>t[k]).map(([k,l])=>({l,v:fmtMoney(t[k]),c:k==="Pago"?"pos":""}))}}]},
+    kpis:rows=>{const t={};rows.forEach(r=>{const k=r.status||"A solicitar";t[k]=(t[k]||0)+(+r.brl||0)});return[["A solicitar","A solicitar"],["Solicitado","Solicitado"],["Pago","Reembolsado"]].filter(([k])=>t[k]).map(([k,l])=>({l,v:fmtMoney(t[k]),c:k==="Pago"?"pos":""}))}},
+   {id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
+    kpis:rows=>{let n=0,v=0;rows.forEach(r=>{if(!r.quit){n++;v+=+r.valor||0}});return n?[{l:"Contratos em aberto",v:n+" · "+fmtMoney(v)}]:[]}}]},
  {id:"reemb-med",g:"Controles",l:"Reembolsos médicos",desc:"Solicitações e acompanhamento de reembolsos da SulAmérica de Leticia, Fernando e Cristiana.",
   src:[["SulAmérica | Leticia",DRIVE+"1E3WQB8UAmYMNzRtC8tS4xGvPYhzUlgbExG8w9pgDZHQ/edit"],["SulAmérica | Fernando",DRIVE+"1J5vDaIDg5IWxNS31I2BBZHLO-axLbJ1sYjZZalF2T9M/edit"],["SulAmérica | Kiki",DRIVE+"1mgAt0QfoMBX2A6RZ2j75SKusJ6tLBW1zBMCfY--Tn0o/edit"]],
   tables:[{id:"reemb-med",title:"Solicitações SulAmérica",sort:"data",cols:[
@@ -807,6 +813,7 @@ const LIST={
   done:r=>r.status==="Quitado",stamp:r=>r.pagoEm,doP:()=>({status:"Quitado"}),undoP:()=>({status:"Em aberto"})},
  "reemb-corp":{cap:"descr",sel:"status",group:byStatus(["A solicitar","Solicitado","Pago","Negado"],"A solicitar"),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>r.descr||r.cat,
   tags:r=>[T(r.pessoa,"info"),T(r.cat),T(r.ref),hasV(r.vme)&&r.moeda&&r.moeda!=="BRL"?T(`${r.moeda} ${fmtMoney(r.vme)}`):null],value:r=>r.brl,stamp:r=>r.status==="Pago"&&r.pagoEm},
+ "reemb-contratos":{cap:"nome",group:()=>({k:"1",l:"Contratos"}),order:r=>r.numero||"",lead:r=>r.numero||"",title:r=>(r.numero?"Contrato "+r.numero:"Contrato")+(r.nome?" · "+r.nome:""),tags:()=>[],value:r=>r.valor},
  "reemb-med":{cap:"descr",sel:"status",group:byStatus(["Pendente","Em análise","Pago","Negado"],"Pendente"),order:r=>r.data||"",lead:r=>dm(r.data),title:r=>[r.paciente,r.descr].filter(Boolean).join(" · "),
   tags:r=>[T(r.titular,"info"),T(r.cat),r.protocolo?T("protocolo "+r.protocolo):null,hasV(r.vreemb)?T("reembolsado "+fmtMoney(r.vreemb),"ok"):null],value:r=>r.valor,stamp:r=>r.status==="Pago"&&r.pagoEm},
  "reemb-pagar":{cap:"descr",group:byStatus(["A pagar","Pago","Cancelado"],"A pagar"),order:r=>r.venc||r.data||"",lead:r=>dm(r.venc||r.data),title:r=>r.descr,
@@ -934,7 +941,7 @@ async function solSync(r){try{const tid=SOL_RB[r.reemb];if(!tid||r.status!=="Pag
 /* uma seção por pessoa (Fernando e Leticia), como em Empréstimos */
 const ppV={};
 function ppSections(tb,h,C){const tid=tb.id,hasQ=!!(state.qs[state.tab.id]||"").trim(),filt=hasQ||Object.values(state.filters[tid]||{}).some(Boolean);
-  const srt=l=>l.slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+  const srt=C.srt||(l=>l.slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||""))));
   h+=`</section>`;
   [["fernando","Fernando"],["leticia","Leticia"]].forEach(([p,pn])=>{
     if(gExec&&gExec!=="ambos"&&gExec!==p)return;
@@ -944,7 +951,7 @@ function ppSections(tb,h,C){const tid=tb.id,hasQ=!!(state.qs[state.tab.id]||"").
     h+=`<div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb sol ${C.cls||""}"><thead><tr>${C.head.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${cur.length?cur.map(C.tr).join(""):`<tr><td colspan="${nc}" class="sol-none">${filt?"Nada corresponde à busca ou aos filtros.":v==="co"?C.emptyCo(pn):C.emptyAb(pn)}</td></tr>`}</tbody>${v==="ab"&&!hasQ&&ab.length?`<tfoot><tr><td colspan="${C.vi}">Total em aberto</td><td>${fmtMoney(tot)}</td><td colspan="${nc-C.vi-1}"></td></tr></tfoot>`:""}</table></div></div></section>`});
   return h}
 const ownP=v=>/fernando|shayer/i.test(v||"")?"fernando":"leticia";
-const PP_FIELD={solicitacoes:["pagador","Shayer"],"reemb-corp":["pessoa","Fernando"],"reemb-med":["titular","Fernando"]};
+const PP_FIELD={solicitacoes:["pagador","Shayer"],"reemb-corp":["pessoa","Fernando"],"reemb-med":["titular","Fernando"],"reemb-contratos":["pessoa","Fernando"]};
 function solHTML(tb,rows,h){subscribe("reemb-med");subscribe("reemb-corp");
   const E=new Map(rows.map(r=>[r.id,solEtapa(r)])),pend=r=>{const e=E.get(r.id);return e.k==="recebida"||e.k==="pronta"||e.semComp||e.reembAberto};
   const ok=(r,k,t)=>tkBtn("solicitacoes",r,k,t);
@@ -971,18 +978,33 @@ function rbBar(tid,r){const C=RB_CFG[tid],n=rbN(tid,r),off=n<0;let h="";
     h+=`<${tag} ${ck?`type="button" data-rbst="${tid}|${r.id}|${i}" title="${esc(tip)}" `:""}class="sol-dot ${on?"on":cur?"cur":""}${i?" ln":""}${ln?" lnon":""}${ck?" pgb":""}"><span>${on?"✓":""}</span>${esc(lab).replace("&lt;br&gt;","<br>")}</${tag}>`}
   return `<div class="sol-st rb3${off?" off":""}">${h}</div>`}
 function tkBtn(tid,r,k,t){const b=solHas(r,k);return `<button type="button" class="sol-apb ${b?"on":""}" data-tk="${tid}|${r.id}|${k}" aria-pressed="${b}" title="${b?esc(t)+" recebido · clique para desmarcar":"Clique para marcar "+esc(t.toLowerCase())+" como recebido"}">${b?"✓":""}</button>`}
-function rbHTML(tb,rows,h){const tid=tb.id,med=tid==="reemb-med";
+function rbHTML(tb,rows,h){const tid=tb.id,med=tid==="reemb-med";if(!med)subscribe("reemb-contratos");
   const aberto=r=>{const n=rbN(tid,r);return n>0&&n<3},mv=v=>hasV(v)?fmtMoney(v):"";
   const head=med?["Data","Paciente","Especialidade","Categoria","Valor pago","Reembolsado","% reembolsado","Nota fiscal","Comprovante","Etapa"]
-    :["Data","Descrição","Categoria","Referência","Valor em R$","Forma de pagamento","Comprovante","Etapa"];
+    :["Data","Descrição","Categoria","Referência","Valor em R$","Forma de pagamento","Contrato","Comprovante","Etapa"];
   const tr=r=>{const off=rbN(tid,r)<0;
     const cells=med?[esc(dm(r.data)||""),`<b>${esc(r.paciente||"")}</b>`,esc(r.descr||""),esc(r.cat||""),mv(r.valor),mv(r.vreemb),
         hasV(r.vreemb)&&+r.valor?Math.round(r.vreemb/r.valor*100)+"%":"",off?"":tkBtn(tid,r,"nf","Nota fiscal"),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)]
-      :[esc(dm(r.data)||""),`<b>${esc(r.descr||r.cat||"Sem descrição")}</b>`,esc(r.cat||""),esc(r.ref||""),mv(r.brl),esc(r.formapg||""),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)];
+      :[esc(dm(r.data)||""),`<b>${esc(r.descr||r.cat||"Sem descrição")}</b>`,esc(r.cat||""),esc(r.ref||""),mv(r.brl),esc(r.formapg||""),ctSel(r),off?"":tkBtn(tid,r,"comp","Comprovante"),rbBar(tid,r)];
     const tip=med&&(r.protocolo||r.sr)?[r.protocolo?"Protocolo "+r.protocolo:"",r.sr?"SR "+r.sr:""].filter(Boolean).join(" · "):"";
     return `<tr class="atr ${off?"off":""}" data-open="${tid}|${r.id}" tabindex="0">${cells.map((c,i)=>`<td${i===1?' class="a-t"':""}${i===cells.length-1&&tip?` title="${esc(tip)}"`:""}>${c}</td>`).join("")}</tr>`};
   return ppSections(tb,h,{rows,own:r=>ownP(med?r.titular:r.pessoa),isOpen:aberto,val:r=>r[RB_CFG[tid].val],tr,vi:med?4:4,concL:"Concluídos",addL:"+ Novo reembolso",head,cls:"rb",
     emptyAb:pn=>"Nenhum reembolso em aberto de "+pn+".",emptyCo:pn=>"Nenhum reembolso concluído de "+pn+"."})}
+/* contratos de reembolso corporativo: vínculo dos gastos ao número do contrato */
+const ctNum=v=>String(v||"").replace(/^\s*contrato\s*/i,"").trim();
+function ctOf(p){return (data["reemb-contratos"]||[]).filter(c=>ownP(c.pessoa)===p&&ctNum(c.numero))}
+function ctSel(r){const p=ownP(r.pessoa),cur=ctNum(r.contrato),L=ctOf(p).slice().sort((a,b)=>ctNum(a.numero).localeCompare(ctNum(b.numero),"pt",{numeric:true}));
+  const opts=L.map(c=>ctNum(c.numero));if(cur&&!opts.includes(cur))opts.push(cur);
+  return `<label class="sr" for="ct-${r.id}">Contrato</label><select id="ct-${r.id}" class="ct-sel ${cur?"on":""}" data-ctset="${r.id}" title="${L.length?"Escolha o contrato em que este gasto entra":"Cadastre os contratos na aba Contratos"}"><option value="">–</option>${opts.map(n=>{const c=L.find(x=>ctNum(x.numero)===n);return `<option value="${esc(n)}" ${n===cur?"selected":""}>${esc(n)}${c&&c.quit?" (quitado)":""}</option>`}).join("")}</select>`}
+function ctHTML(tb,rows,h){subscribe("reemb-corp");const G=data["reemb-corp"]||[];
+  const gs=c=>G.filter(g=>ownP(g.pessoa)===ownP(c.pessoa)&&ctNum(g.contrato)&&ctNum(g.contrato)===ctNum(c.numero));
+  const tr=c=>{const l=gs(c),t=l.reduce((a,g)=>a+(+g.brl||0),0),dif=l.length&&hasV(c.valor)&&Math.abs(t-(+c.valor||0))>0.005;
+    return `<tr class="atr" data-open="${tb.id}|${c.id}" tabindex="0"><td><b>${esc(ctNum(c.numero))}</b></td><td class="a-t">${esc(c.nome||"")}</td><td>${hasV(c.valor)?fmtMoney(c.valor):""}</td>
+      <td class="${dif?"ct-dif":""}" title="${l.length?l.length+" gasto"+(l.length>1?"s":"")+" vinculado"+(l.length>1?"s":"")+(dif?" · a soma é diferente do valor do contrato":""):"Nenhum gasto vinculado ainda"}">${l.length?fmtMoney(t)+` <span class="ct-n">(${l.length})</span>`:"–"}</td><td>${c.quit?esc(fmtDate(c.quit)):""}</td></tr>`};
+  return ppSections(tb,h,{rows,own:c=>ownP(c.pessoa),isOpen:c=>!c.quit,val:c=>c.valor,tr,vi:2,concL:"Quitados",addL:"+ Novo contrato",cls:"ct",
+    srt:l=>l.slice().sort((a,b)=>ctNum(b.numero).localeCompare(ctNum(a.numero),"pt",{numeric:true})),
+    head:["Número do contrato","Contrato","Valor","Gastos vinculados","Data da quitação"],
+    emptyAb:pn=>"Nenhum contrato em aberto de "+pn+".",emptyCo:pn=>"Nenhum contrato quitado de "+pn+"."})}
 function listHTML(tb,ctx,multi){
   const L=LIST[tb.id];const all=secRows(tb,srcRows(tb));const rows=visibleRows(tb,ctx);
   let h=`<section class="tbl tb-${tb.id}">`;
@@ -996,6 +1018,7 @@ function listHTML(tb,ctx,multi){
     h+=`<p class="sumline"><span>Programas <b>${rs.length}</b></span><span>Com saldo <b>${rs.filter(r=>+r.pts>0).length}</b></span></p><div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb pt"><thead><tr><th>Programa</th><th>Titular</th><th>Login</th><th class="r">Pontuação</th><th>Vencimento</th><th>Atualizado</th><th>Parcerias</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-t"><b>${esc(r.prog||"Sem nome")}</b>${r.codigo?`<span class="a-o">${esc(r.codigo)}</span>`:""}${r.obs?`<span class="a-o" title="${esc(r.obs)}">${esc(r.obs)}</span>`:""}</td><td>${esc(r.titular||"")}</td><td>${esc(r.login||"")}</td><td class="a-v">${hasV(r.pts)?fmtNum(r.pts):""}</td><td>${r.venc?`<span class="pill ${r.venc<hj?"bad":r.venc<=lim?"warn":""}">${esc(fmtDate(r.venc))}</span>`:""}</td><td class="mutc">${r.atual?esc(fmtDate(r.atual)):""}</td><td class="a-p">${esc(r.parc||"")}</td></tr>`).join("")}</tbody></table></div></div></section>`;return h}
   if(tb.id==="solicitacoes")return solHTML(tb,rows,h);
   if(tb.id==="reemb-corp"||tb.id==="reemb-med")return rbHTML(tb,rows,h);
+  if(tb.id==="reemb-contratos")return ctHTML(tb,rows,h);
   if(tb.id==="assinaturas"){const rs=rows.slice().sort((x,y)=>String(y.data||"").localeCompare(String(x.data||""))||String(x.descr||"").localeCompare(String(y.descr||""),"pt")),tot=rs.filter(r=>r.sit!=="Cancelada").reduce((n,r)=>n+(+r.brl||0),0);
     h+=`<p class="sumline"><span>Cobranças <b>${rs.length}</b></span><span>Total <b>${fmtMoney(tot)}</b></span></p><div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb"><thead><tr><th>Data</th><th>Serviço</th><th>Gestor</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${esc(dm(r.data)||"—")}</td><td class="a-t"><b>${esc(r.descr||"Sem descrição")}</b>${r.sit&&r.sit!=="Ativa"?` <span class="pill ${badgeTone(r.sit)}">${esc(r.sit)}</span>`:""}</td><td>${esc(r.gestor||"")}</td><td>${r.rec?`<span class="tag ${r.rec==="Mensal"?"info":""}">${esc(r.rec)}</span>`:""}</td><td class="a-v">${hasV(r.brl)?fmtMoney(r.brl):""}</td></tr>`).join("")}</tbody></table></div></div></section>`;return h}
   if(tb.id==="parcelas"){/* Cartão de crédito: uma tabela por mês. Mês atual: parcelas ao vivo (planilha sincronizada). Meses anteriores: foto salva em abas/faturas. */
@@ -1056,7 +1079,7 @@ async function kSend(tid,id,r){
   if(!window.CS){toast("A Operação não está disponível nesta visualização.");return}
   const ctx=ctxFor();if(kTask(tid,r,ctx))return;
   const tab=tabOfTable(tid),tb=tbById(tid);
-  const FCAT={cronograma:"c-fin-cron",solicitacoes:"c-fin-sol",assinaturas:"c-fin-ctrl",pontos:"c-fin-ctrl","reemb-corp":"c-fin-ctrl","reemb-med":"c-fin-ctrl","reemb-pagar":"c-fin-ctrl",emprestimos:"c-fin-cred",parcelas:"c-fin-cred","rep-contas":"c-fin-cred","rep-dev":"c-fin-cred","rep-fech":"c-fin-cred","rep-transf":"c-fin-cred"};
+  const FCAT={cronograma:"c-fin-cron",solicitacoes:"c-fin-sol",assinaturas:"c-fin-ctrl",pontos:"c-fin-ctrl","reemb-corp":"c-fin-ctrl","reemb-contratos":"c-fin-ctrl","reemb-med":"c-fin-ctrl","reemb-pagar":"c-fin-ctrl",emprestimos:"c-fin-cred",parcelas:"c-fin-cred","rep-contas":"c-fin-cred","rep-dev":"c-fin-cred","rep-fech":"c-fin-cred","rep-transf":"c-fin-cred"};
   const t=window.CS.newTask(kTitle(tid,r,ctx),{sphere:"pessoal",categoryId:FCAT[tid]||"c-fin-fdc",executive:execOf(r),due:kDue(tid,r,ctx),
     notes:"Lançamento do financeiro: "+tab.l+(tab.tables.length>1?" · "+tb.title:""),fin:{tid,id,tab:tab.id,label:tab.l,m:tid==="cronograma"?ctx.month:null}});
   if(t)await updRow(tid,id,kPatch(tid,ctx,t.id));
@@ -1793,7 +1816,7 @@ async function importPaste(tid){
 /* ---------- eventos ---------- */
 document.addEventListener("click",async e=>{
   if(!e.target.closest||!e.target.closest("#fin"))return;
-  if(e.target.closest(".qsel"))return;
+  if(e.target.closest(".qsel,.ct-sel"))return;
   const ms=e.target.closest("[data-mst]");if(ms){const[t,id,i]=ms.dataset.mst.split("|");openCellFicha(t,id,+i);return}
   const cs=e.target.closest("[data-cellsave]");if(cs){const[t,id,i]=cs.dataset.cellsave.split("|");saveCellFicha(t,id,+i);return}
   const me=e.target.closest("[data-medit]");if(me&&!e.target.closest("input")){startMatrixEdit(me);return}
@@ -1896,6 +1919,7 @@ document.addEventListener("keydown",e=>{
   if(e.target.id==="dv-linkurl"){if(e.key==="Enter"){e.preventDefault();const b=document.querySelector("[data-dvlinkgo]");if(b)b.click()}else if(e.key==="Escape"){dvAtt.link=null;state.editing=false;render()}}
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details[data-ccm]"))grpOpen["cc:"+d.dataset.ccm]=d.open;if(d&&d.matches&&d.matches("details[data-ench]"))grpOpen[d.dataset.ench]=d.open;if(d&&d.matches&&d.matches("details[data-emphist]"))grpOpen["emp-hist"]=d.open;if(d&&d.matches&&d.matches("details[data-empyr]"))grpOpen["emp-yr-"+d.dataset.empyr]=d.open},true);
+document.addEventListener("change",async e=>{const t=e.target;if(t.matches&&t.matches("[data-ctset]")){try{await updRow("reemb-corp",t.dataset.ctset,{contrato:t.value});toast(t.value?"Gasto vinculado ao contrato "+t.value:"Vínculo removido")}catch(x){toast("Não foi possível salvar.")}return}});
 document.addEventListener("change",async e=>{const t=e.target;if(!t.matches||!t.matches("[data-fat]"))return;const [mes,c]=t.dataset.fat.split("|"),v=parseNum(t.value),id=(mes+"_"+c).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9_-]+/g,"-");
   const obj={mes,cartao:c,total:v==null?null:Math.round(v*100)/100,atualizadoEm:Date.now()};
   try{const ja=(data.faturas||[]).some(x=>x.id===id);if(db){const ref=db.collection("abas/faturas/linhas").doc(id);await track(ja?ref.update(obj):ref.set(obj))}else{const a=(data.faturas=data.faturas||[]);const k=a.findIndex(x=>x.id===id);if(k>-1)Object.assign(a[k],obj);else a.push(Object.assign({id},obj));render()}toast(v==null?"Total da fatura apagado":"Total da fatura salvo")}catch(err){toast("Não foi possível salvar o total da fatura.")}});
