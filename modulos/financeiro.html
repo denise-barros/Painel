@@ -551,7 +551,7 @@ const TABS=[
     M("devolvido","Valor devolvido / total pago"),DT("datadev","Data da devolução / quitação"),
     SE("forma","Forma de pag.",["Pix","TED","Débito","Boleto"],{f:false}),M("juros","Juros"),
     {k:"saldo",l:"Saldo devedor",t:"calc",ct:"money",sum:true,calc:r=>empFech(r)?0:(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0)},
-    SE("status","Status",["Em aberto","Quitado","Não será cobrado"]),LG("obs","Observações",{w:200})],
+    SE("status","Status",["Em aberto","Quitado","Não será cobrado"],{f:false}),LG("obs","Observações",{w:200})],
     kpis:rows=>{const e=state.empTipo==="Entrada";let p=0,c=0,q=0;rows.forEach(r=>{if(r.status==="Quitado"){q++;return}if(r.status==="Não será cobrado")return;const v=(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0);if(r.destino==="Corporativo")c+=v;else p+=v});
       const cl=e?"neg":"pos";return e?[{l:"A pagar · pessoal",v:fmtMoney(p),c:cl},{l:"A pagar · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]:[{l:"A receber · pessoal",v:fmtMoney(p),c:cl},{l:"A receber · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]}}]},
  {id:"reemb-corp",g:"Controles",l:"Reembolsos corporativos",desc:"Despesas de viagem e trabalho de Leticia e Fernando a reembolsar. Apurações com Daniel todo dia 03.",
