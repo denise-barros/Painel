@@ -572,7 +572,7 @@ const TABS=[
   solo:true,subtabs:[{k:"ativas",l:"Ativas",tables:["cronograma"]},{k:"encerradas",l:"Encerradas",tables:["cronograma"]}],
   tables:[{id:"cronograma",title:"Conta",sort:"venc",cols:[
     TX("despesa","Despesa",{w:170}),SE("quem","Centro de custo",QUEM),TX("endereco","Endereço",{w:160}),
-    {k:"venc",l:"Vencimento (dia)",t:"num",w:70},SE("period","Periodicidade",["Mensal","Semanal","Bimestral","Trimestral","Semestral","Anual","Única"]),SE("tipo","Tipo",CR_TIPOS),SE("criancas","Crianças",["Sim","Não"],{f:false}),{k:"mesref",l:"Mês de referência",t:"month",w:90},SE("forma","Forma de pagamento",["Pix","Boleto","Débito automático","Cartão de crédito","Transferência"]),
+    {k:"venc",l:"Vencimento (dia)",t:"num",w:70},SE("period","Periodicidade",["Mensal","Semanal","Bimestral","Trimestral","Semestral","Anual","Única"]),SE("tipo","Tipo",CR_TIPOS),SE("criancas","Crianças",["Sim","Não"],{f:false}),SE("reemb","Entra em reembolsos médicos",["Sim","Não"],{f:false}),SE("titplano","Titular do plano de saúde",["Leticia","Fernando"],{f:false}),TX("paciente","Paciente"),TX("esp","Especialidade"),{k:"mesref",l:"Mês de referência",t:"month",w:90},SE("forma","Forma de pagamento",["Pix","Boleto","Débito automático","Cartão de crédito","Transferência"]),
     LG("acesso","Acesso pelo site",{w:180}),LG("chave","Dados bancários / chave Pix",{w:200}),LG("obs","Observações",{w:220}),{k:"encerra",l:"Último mês (encerrada ou última parcela)",t:"month",w:90},
     M("medio","Valor médio")],
     kpis:null}]},
@@ -1177,14 +1177,20 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
       if(fld==="pago")await updStamp("solicitacoes",s.id,s.status==="Pago"?{status:"Pendente"}:{status:"Pago",dtpg:new Date().toISOString().slice(0,10)});else await updRow("solicitacoes",s.id,{compOk:!solHas(s,"comp")});return}
     const x=cpLines(state.month).find(y=>y.key===key);if(!x)return;const on=!x[fld];const p={[fld]:on};
     if(fld==="pago"){if(on){p.pagoEm=new Date().toISOString();if(!hasV(x.k.valor)&&hasV(x.valor))p.valor=+x.valor}}
-    await cpSave(key,p);return}
+    await cpSave(key,p);
+    if(fld==="pago"&&x.cr&&x.cr.reemb==="Sim"){const rid="cp-"+key,ex=(data["reemb-med"]||[]).find(r=>r.id===rid);
+      if(on&&!ex){const v=hasV(p.valor)?p.valor:hasV(x.k.valor)?+x.k.valor:hasV(x.valor)?+x.valor:null;
+        const tit=x.cr.titplano||(x.quem==="Leticia"?"Leticia":"Fernando");
+        await setRow("reemb-med",rid,{titular:tit,solicitante:tit,paciente:x.cr.paciente||x.quem||"",cat:"Consultas",descr:x.cr.esp||x.desc,data:new Date().toISOString().slice(0,10),valor:v,status:"Pendente",coment:"Lançado pelo Contas a pagar: "+x.desc+" ("+fmtMonth(state.month)+"). Falta a nota fiscal."+(x.cr.titplano?"":" Confira o titular do plano."),origem:"contas:"+key});toast("Pago. Lançado em Reembolsos médicos como pendente.")}
+      else if(!on&&ex&&(!ex.status||ex.status==="Pendente")){await delRow("reemb-med",rid);toast("Pagamento desmarcado. Saiu de Reembolsos médicos.")}}
+    return}
   if(d.cpadd!==undefined){const rid=document.getElementById("cpa-r").value,dia=parseInt(document.getElementById("cpa-d").value),v=parseNum(document.getElementById("cpa-v").value);
     if(!rid||!dia){toast("Informe a conta e o dia.");return}const r=(data.cronograma||[]).find(x=>x.id===rid)||{};
     const key=cpKey(rid,state.month,dia);await setRow("contas",key,{cr:rid,mes:state.month,dia,extra:true,quem:r.quem||"",desc:r.despesa||"",forma:r.forma||"",valor:v==null?null:v});return}
   }catch(err){console.warn(err);toast("Não foi possível salvar.")}},true);
 document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("[data-diasel]"))return;state[t.dataset.diasel]=t.value;render()});
 document.addEventListener("change",async e=>{const t=e.target;if(!t.matches||!t.matches("[data-cpv]"))return;const v=parseNum(t.value);
-  try{await cpSave(t.dataset.cpv,{valor:v==null?null:v})}catch(err){console.warn(err);toast("Não foi possível salvar.")}});
+  try{await cpSave(t.dataset.cpv,{valor:v==null?null:v});const rm=(data["reemb-med"]||[]).find(r=>r.id==="cp-"+t.dataset.cpv);if(rm&&(!rm.status||rm.status==="Pendente"))await updRow("reemb-med",rm.id,{valor:v==null?null:v})}catch(err){console.warn(err);toast("Não foi possível salvar.")}});
 
 /* ---------- kanban do Painel ---------- */
 const KSPH={"reemb-corp":"corporativo","assinaturas":"corporativo"};
