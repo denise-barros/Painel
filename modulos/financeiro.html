@@ -556,6 +556,8 @@ const ENC_LADOS=["Fernando deve","Leticia deve"];
 const encF=r=>!String(r.lado||"").startsWith("Leticia");
 const ENC_ST=["Devolver","Cobrança","Recusado","Devolvido"];const encRec=r=>r.status==="Recusado";const encDone=r=>r.status==="Devolvido"||r.status==="Quitado";
 const ENC_REF={k:"ref",l:"Referente a",t:"select",f:true,get opts(){return["Saldo geral",...[...new Set((data["rep-contas"]||[]).filter(r=>!state.encRef||encF(r)===(state.encRef==="F")).map(r=>r.item).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt"))]}};
+const TB_CONTRATOS={id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
+    kpis:rows=>{let n=0,v=0;rows.forEach(r=>{if(!r.quit){n++;v+=+r.valor||0}});return n?[{l:"Contratos em aberto",v:n+" · "+fmtMoney(v)}]:[]}};
 const TABS=[
  {id:"cronograma",g:"Pagamentos",l:"Cronograma de pagamentos",desc:"Pagamentos recorrentes, vencimentos e acessos, com o valor pago e o status de cada mês.",
   src:[["Calendário de pagamentos",DRIVE+"1t8drdAiTy-QYSP2_F4CL85Vzki1NlswVDkcRkEiIEq4/edit"]],monthly:true,
@@ -570,6 +572,7 @@ const TABS=[
  ...Object.entries(FLUXOS).map(([id,f])=>({id,g:"Fluxos de caixa e prestação de contas",l:f.l,title:"Fluxo de caixa · "+f.l,desc:f.desc,src:f.src,matrix:f})),
  {id:"emprestimos",g:"Controles",l:"Empréstimos",desc:"Empréstimos de Fernando e Leticia: o que cada um tem a receber, o que tem a pagar e o que já foi quitado. Sem titular, conta como Leticia.",
   src:[["Empréstimos","https://drive.google.com/file/d/1kowHq-8zsWPX659N01nyM7djDgZdZsks/view"]],
+  solo:true,subtabs:[{k:"emp",l:"Empréstimos",tables:["emprestimos"]},{k:"contratos",l:"Contratos",tables:["reemb-contratos"]}],
   tables:[{id:"emprestimos",title:"Empréstimos",sort:"data",cols:[
     SE("titular","Titular",["Leticia","Fernando"],{f:false}),SE("destino","Tipo",["Pessoal","Corporativo"]),SE("tipo","Saída ou entrada",["Saída","Entrada"],{f:false}),TX("razao","Razão social / pessoa",{w:180}),M("valor","Valor emprestado"),DT("data","Data do empréstimo"),
     M("devolvido","Valor devolvido / total pago"),DT("datadev","Data da devolução / quitação"),
@@ -577,10 +580,10 @@ const TABS=[
     {k:"saldo",l:"Saldo devedor",t:"calc",ct:"money",sum:true,calc:r=>empFech(r)?0:(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0)},
     SE("status","Status",["Em aberto","Quitado","Não será cobrado"],{f:false}),LG("obs","Observações",{w:200})],
     kpis:rows=>{const e=state.empTipo==="Entrada";let p=0,c=0,q=0;rows.forEach(r=>{if(r.status==="Quitado"){q++;return}if(r.status==="Não será cobrado")return;const v=(+r.valor||0)+(+r.juros||0)-(+r.devolvido||0);if(r.destino==="Corporativo")c+=v;else p+=v});
-      const cl=e?"neg":"pos";return e?[{l:"A pagar · pessoal",v:fmtMoney(p),c:cl},{l:"A pagar · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]:[{l:"A receber · pessoal",v:fmtMoney(p),c:cl},{l:"A receber · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]}}]},
+      const cl=e?"neg":"pos";return e?[{l:"A pagar · pessoal",v:fmtMoney(p),c:cl},{l:"A pagar · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]:[{l:"A receber · pessoal",v:fmtMoney(p),c:cl},{l:"A receber · corporativo",v:fmtMoney(c),c:cl},{l:"Quitados",v:String(q)}]}},TB_CONTRATOS]},
  {id:"reemb-corp",g:"Controles",l:"Reembolsos corporativos",desc:"Despesas de viagem e trabalho de Leticia e Fernando a reembolsar. Apurações com Daniel todo dia 03.",
   src:[["Reembolsos | Leticia",DRIVE+"1wLIT4EwtX28UUVc8nGwKhuYTJIM5rGsHH8tHLcMqYHk/edit"],["Reembolsos | Shayer",DRIVE+"1S7y0fKPuMFt6bi7G1N-Pw-q6q9pJcbuqrpbJc6oPdCc/edit"],["Base para reembolsos",DRIVE+"1t58x-alGZcLDutbojaWQgkhWSOAbkBWxlxGWvcbeqUs/edit"]],
-  subtabs:[{k:"gastos",l:"Gastos",tables:["reemb-corp"]},{k:"contratos",l:"Contratos",tables:["reemb-contratos"]}],
+  solo:true,subtabs:[{k:"gastos",l:"Gastos",tables:["reemb-corp"]},{k:"contratos",l:"Contratos",tables:["reemb-contratos"]}],
   tables:[{id:"reemb-corp",title:"Gastos",sort:"data",cols:[
     SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("ref","Referência e mês",{w:160,f:true,t:"text"}),
     SE("cat","Categoria",["Hotel","Aéreo","Aluguel de veículos","Alimentação","Rodoviário","Material de trabalho","Estacionamento","Pedágio","Postagens","Táxi","Assinatura de software"]),
@@ -588,9 +591,7 @@ const TABS=[
     M("vme","Valor em moeda estrangeira",{sum:false}),{k:"cot",l:"Cotação",t:"num",w:80},M("brl","Valor em BRL"),
     SE("formapg","Forma de pagamento",["C6","Itaú The One","Itaú LATAM","Itaú Personnalité","Santander","Pix"]),TX("comp","Comprovante",{w:140}),TX("contrato","Contrato (número)",{w:90}),
     SE("status","Status",["A solicitar","Solicitado","Pago","Negado"]),DT("datareemb","Data do reembolso"),LG("coment","Comentários",{w:160})],
-    kpis:rows=>{const t={};rows.forEach(r=>{const k=r.status||"A solicitar";t[k]=(t[k]||0)+(+r.brl||0)});return[["A solicitar","A solicitar"],["Solicitado","Solicitado"],["Pago","Reembolsado"]].filter(([k])=>t[k]).map(([k,l])=>({l,v:fmtMoney(t[k]),c:k==="Pago"?"pos":""}))}},
-   {id:"reemb-contratos",title:"Contratos",sort:"numero",cols:[SE("pessoa","Pessoa",["Leticia","Fernando"],{f:false}),TX("numero","Número do contrato",{w:110}),TX("nome","Contrato",{w:220}),M("valor","Valor"),DT("quit","Data da quitação"),LG("obs","Observações",{w:200})],
-    kpis:rows=>{let n=0,v=0;rows.forEach(r=>{if(!r.quit){n++;v+=+r.valor||0}});return n?[{l:"Contratos em aberto",v:n+" · "+fmtMoney(v)}]:[]}}]},
+    kpis:rows=>{const t={};rows.forEach(r=>{const k=r.status||"A solicitar";t[k]=(t[k]||0)+(+r.brl||0)});return[["A solicitar","A solicitar"],["Solicitado","Solicitado"],["Pago","Reembolsado"]].filter(([k])=>t[k]).map(([k,l])=>({l,v:fmtMoney(t[k]),c:k==="Pago"?"pos":""}))}},TB_CONTRATOS]},
  {id:"reemb-med",g:"Controles",l:"Reembolsos médicos",desc:"Solicitações e acompanhamento de reembolsos da SulAmérica de Leticia, Fernando e Cristiana.",
   src:[["SulAmérica | Leticia",DRIVE+"1E3WQB8UAmYMNzRtC8tS4xGvPYhzUlgbExG8w9pgDZHQ/edit"],["SulAmérica | Fernando",DRIVE+"1J5vDaIDg5IWxNS31I2BBZHLO-axLbJ1sYjZZalF2T9M/edit"],["SulAmérica | Kiki",DRIVE+"1mgAt0QfoMBX2A6RZ2j75SKusJ6tLBW1zBMCfY--Tn0o/edit"]],
   tables:[{id:"reemb-med",title:"Solicitações SulAmérica",sort:"data",cols:[
@@ -1012,13 +1013,13 @@ function listHTML(tb,ctx,multi){
   h+=pasteHTML(tb);
   if(tb.id==="emprestimos")return empHTML(tb,ctx,all,rows,h);
   if(tb.kpis&&all.length&&tb.id!=="assinaturas"&&tb.id!=="parcelas"){const k=tb.kpis(all,ctx);h+=`<p class="sumline">${k.map(x=>`<span>${esc(x.l)} <b class="${x.c||""}">${x.v}</b></span>`).join("")}</p>`}
+  if(tb.id==="solicitacoes")return solHTML(tb,rows,h);
+  if(tb.id==="reemb-corp"||tb.id==="reemb-med")return rbHTML(tb,rows,h);
+  if(tb.id==="reemb-contratos")return ctHTML(tb,rows,h);
   if(!all.length)return h+`<div class="empty-big"><b>Nenhum lançamento ainda</b>Registre o primeiro no campo do topo${multi?" ou em “+ Novo”":""}, ou traga as linhas da planilha atual com “Colar do Sheets”.</div></section>`;
   if(!rows.length)return h+`<div class="empty-big">Nada corresponde à busca ou aos filtros.</div></section>`;
   if(tb.id==="pontos"){const rs=rows.slice().sort((x,y)=>String(x.prog||"").localeCompare(String(y.prog||""),"pt")),hj=new Date().toISOString().slice(0,10),lim=new Date(Date.now()+30*864e5).toISOString().slice(0,10);
     h+=`<p class="sumline"><span>Programas <b>${rs.length}</b></span><span>Com saldo <b>${rs.filter(r=>+r.pts>0).length}</b></span></p><div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb pt"><thead><tr><th>Programa</th><th>Titular</th><th>Login</th><th class="r">Pontuação</th><th>Vencimento</th><th>Atualizado</th><th>Parcerias</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-t"><b>${esc(r.prog||"Sem nome")}</b>${r.codigo?`<span class="a-o">${esc(r.codigo)}</span>`:""}${r.obs?`<span class="a-o" title="${esc(r.obs)}">${esc(r.obs)}</span>`:""}</td><td>${esc(r.titular||"")}</td><td>${esc(r.login||"")}</td><td class="a-v">${hasV(r.pts)?fmtNum(r.pts):""}</td><td>${r.venc?`<span class="pill ${r.venc<hj?"bad":r.venc<=lim?"warn":""}">${esc(fmtDate(r.venc))}</span>`:""}</td><td class="mutc">${r.atual?esc(fmtDate(r.atual)):""}</td><td class="a-p">${esc(r.parc||"")}</td></tr>`).join("")}</tbody></table></div></div></section>`;return h}
-  if(tb.id==="solicitacoes")return solHTML(tb,rows,h);
-  if(tb.id==="reemb-corp"||tb.id==="reemb-med")return rbHTML(tb,rows,h);
-  if(tb.id==="reemb-contratos")return ctHTML(tb,rows,h);
   if(tb.id==="assinaturas"){const rs=rows.slice().sort((x,y)=>String(y.data||"").localeCompare(String(x.data||""))||String(x.descr||"").localeCompare(String(y.descr||""),"pt")),tot=rs.filter(r=>r.sit!=="Cancelada").reduce((n,r)=>n+(+r.brl||0),0);
     h+=`<p class="sumline"><span>Cobranças <b>${rs.length}</b></span><span>Total <b>${fmtMoney(tot)}</b></span></p><div class="wrap asn-wrap"><div class="asn-sc"><table class="grid atb"><thead><tr><th>Data</th><th>Serviço</th><th>Gestor</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>${rs.map(r=>`<tr class="atr" data-open="${tb.id}|${r.id}" tabindex="0"><td class="a-d">${esc(dm(r.data)||"—")}</td><td class="a-t"><b>${esc(r.descr||"Sem descrição")}</b>${r.sit&&r.sit!=="Ativa"?` <span class="pill ${badgeTone(r.sit)}">${esc(r.sit)}</span>`:""}</td><td>${esc(r.gestor||"")}</td><td>${r.rec?`<span class="tag ${r.rec==="Mensal"?"info":""}">${esc(r.rec)}</span>`:""}</td><td class="a-v">${hasV(r.brl)?fmtMoney(r.brl):""}</td></tr>`).join("")}</tbody></table></div></div></section>`;return h}
   if(tb.id==="parcelas"){/* Cartão de crédito: uma tabela por mês. Mês atual: parcelas ao vivo (planilha sincronizada). Meses anteriores: foto salva em abas/faturas. */
@@ -1165,12 +1166,12 @@ function openFicha(tid,id,focusFirst){
     else if(c.t==="money"||c.t==="num")inp=c.t==="money"?`<input id="${fid}" type="text" inputmode="decimal" data-money placeholder="0,00" value="${hasV(v)?esc(moneyFmtInput(v)):""}">`:`<input id="${fid}" type="text" inputmode="decimal" value="${hasV(v)?esc(String(v).replace(".",",")):""}">`;
     else inp=`<input id="${fid}" type="text" value="${esc(v||"")}">`;
     return `<label for="${fid}" class="${c.t==="long"?"lt":""}">${esc(lab)}</label>${inp}`};
-  const tab=TABS.find(t=>(t.tables||[]).includes(tb));
+  const tab=(state.tab&&(state.tab.tables||[]).includes(tb))?state.tab:TABS.find(t=>(t.tables||[]).includes(tb));
   const hs=r?((tid==="cronograma"?mon(r,ctx).hist:r.hist)||[]):[];
   const ttl=r?(LIST[tid].title(r,ctx)||"Sem descrição"):"Novo lançamento";
   const d=$("#fin-drawer");
   d.innerHTML=`<div class="scrim" data-fclose></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="ft">
-    <div class="dr-head"><span class="stamp">${esc(tab?tab.l:"")}${tab&&tab.tables.length>1?" · "+esc(tb.title):""}</span>${r&&r.criado?`<span class="stamp">criado ${fmtStampShort(r.criado)}</span>`:""}<button class="icon-btn" aria-label="Fechar" data-fclose><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="dr-head"><span class="stamp">${esc(tab?tab.l:"")}${tab&&(tab.tables.length>1||tab.solo)?" · "+esc(tb.title):""}</span>${r&&r.criado?`<span class="stamp">criado ${fmtStampShort(r.criado)}</span>`:""}<button class="icon-btn" aria-label="Fechar" data-fclose><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <form class="dr-body" id="fform"><h2 class="dr-title" id="ft">${esc(ttl)}</h2>
       <div class="fields">${ed.map(field).join("")}</div>
       ${(()=>{const kt=r?kTask(tid,r,ctx):null;return `<div class="kbox"><label class="kchk"><input type="checkbox" id="fi-kanban" ${kt?"checked":""}> É uma demanda minha: mostrar na Operação</label>${kt?`<span class="tag info">D-${pad4(kt.num)} · ${esc(kt.status==="concluido"?"Concluída":kt.status==="andamento"?"Em andamento":kt.status==="aguardando"?"Aguardando":"Nova demanda")}</span><button type="button" class="btn sm" data-kopen="${kt.id}">Abrir na Operação</button>`:`<span class="hint-k">Marque para criar um cartão${tid==="cronograma"?" deste mês":""} na Operação.</span>`}</div>`})()}
@@ -1574,11 +1575,12 @@ function reportsHTML(){
 /* ---------- render ---------- */
 function topHTML(tab){
   const g=groupOf(tab.id);const isList=tab.tables&&tab.tables.length&&!tab.home;
-  const first=isList?tab.tables[0]:null;const multi=isList&&tab.tables.length>1;
+  const curT=tab.solo&&tab.subtabs?tab.tables.filter(t=>subOf(tab).tables.includes(t.id)):tab.tables;
+  const first=isList?curT[0]:null;const multi=isList&&curT.length>1;
   let h=`<div class="top-row"><button class="menu-btn" data-navopen aria-label="Abrir menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     <div class="title-wrap">${tab.home?"":`<div class="crumb"><button class="back-home" data-tab="visao">‹ Voltar para Visão geral</button>${g&&g.tabs.length>1?esc(g.l):""}</div>`}<h2 class="page-title">${esc(tab.title||tab.l)}</h2><div class="page-sub" title="${esc(tab.desc)}">${esc(tab.desc)}</div></div>`;
   if(tab.monthly||tab.home)h+=`<div class="top-acts"><label class="sr" for="fmes">Mês</label><input class="sel" type="month" id="fmes" data-month value="${esc(state.month)}"></div>`;
-  let srch="";if(isList&&(!tab.subtabs||tab.subtabs.every(s=>s.own)))srch=`<label class="search" for="fq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fq" type="search" data-q placeholder="Buscar nesta aba" value="${esc(state.qs[tab.id]||"")}" autocomplete="off"></label>`;
+  let srch="";if(isList&&(!tab.subtabs||tab.solo||tab.subtabs.every(s=>s.own)))srch=`<label class="search" for="fq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fq" type="search" data-q placeholder="Buscar nesta aba" value="${esc(state.qs[tab.id]||"")}" autocomplete="off"></label>`;
   h+=`</div><div class="toolbar">`;
   if(tab.monthly){const f=state.filters.cronograma||{},hj=new Date().getDate(),at=!!f._sem,ho=!at&&+f._dia===hj,mes=state.cronGroup==="mes"&&!at&&!ho,sem=state.cronGroup!=="mes"&&!at&&!ho;h+=`<div class="seg" role="group" aria-label="Período da lista"><button data-cgroup="hoje" class="${ho?"on":""}">Hoje</button><button data-cgroup="atual" class="${at?"on":""}">Esta semana</button><button data-cgroup="semana" class="${!at&&!ho?"on":""}">Mês inteiro</button></div>`}
   if(tab.monthly)h+=`<div class="seg" role="group" aria-label="Visualização"><button data-view="list" class="${state.cronView!=="cal"?"on":""}">Lista</button><button data-view="cal" class="${state.cronView==="cal"?"on":""}">Calendário</button></div>`;
@@ -1776,7 +1778,7 @@ function render(){
     if(sub&&sub.custom==="fech")h+=fechHTML();
     if(sub&&sub.custom){}
     else if(tab.monthly&&state.cronView==="cal")h+=calendarHTML();
-    else tbs.forEach(tb=>h+=tb.encontro?encontroHTML(tb):listHTML(tb,ctx,tab.tables.length>1))}
+    else tbs.forEach(tb=>h+=tb.encontro?encontroHTML(tb):listHTML(tb,ctx,tab.solo?tbs.length>1:tab.tables.length>1))}
   $("#fin-content").innerHTML=h;renderNav();
   if(state.encSel){const a=document.querySelector("[data-encpickall]");if(a)a.textContent=encAllTxt()}
   if(aid&&!aid.startsWith("fi-")){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
