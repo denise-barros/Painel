@@ -595,7 +595,7 @@ const FLUXOS={
   "fdc-leticia":{l:"Leticia",desc:"Fechamento mensal e envio para Leticia.",src:[["Fluxo de Caixa Leticia 2026",DRIVE+"1qRT_kGecnoXkFNhuGdBRK6IZRNMESdqNJyRUKlVmc9E/edit"]],
     groups:[{k:"rec",l:"Recebimentos",s:1},{k:"fix",l:"Pagamentos fixos",s:-1},{k:"var",l:"Pagamentos variáveis",s:-1}]},
   "fdc-luciano":{l:"Luciano",t:"Prestação de contas do Luciano",env:"Fernando",desc:"Fechamento mensal e envio para o Fernando todo dia 04.",src:[["FDC Mensal Luciano","https://drive.google.com/file/d/1GJewPx4H2X8ki0H6tiiD6_J59zOGoHiT/view"]],
-    groups:[{k:"rec",l:"Receitas",s:1,t:"Receita",f:"Receitas"},{k:"fix",l:"Despesas fixas",s:-1,t:"Fixa",f:"Fixas"},{k:"var",l:"Despesas variáveis",s:-1,t:"Variável",f:"Variáveis"}]},
+    groups:[{k:"fix",l:"Despesas fixas",s:-1,t:"Fixa",f:"Fixas"},{k:"var",l:"Despesas variáveis",s:-1,t:"Variável",f:"Variáveis"}]},
   "fdc-fernando":{l:"Fernando",t:"Prestação de contas do Fernando",env:"Fernando",desc:"Fechamento mensal e envio para o Fernando todo dia 04.",src:[["FDC Mensal Fernando","https://drive.google.com/file/d/14PSzzdxmFszDyYzLTwhBzoABFfW1wM5i/view"]],
     groups:[{k:"fix",l:"Despesas fixas",s:0,t:"Fixa",f:"Fixas"},{k:"var",l:"Despesas variáveis",s:0,t:"Variável",f:"Variáveis"},{k:"desp",l:"Despesas",s:0,t:"Despesa",f:"Despesas"}]},
   "fdc-camburi":{l:"Camburi",desc:"Visão geral dos gastos do mês. Enviar para Thais mensalmente.",src:[["Camburi 2026",DRIVE+"1ELd0-mqfcZzZUxrq7nSs_tQBHuazN2Iqa3YROlorZAM/edit"]],
@@ -1672,7 +1672,7 @@ function fdcRow(tid,r,i){const q=fdcVal(tid,r,i,state.year),dk=fdcDK(tid,r.id,i)
 /* blocos de linhas seguidas da planilha (o Luciano tem receitas, fixas e variáveis separadas por linhas de total) */
 function fdcBlocks(rows,tab){const L=rows.filter(r=>+r.lin).sort((a,b)=>a.lin-b.lin),out=[];L.forEach(r=>{const b=out[out.length-1];if(b&&+r.lin===b.b+1){b.b=+r.lin;b.g.add(r.grupo)}else out.push({a:+r.lin,b:+r.lin,g:new Set([r.grupo])})});
   if(out.length<2)return out.map(b=>Object.assign(b,{l:""}));return out.map(b=>Object.assign(b,{l:[...b.g].map(k=>(tab.matrix.groups.find(g=>g.k===k)||{}).l||k).join(" e ")}))}
-function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r)),cy=new Date().getFullYear(),gs=tab.matrix.groups.filter(g=>rows.some(r=>r.grupo===g.k)),tp=gs.some(g=>g.k===state.fdcTipo)?state.fdcTipo:"";
+function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r)&&tab.matrix.groups.some(g=>g.k===r.grupo)),cy=new Date().getFullYear(),gs=tab.matrix.groups.filter(g=>rows.some(r=>r.grupo===g.k)),tp=gs.some(g=>g.k===state.fdcTipo)?state.fdcTipo:"";
   const ys=[...new Set([cy-1,cy,cy+1,y])].sort(),ml=MESL[i-1].toLowerCase();
   return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"}" class="${state.fdcView!=="ano"?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button></div>
     <label class="sr" for="fdc-per">Período</label><select class="sel dsel" id="fdc-per" data-fdcper>${ys.map(a=>`<optgroup label="${a}">${MESL.map((m,k)=>`<option value="${a}-${k+1}" ${a===y&&k+1===i?"selected":""}>${m} de ${a}</option>`).join("")}</optgroup>`).join("")}</select>
@@ -1682,7 +1682,7 @@ function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[
       ${fdcBlocks(rows,tab).map(b=>`<button data-fdccopyall="${tid}|${b.a}|${b.b}"><b>Copiar ${b.l?esc(b.l.toLowerCase())+" de":"a coluna de"} ${ml}</b><span>Valores e fórmulas, linhas ${b.a} a ${b.b}, na ordem da planilha. Cole na linha ${b.a}.</span></button>`).join("")}
       ${FDC_XCOLS[tid]?`<button data-fdcxls="${tid}"><b>Baixar Excel com notas</b><span>Mesmo layout da planilha. Copie a coluna do mês e cole: as descrições vão junto como notas.</span></button>`:""}${tab.src&&tab.src.length?`<a class="fm-ddl" href="${tab.src[0][1]}" target="_blank" rel="noopener"><b>Abrir a planilha no Drive ↗</b></a>`:""}</div></details></div>`}
 function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(),ml=MESL[i-1].toLowerCase();fdcMemo={};
-  const rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r));
+  const rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r)&&f.groups.some(g=>g.k===r.grupo));
   if(!rows.length)return `<div class="fm-wrap"><div class="none" style="padding:18px 12px">Nenhuma categoria em ${y}. Abra a Visão do ano para adicionar as categorias.</div></div>`;
   const S={};rows.forEach(r=>S[r.id]=fdcRow(tid,r,i));const gi=k=>f.groups.findIndex(g=>g.k===k);
   const all=rows.slice().sort((a,b)=>gi(a.grupo)-gi(b.grupo)||(a.ordem||0)-(b.ordem||0)),tot=k=>all.filter(r=>!k||r.grupo===k).reduce((a,r)=>a+(S[r.id].total||0),0);
