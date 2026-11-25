@@ -412,6 +412,8 @@ table th,table td{text-align:center!important}
 /* FDC no formato novo (aba do mês + visão do ano) */
 .fm-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
 .fm-bar .seg{margin:0}.fm-bar select{margin:0!important}
+.fm-dd{position:relative}.fm-dd>summary{list-style:none;cursor:pointer}.fm-dd>summary::-webkit-details-marker{display:none}.fm-ddm{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:300px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column;gap:2px}.fm-ddm button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;text-align:left!important}.fm-ddm button:hover,.fm-ddm button:focus-visible{background:var(--sunk)}.fm-ddl{display:block;padding:8px 10px;border-radius:10px;text-decoration:none;border-top:1px solid var(--line);margin-top:2px}.fm-ddl:hover{background:var(--sunk)}.fm-ddm b{font-size:11.5px;font-weight:600;color:var(--ink)}.fm-ddm span{font-size:10.5px;color:var(--muted);white-space:normal}
+.fm-bar .grow{flex:1}table.fm-t tfoot td:last-child{white-space:nowrap}table.fm-t tfoot .fm-prog{font-weight:400;color:var(--muted);margin-right:8px;font-size:10.5px}table.fm-t tfoot .fm-env{background:var(--surface)}
 .fm-help{width:24px;height:24px;padding:0;border-radius:50%;border:1px solid var(--line-strong);background:var(--sunk);color:var(--muted);font-weight:700;font-size:11px;cursor:pointer}
 .fm-prog{font-size:11px;color:var(--muted)}.fm-prog b{color:var(--ink)}
 .fm-env{border:1px dashed var(--line-strong);background:none;border-radius:var(--pill);padding:4px 11px;font:inherit;font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer}
@@ -1595,7 +1597,7 @@ async function fdcExcel(tid){const C=FDC_XCOLS[tid];if(!C)return;let X;try{X=awa
   const name=`${C.nome} ${y} - Painel (${new Date().toLocaleDateString("pt-BR").replace(/\//g,".")}).xlsx`;
   if(!downloads){toast("O download não está disponível nesta visualização.");return}
   try{await downloads.save({filename:name,data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})});toast("Excel gerado: mesmas linhas e colunas da planilha, com notas")}catch(e){if(e&&e.code==="declined")return;toast("Não foi possível salvar o arquivo.")}}
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-fdcxls]");if(!b)return;e.stopPropagation();fdcExcel(b.dataset.fdcxls)},true);
+document.addEventListener("click",e=>{document.querySelectorAll(".fm-dd[open]").forEach(d=>{if(!d.contains(e.target))d.open=false});const b=e.target.closest&&e.target.closest("[data-fdcxls]");if(!b)return;e.stopPropagation();{const dd=b.closest("details");if(dd)dd.open=false}fdcExcel(b.dataset.fdcxls)},true);
 function fdcItems(r,k){const it=(r.it||{})[k];if(Array.isArray(it)&&it.length)return it.map(x=>({d:x.d||"",v:+x.v||0}));
   const f=(r.mf||{})[k];if(f)return String(f).slice(1).split(/(?=[+-])/).filter(Boolean).map(t=>({d:"",v:Math.round((+t)*100)/100}));
   const v=(r.m||{})[k];return v==null||v===""?[]:[{d:"",v:+v}]}
@@ -1649,21 +1651,22 @@ function fdcRow(tid,r,i){const q=fdcVal(tid,r,i,state.year),dk=fdcDK(tid,r.id,i)
   const total=r.link?q.total:dr?(dr.length||q.auto.length?Math.round((fdcSum(dr)+autoS)*100)/100:null):q.total;
   const diff=lc.src==="nt"&&Math.abs(fdcSum(lc.L)-manS)>0.005;
   return{q,dk,L:lc.L,src:lc.src,total,manS,autoS,diff}}
-function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r));fdcMemo={};
-  const wv=rows.filter(r=>fdcRow(tid,r,i).total!=null),done=wv.filter(r=>(r.ck||{})[i]).length,ek=tid+"|"+y+"-"+String(i).padStart(2,"0"),env=(cfg.fdcEnv||{})[ek];
-  const lins=rows.map(r=>+r.lin).filter(Boolean),lr=lins.length?` (linhas ${Math.min(...lins)} a ${Math.max(...lins)})`:"";
+function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r)),cy=new Date().getFullYear();
+  const lins=rows.map(r=>+r.lin).filter(Boolean),lr=lins.length?`linhas ${Math.min(...lins)} a ${Math.max(...lins)}`:"";
+  const ys=[...new Set([cy-1,cy,cy+1,y])].sort(),ml=MESL[i-1].toLowerCase();
   return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"}" class="${state.fdcView!=="ano"?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button></div>
-    <label class="sr" for="fdc-mes">Mês</label><select class="sel dsel" id="fdc-mes" data-fdcmesn>${MESL.map((m,k)=>`<option value="${k+1}" ${k+1===i?"selected":""}>${m} de ${y}</option>`).join("")}</select>
-    <button class="btn sm" data-fdccopyall="${tid}" title="Copia a coluna de ${esc(MESL[i-1])}${lr}, na ordem das linhas da planilha">Copiar para a planilha</button><button class="btn sm" data-fdcxls="${tid}">Baixar Excel com notas</button><button class="fm-help" data-fdctip aria-expanded="${!!state.fdcTip}" title="Como levar para a planilha">?</button>
-    <span class="grow"></span><span class="fm-prog">Conferidas <b>${done} de ${wv.length}</b></span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}" title="Envio do fechamento ao ${esc(FDC_PES[tid])}">${env?`✓ Enviado em ${fmtDate(env)}`:"Marcar como enviado"}</button>
-    ${state.fdcTip?`<p class="fm-tip">“Copiar para a planilha” leva os valores e as fórmulas da coluna do mês${lr}, na ordem das linhas: cole na primeira linha. Linhas que não existem no Painel vão em branco. Para levar também as descrições como notas das células, baixe o Excel, copie a coluna do mês e cole na planilha.</p>`:""}</div>`}
+    <label class="sr" for="fdc-per">Período</label><select class="sel dsel" id="fdc-per" data-fdcper>${ys.map(a=>`<optgroup label="${a}">${MESL.map((m,k)=>`<option value="${a}-${k+1}" ${a===y&&k+1===i?"selected":""}>${m} de ${a}</option>`).join("")}</optgroup>`).join("")}</select>
+    <span class="grow"></span>
+    <details class="fm-dd"><summary class="btn sm">Levar para a planilha ▾</summary><div class="fm-ddm">
+      <button data-fdccopyall="${tid}"><b>Copiar a coluna de ${ml}</b><span>Valores e fórmulas${lr?", "+lr:""}, na ordem da planilha. Cole na primeira linha.</span></button>
+      <button data-fdcxls="${tid}"><b>Baixar Excel com notas</b><span>Mesmo layout da planilha. Copie a coluna do mês e cole: as descrições vão junto como notas.</span></button>${tab.src&&tab.src.length?`<a class="fm-ddl" href="${tab.src[0][1]}" target="_blank" rel="noopener"><b>Abrir a planilha no Drive ↗</b></a>`:""}</div></details></div>`}
 function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(),ml=MESL[i-1].toLowerCase();fdcMemo={};
   const rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r));
   if(!rows.length)return `<div class="fm-wrap"><div class="none" style="padding:18px 12px">Nenhuma categoria em ${y}. Abra a Visão do ano para adicionar as categorias.</div></div>`;
   const S={};rows.forEach(r=>S[r.id]=fdcRow(tid,r,i));const gi=k=>f.groups.findIndex(g=>g.k===k);
   const all=rows.slice().sort((a,b)=>gi(a.grupo)-gi(b.grupo)||(a.ordem||0)-(b.ordem||0)),tot=k=>all.filter(r=>!k||r.grupo===k).reduce((a,r)=>a+(S[r.id].total||0),0);
   const tp=state.fdcTipo||"",gs=f.groups.filter(g=>all.some(r=>r.grupo===g.k)),lbl=k=>k==="fix"?"Fixa":k==="var"?"Variável":"Despesa";
-  let h=`<div class="fm-tabs" role="tablist" aria-label="Tipo de despesa"><button role="tab" data-fdctipo="" aria-selected="${!tp}" class="${!tp?"on":""}">Todas<em id="fmg-all">${fmtMoney(tot(""))||"0,00"}</em></button>${gs.map(g=>`<button role="tab" data-fdctipo="${g.k}" aria-selected="${tp===g.k}" class="${tp===g.k?"on":""}">${g.k==="fix"?"Fixas":g.k==="var"?"Variáveis":esc(g.l)}<em id="fmg-${g.k}">${fmtMoney(tot(g.k))||"0,00"}</em></button>`).join("")}</div>`;
+  let h=`<div class="fm-tabs" role="tablist" aria-label="Tipo de despesa"><button role="tab" data-fdctipo="" aria-selected="${!tp}" class="${!tp?"on":""}">Todas</button>${gs.map(g=>`<button role="tab" data-fdctipo="${g.k}" aria-selected="${tp===g.k}" class="${tp===g.k?"on":""}">${g.k==="fix"?"Fixas":g.k==="var"?"Variáveis":esc(g.l)}</button>`).join("")}</div>`;
   const L=all.filter(r=>!tp||r.grupo===tp),more=!!(state.fdcMore||{})[tid],vis=r=>S[r.id].total!=null||state.fdcOpen===tid+"|"+r.id,hid=L.filter(r=>!vis(r)).length;
   h+=`<div class="fm-wrap"><table class="fm-t"><colgroup><col style="width:34%"><col style="width:14%"><col style="width:20%"><col style="width:16%"><col style="width:16%"></colgroup><thead><tr><th>Categoria</th><th>Tipo</th><th>Valor do mês</th><th>Lançamentos</th><th>Conferido</th></tr></thead><tbody>`;
   L.filter(r=>more||vis(r)).forEach(r=>{const s=S[r.id],op=state.fdcOpen===tid+"|"+r.id,n=s.L.length+s.q.auto.length,ck=!!(r.ck||{})[i],ed=!r.link&&!s.L.length&&!s.q.auto.length;
@@ -1674,7 +1677,8 @@ function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(
       <td>${s.total!=null?`<button class="fm-ck ${ck?"on":""}" data-fdcck="${tid}|${r.id}|${i}" aria-pressed="${ck}" aria-label="Conferido: ${esc(fdcNome(r))}">${ck?"✓":"–"}</button>`:""}</td></tr>`;
     if(op)h+=`<tr class="fm-exp"><td colspan="5">${fdcExpHTML(tid,r,i,s)}</td></tr>`});
   if(hid)h+=`<tr class="fm-more"><td colspan="5"><button class="fm-lnk" data-fdcmore="${tid}">${more?"Esconder linhas sem valor":`Mostrar ${hid} ${hid===1?"linha":"linhas"} sem valor em ${ml}`}</button></td></tr>`;
-  h+=`</tbody><tfoot><tr><td>Total ${tp==="fix"?"das fixas":tp==="var"?"das variáveis":"do mês"}</td><td></td><td id="fmt">${fmtMoney(tot(tp))||"0,00"}</td><td colspan="2"></td></tr></tfoot></table></div>
+  const wv=all.filter(r=>S[r.id].total!=null),done=wv.filter(r=>(r.ck||{})[i]).length,ek=tid+"|"+y+"-"+String(i).padStart(2,"0"),env=(cfg.fdcEnv||{})[ek];
+  h+=`</tbody><tfoot><tr><td>Total ${tp==="fix"?"das fixas":tp==="var"?"das variáveis":"do mês"}</td><td></td><td id="fmt">${fmtMoney(tot(tp))||"0,00"}</td><td colspan="2"><span class="fm-prog">Conferidas ${done} de ${wv.length}</span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}" title="Envio do fechamento ao ${esc(FDC_PES[tid])}">${env?`✓ Enviado em ${fmtDate(env)}`:"Marcar como enviado"}</button></td></tr></tfoot></table></div>
   <p class="fm-foot">Clique na linha para ver e editar os lançamentos (o valor da linha é a soma deles). Nas linhas sem lançamentos, clique no valor para corrigir direto.</p>`;
   return h}
 function fdcExpHTML(tid,r,i,s){const dk=s.dk,ml=MESL[i-1].toLowerCase();
@@ -1727,7 +1731,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
   const vw=t.closest("[data-fdcview]");if(vw){e.stopPropagation();fdcFlush();state.fdcView=vw.dataset.fdcview;state.fdcOpen=null;render();return}
   if(t.closest("[data-fdctip]")){e.stopPropagation();state.fdcTip=!state.fdcTip;render();return}
   const en=t.closest("[data-fdcenv]");if(en){e.stopPropagation();const k=en.dataset.fdcenv;cfg.fdcEnv=Object.assign({},cfg.fdcEnv||{});if(cfg.fdcEnv[k])delete cfg.fdcEnv[k];else cfg.fdcEnv[k]=new Date().toISOString().slice(0,10);await saveCfg();render();return}
-  const ca=t.closest("[data-fdccopyall]");if(ca){e.stopPropagation();fdcMemo={};const tid=ca.dataset.fdccopyall,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===state.year&&+r.lin);if(!rows.length){toast("Nenhuma linha da planilha neste ano.");return}
+  const ca=t.closest("[data-fdccopyall]");if(ca){e.stopPropagation();const dd=ca.closest("details");if(dd)dd.open=false;fdcMemo={};const tid=ca.dataset.fdccopyall,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===state.year&&+r.lin);if(!rows.length){toast("Nenhuma linha da planilha neste ano.");return}
     const lins=rows.map(r=>+r.lin),a=Math.min(...lins),b=Math.max(...lins),out=[];for(let l=a;l<=b;l++){const r=rows.find(x=>+x.lin===l);out.push(r?fdcCell(tid,r,i):"")}
     const ok=await copyText(out.join("\n"));toast(ok?`Copiado: linhas ${a} a ${b} de ${MESL[i-1].toLowerCase()}. Cole na linha ${a} da planilha.`:"Não foi possível copiar.");return}
   const tpb=t.closest("[data-fdctipo]");if(tpb){e.stopPropagation();fdcFlush();state.fdcTipo=tpb.dataset.fdctipo;state.fdcOpen=null;render();return}
@@ -1748,7 +1752,7 @@ document.addEventListener("input",e=>{const t=e.target;if(!t.matches)return;
   if(t.matches("[data-fdcl]")){const p=t.dataset.fdcl.split("|"),f=p.pop(),k=+p.pop(),dk=p.join("|"),L=fdcDraftOf(dk);if(!L||!L[k])return;state.editing=true;
     L[k][f]=f==="v"?parseNum(t.value):t.value;if(f==="v")fdcRefresh(p[0])}});
 document.addEventListener("change",async e=>{const t=e.target;if(!t.matches)return;
-  if(t.matches("[data-fdcmesn]")){fdcFlush();state.fdcMes=+t.value;state.fdcOpen=null;render();return}
+  if(t.matches("[data-fdcper]")){fdcFlush();const[a,m]=t.value.split("-");state.year=+a;state.fdcMes=+m;state.fdcOpen=null;render();return}
   if(t.matches("[data-fdcv]")){const[tid,id,i]=t.dataset.fdcv.split("|"),v=parseNum(t.value);t.value=v==null?"":fdcBR(v);try{await updRow(tid,id,{m:{[i]:v},mf:{[i]:null},it:{[i]:null}})}catch(x){toast("Não foi possível salvar. Tente de novo.")}}});
 document.addEventListener("focusout",e=>{const t=e.target;if(!t.matches||!t.matches("[data-fdcl]"))return;
   if(t.dataset.fdcl.endsWith("|v")){const n=parseNum(t.value);t.value=n==null?"":fdcBR(n)}
@@ -2076,7 +2080,7 @@ function topHTML(tab){
     <div class="title-wrap">${tab.home?"":`<div class="crumb"><button class="back-home" data-tab="visao">‹ Voltar para Visão geral</button>${g&&g.tabs.length>1?esc(g.l):""}</div>`}<h2 class="page-title">${esc(tab.title||tab.l)}</h2><div class="page-sub" title="${esc(tab.desc)}">${esc(tab.desc)}</div></div>`;
   if(tab.monthly||tab.home||tab.mpick)h+=`<div class="top-acts">${tab.id==="contas"?cpActs():""}<label class="sr" for="fmes">Mês</label><input class="sel" type="month" id="fmes" data-month value="${esc(state.month)}"></div>`;
   let srch="";if(isList&&(!tab.subtabs||tab.solo||tab.subtabs.every(s=>s.own)))srch=`<label class="search" for="fq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fq" type="search" data-q placeholder="Buscar nesta aba" value="${esc(state.qs[tab.id]||"")}" autocomplete="off"></label>`;
-  h+=`</div><div class="toolbar">`;
+  h+=`</div><div class="toolbar"${FDC_NOVO[tab.id]?" hidden":""}>`;
   if(tab.monthly){const f=state.filters.cronograma||{},hj=new Date().getDate(),at=!!f._sem,ho=!at&&+f._dia===hj,mes=state.cronGroup==="mes"&&!at&&!ho,sem=state.cronGroup!=="mes"&&!at&&!ho;h+=`<div class="seg" role="group" aria-label="Período da lista"><button data-cgroup="hoje" class="${ho?"on":""}">Hoje</button><button data-cgroup="atual" class="${at?"on":""}">Esta semana</button><button data-cgroup="semana" class="${!at&&!ho?"on":""}">Mês inteiro</button></div>`}
   if(tab.monthly)h+=`<div class="seg" role="group" aria-label="Visualização"><button data-view="list" class="${state.cronView!=="cal"?"on":""}">Lista</button><button data-view="cal" class="${state.cronView==="cal"?"on":""}">Calendário</button></div>`;
   if(tab.id==="contas"||tab.id==="cronograma"){h+=quemSeg(tab.id);
@@ -2084,7 +2088,7 @@ function topHTML(tab){
     else if(state.month>=CP_INI){let L=cpLines(state.month).filter(x=>qOk(x.quem));if(state.cpQuem)L=L.filter(x=>x.quem===state.cpQuem);h+=diaSel("cpDia",[...new Set(L.map(x=>x.d).filter(Boolean))].sort((a,b)=>a-b),state.month);h+=`<label class="cp-ck"><input type="checkbox" data-cpopen ${state.cpOpen?"checked":""}>Só o que falta pagar</label>`}}
   if(tab.subtabs){const sk=subOf(tab).k;h+=`<div class="seg subtabs" role="tablist" aria-label="Seções">${tab.subtabs.map(s=>`<button role="tab" data-subtab="${s.k}" aria-selected="${s.k===sk}" class="${s.k===sk?"on":""}">${esc(s.l)}</button>`).join("")}</div>`;
   }
-  if(tab.matrix||tab.reports||tab.id==="repasses"){const ys=[...new Set([new Date().getFullYear()-1,new Date().getFullYear(),new Date().getFullYear()+1,state.year])].filter(a=>tab.id!=="repasses"||a>=2026).sort();h+=`<label class="sr" for="fyr">Ano</label><select class="sel" id="fyr" data-year>${ys.map(a=>`<option ${a===state.year?"selected":""}>${a}</option>`).join("")}</select>`}
+  if((tab.matrix&&!FDC_NOVO[tab.id])||tab.reports||tab.id==="repasses"){const ys=[...new Set([new Date().getFullYear()-1,new Date().getFullYear(),new Date().getFullYear()+1,state.year])].filter(a=>tab.id!=="repasses"||a>=2026).sort();h+=`<label class="sr" for="fyr">Ano</label><select class="sel" id="fyr" data-year>${ys.map(a=>`<option ${a===state.year?"selected":""}>${a}</option>`).join("")}</select>`}
   const inl=isList&&!multi&&tab.id!=="contas"&&tab.id!=="cronograma";if(inl){const fl=state.filters[first.id]||{};const act=Object.keys(fl).some(k=>fl[k]&&k!=="_sem"&&k!=="_pend"&&!((first.id==="assinaturas"||first.id==="solicitacoes")&&k==="_mes"));h+=filtersHTML(first)+(act?`<button class="btn sm" data-fclear="${first.id}">Limpar filtros</button>`:"")+pendBtns(first,fl)}
   h+=`<span class="grow"></span>`+srch;
   const more=[];
