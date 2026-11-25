@@ -410,7 +410,7 @@ table.grid{border-collapse:collapse;width:100%;font-size:10.5px}
 /* todas as tabelas do Painel: títulos e conteúdo centralizados (pedido da Denise, 24/11/2026) */
 table th,table td{text-align:center!important}
 /* FDC no formato novo (aba do mês + visão do ano) */
-.fm-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;margin:0 0 12px}
+.fm-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
 .fm-bar .seg{margin:0}.fm-bar select{margin:0!important}
 .fm-help{width:24px;height:24px;padding:0;border-radius:50%;border:1px solid var(--line-strong);background:var(--sunk);color:var(--muted);font-weight:700;font-size:11px;cursor:pointer}
 .fm-prog{font-size:11px;color:var(--muted)}.fm-prog b{color:var(--ink)}
@@ -1652,7 +1652,7 @@ function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[
   return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"}" class="${state.fdcView!=="ano"?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button></div>
     <label class="sr" for="fdc-mes">Mês</label><select class="sel dsel" id="fdc-mes" data-fdcmesn>${MESL.map((m,k)=>`<option value="${k+1}" ${k+1===i?"selected":""}>${m} de ${y}</option>`).join("")}</select>
     <button class="btn sm" data-fdccopyall="${tid}" title="Copia a coluna de ${esc(MESL[i-1])}${lr}, na ordem das linhas da planilha">Copiar para a planilha</button><button class="btn sm" data-fdcxls="${tid}">Baixar Excel com notas</button><button class="fm-help" data-fdctip aria-expanded="${!!state.fdcTip}" title="Como levar para a planilha">?</button>
-    <span class="grow"></span><span class="fm-prog">Conferidas <b>${done} de ${wv.length}</b></span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}">${env?`✓ Enviado ao ${esc(FDC_PES[tid])} em ${fmtDate(env)}`:`Marcar como enviado ao ${esc(FDC_PES[tid])}`}</button>
+    <span class="grow"></span><span class="fm-prog">Conferidas <b>${done} de ${wv.length}</b></span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}" title="Envio do fechamento ao ${esc(FDC_PES[tid])}">${env?`✓ Enviado em ${fmtDate(env)}`:"Marcar como enviado"}</button>
     ${state.fdcTip?`<p class="fm-tip">“Copiar para a planilha” leva os valores e as fórmulas da coluna do mês${lr}, na ordem das linhas: cole na primeira linha. Linhas que não existem no Painel vão em branco. Para levar também as descrições como notas das células, baixe o Excel, copie a coluna do mês e cole na planilha.</p>`:""}</div>`}
 function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(),ml=MESL[i-1].toLowerCase();fdcMemo={};
   const rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r));
