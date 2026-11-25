@@ -1698,7 +1698,7 @@ function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(
       <td>${s.total!=null?`<button class="fm-ck ${ck?"on":""}" data-fdcck="${tid}|${r.id}|${i}" aria-pressed="${ck}" aria-label="Conferido: ${esc(fdcNome(r))}">${ck?"✓":"–"}</button>`:""}</td></tr>`;
     if(op)h+=`<tr class="fm-exp"><td colspan="5">${fdcExpHTML(tid,r,i,s)}</td></tr>`});
   const wv=all.filter(r=>S[r.id].total!=null),done=wv.filter(r=>(r.ck||{})[i]).length,ek=tid+"|"+y+"-"+String(i).padStart(2,"0"),env=(cfg.fdcEnv||{})[ek];
-  h+=`</tbody><tfoot><tr><td>${tp?"Total · "+esc(G(tp).f||G(tp).l||""):hasRec?"Total das despesas":"Total do mês"}</td><td></td><td id="fmt">${fmtMoney(tt(tp))||"0,00"}</td><td colspan="2"><span class="fm-prog">Conferidas ${done} de ${wv.length}</span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}" title="Envio do fechamento para ${esc(f.env||"")}">${env?`✓ Enviado em ${fmtDate(env)}`:"Marcar como enviado"}</button></td></tr></tfoot></table></div>
+  h+=`</tbody><tfoot><tr><td>${tp?"Total · "+esc(G(tp).f||G(tp).l||""):hasRec?"Total das despesas":"Total do mês"}</td><td></td><td id="fmt">${fmtMoney(tt(tp))||"0,00"}</td><td colspan="2"><span class="fm-prog">Conferidas ${done} de ${wv.length}</span>${y+"-"+String(i).padStart(2,"0")>=FDC_PAINEL_INI?`<button class="fm-env ${env?"on":""}" data-fdcenv="${ek}" title="Envio do fechamento para ${esc(f.env||"")}">${env?`✓ Enviado em ${fmtDate(env)}`:"Marcar como enviado"}</button>`:""}</td></tr></tfoot></table></div>
   <p class="fm-foot">Clique na linha para ver e editar os lançamentos (o valor da linha é a soma deles). Nas linhas sem lançamentos, clique no valor para corrigir direto.</p>`;
   return h}
 function fdcExpHTML(tid,r,i,s){const dk=s.dk,ml=MESL[i-1].toLowerCase();
