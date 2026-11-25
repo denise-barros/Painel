@@ -16,7 +16,7 @@ const finOk=(ex,v)=>!ex||finDono(v)===ex;
 /* prestação de contas: de quem é cada fluxo e quais grupos são despesa */
 const FDC_DONO={'fdc-leticia':'leticia','fdc-luciano':'fernando','fdc-fernando':'fernando','fdc-camburi':'leticia','fdc-criancas':'leticia'};
 const FDC_NOME={'fdc-leticia':'Leticia','fdc-luciano':'Luciano','fdc-fernando':'Fernando','fdc-camburi':'Camburi','fdc-criancas':'Crianças'};
-const FDC_DESP={'fdc-leticia':['fix','var'],'fdc-luciano':['fix','var'],'fdc-fernando':['desp','cart'],'fdc-camburi':['sai'],'fdc-criancas':['leticia']};
+const FDC_DESP={'fdc-leticia':['fix','var'],'fdc-luciano':['fix','var'],'fdc-fernando':['desp'],'fdc-camburi':['sai'],'fdc-criancas':['leticia']};
 /* empréstimos à equipe ficam no DP (dp-emp) e aparecem também no Financeiro, no formato das linhas de lá */
 const nomeCurto=n=>{const p=String(n||'').trim().split(/\s+/);return p.length>1?p[0]+' '+p[p.length-1]:p[0]||'';};
 function dpEmpFin(){return (S.rec['dp-emp']||[]).map(r=>({id:'dp:'+r.id,_dp:true,titular:r.titular||'Leticia',tipo:'Saída',destino:'Pessoal',razao:nomeCurto(refName('equipe',r.pessoa)),valor:r.valor,data:r.data,devolvido:r.pago,datadev:r.datadev||'',status:r.status==='Quitado'||r.status==='Não será cobrado'?r.status:'Em aberto',obs:r.descricao||'',anexos:r.anexos||[]}));}
