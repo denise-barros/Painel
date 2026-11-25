@@ -409,6 +409,51 @@ table.grid{border-collapse:collapse;width:100%;font-size:10.5px}
 
 /* todas as tabelas do Painel: títulos e conteúdo centralizados (pedido da Denise, 24/11/2026) */
 table th,table td{text-align:center!important}
+/* FDC no formato novo (aba do mês + visão do ano) */
+.fm-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;margin:0 0 12px}
+.fm-bar .seg{margin:0}.fm-bar select{margin:0!important}
+.fm-help{width:24px;height:24px;padding:0;border-radius:50%;border:1px solid var(--line-strong);background:var(--sunk);color:var(--muted);font-weight:700;font-size:11px;cursor:pointer}
+.fm-prog{font-size:11px;color:var(--muted)}.fm-prog b{color:var(--ink)}
+.fm-env{border:1px dashed var(--line-strong);background:none;border-radius:var(--pill);padding:4px 11px;font:inherit;font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.fm-env.on{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.fm-tip{flex-basis:100%;margin:2px 0 0;font-size:11px;color:var(--muted);background:var(--sunk);border-radius:10px;padding:7px 10px}
+.fm-wrap{max-width:860px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+table.fm-t{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+table.fm-t th{background:var(--sunk);font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+table.fm-t td{padding:3px 10px;border-bottom:1px solid var(--line)}
+table.fm-t tfoot td{background:var(--sunk);font-weight:700;padding:7px 10px;border-bottom:0}
+tr.fm-g td{font-weight:700;font-family:var(--font-display);font-size:11.5px;padding:10px 10px 5px;border-bottom:1px solid var(--line-strong)}
+.fm-gt{font-family:inherit;color:var(--muted);margin-left:8px;font-size:11px}
+tr.fm-row{cursor:pointer}tr.fm-row:hover td{background:var(--sunk)}tr.fm-row.on td{background:var(--accent-soft)}
+td.fm-cat{font-weight:600}
+.fm-car{display:inline-block;width:14px;color:var(--faint);font-size:9px}
+.fm-link{font-size:9.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--pill);padding:1px 7px;margin-left:4px}
+.fm-vv{font-weight:700}
+.fm-v{width:120px;border:1px solid transparent;background:transparent;border-radius:8px;padding:1px 8px;font:inherit;font-weight:700;color:var(--ink);text-align:center}
+.fm-v:hover{border-color:var(--line-strong);background:var(--surface)}.fm-v:focus{border-color:var(--accent);background:var(--surface);outline:none}
+.fm-v::placeholder{color:var(--faint);font-weight:400}
+.fm-warn{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--neg);color:var(--surface);font-size:9.5px;font-weight:700;margin-left:6px;vertical-align:1px}
+.fm-cnt{display:inline-block;min-width:24px;border-radius:var(--pill);background:var(--sunk);border:1px solid var(--line);font-size:10px;font-weight:700;padding:0 7px;color:var(--muted)}
+.fm-dash{color:var(--faint)}
+.fm-ck{border:0;background:none;font-size:14px;line-height:1;padding:2px 8px;font-weight:700;color:var(--faint);cursor:pointer}.fm-ck.on{color:var(--pos)}
+tr.fm-more td{padding:3px 10px;border-bottom:1px solid var(--line-strong)}
+.fm-lnk{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;font-size:10.5px;padding:2px 4px;cursor:pointer}
+tr.fm-exp>td{background:var(--sunk);padding:8px 14px 12px}
+.fm-lx{display:flex;flex-direction:column;gap:4px;max-width:720px;margin:0 auto}
+.fm-lh,.fm-lr{display:grid;grid-template-columns:86px minmax(0,1fr) 60px 108px 28px;gap:6px;align-items:center}
+.fm-lh span{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.fm-li{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:3px 8px;font:inherit;font-size:11px;color:var(--ink);text-align:center}
+.fm-li.fm-ld{text-align:left!important}.fm-li:focus{border-color:var(--accent);outline:none}
+.fm-lf{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.fm-s{color:var(--muted);font-size:11px}.fm-s b{color:var(--ink)}
+.fm-msg{margin:0;color:var(--muted);font-size:11px}
+.fm-w{background:var(--warn-soft);border-radius:10px;padding:7px 10px;font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.fm-au{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:10.5px;display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.fm-foot{max-width:860px;margin:8px auto 0;color:var(--muted);font-size:10.5px}
+.fy td.cur,.fy th.cur{box-shadow:inset 2px 0 0 var(--accent),inset -2px 0 0 var(--accent)}
+.fy{font-size:10px}.fy th{padding:8px 3px!important;letter-spacing:.04em!important}.fy td .cell{padding:6px 3px}.fy td:first-child,.fy th:first-child{min-width:150px}.fy td.hs .cell{padding-left:12px}.fy-c{display:flex;align-items:center;justify-content:center;gap:2px}.fy-c .x{padding:2px 4px;font-size:9px;opacity:0}.fy tr:hover .fy-c .x,.fy-c .x:focus{opacity:1}.fy tr.fy-g{cursor:pointer}.fy tr.fy-g td{background:var(--surface)}.fy tr.fy-g:hover td{background:var(--sunk)}
+@media (max-width:640px){.fm-lh{display:none}.fm-lr{grid-template-columns:70px minmax(0,1fr) 90px 28px}.fm-lr .fm-li[data-fdcl$="|pc"]{display:none}}
+
 </style>
 
 <div id="fin" style="display:contents">
@@ -548,7 +593,7 @@ const FLUXOS={
   "fdc-luciano":{l:"Luciano",desc:"Fechamento mensal e envio para o Fernando todo dia 04.",src:[["FDC Mensal Luciano","https://drive.google.com/file/d/1GJewPx4H2X8ki0H6tiiD6_J59zOGoHiT/view"]],
     groups:[{k:"rec",l:"Receitas",s:1},{k:"fix",l:"Despesas fixas",s:-1},{k:"var",l:"Despesas variáveis",s:-1}]},
   "fdc-fernando":{l:"Fernando",desc:"Fechamento mensal e envio para o Fernando todo dia 04.",src:[["FDC Mensal Fernando","https://drive.google.com/file/d/14PSzzdxmFszDyYzLTwhBzoABFfW1wM5i/view"]],
-    groups:[{k:"desp",l:"Despesas",s:0}]},
+    groups:[{k:"fix",l:"Despesas fixas",s:0},{k:"var",l:"Despesas variáveis",s:0},{k:"desp",l:"Despesas",s:0}]},
   "fdc-camburi":{l:"Camburi",desc:"Visão geral dos gastos do mês. Enviar para Thais mensalmente.",src:[["Camburi 2026",DRIVE+"1ELd0-mqfcZzZUxrq7nSs_tQBHuazN2Iqa3YROlorZAM/edit"]],
     groups:[{k:"ent",l:"Entradas (aportes e aluguéis)",s:1},{k:"sai",l:"Saídas",s:-1}]},
   "fdc-criancas":{l:"Crianças",desc:"Visão geral dos gastos do mês de Anna e Spike. Enviar para Andrew mensalmente.",src:[["Kids accounts","https://drive.google.com/file/d/1VQgdEuQFpic1xu0gY9M_CVCBs25bF8Vv/view"]],
@@ -715,7 +760,7 @@ async function delRow(tid,id){
   if(db){await track(colRef(tid).doc(id).delete());return}
   data[tid]=(data[tid]||[]).filter(x=>x.id!==id);scheduleRender();
 }
-async function saveCfg(){if(db){try{await track(db.doc("config/painel").set({parcelasRef:cfg.parcelasRef}))}catch(e){console.warn(e)}}}
+async function saveCfg(){if(db){try{await track(db.doc("config/painel").set({parcelasRef:cfg.parcelasRef,fdcEnv:cfg.fdcEnv||{}}))}catch(e){console.warn(e)}}}
 const fmtStampBR=ts=>{if(!ts)return"";const d=new Date(ts);const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} às ${p(d.getHours())}:${p(d.getMinutes())}`};
 const fmtStampShort=ts=>{if(!ts)return"";const d=new Date(ts);const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)} ${p(d.getHours())}:${p(d.getMinutes())}`};
 function stampPatch(tid,r,patch){
@@ -1477,6 +1522,7 @@ async function saveFicha(tid,id){
 
 /* ---------- fluxo de caixa (grade de meses) ---------- */
 function matrixHTML(tab){
+  if(FDC_NOVO[tab.id])return fdcNovoHTML(tab);
   const f=tab.matrix,tid=tab.id,y=state.year;
   const rows=(data[tid]||[]).filter(r=>+r.ano===y);
   const lucTot=i=>{const L=(data["fdc-luciano"]||[]).filter(x=>+x.ano===y&&(x.grupo==="fix"||x.grupo==="var"));let t=0,any=false;L.forEach(x=>{const v=(x.m||{})[i];if(v!=null&&v!==""){t+=+v;any=true}});return any?Math.round(t*100)/100:null};
@@ -1513,10 +1559,10 @@ const FDC_PES={"fdc-fernando":"Fernando","fdc-luciano":"Luciano"};
 const fdcLbl=(tid,r)=>FDC_PES[tid]+" · "+String(r.cat||"").trim();
 function fdcLinhas(){const y=new Date().getFullYear(),o=[];Object.keys(FDC_PES).forEach(tid=>(data[tid]||[]).filter(r=>+r.ano===y||+r.ano===state.year).sort((a,b)=>String(a.grupo).localeCompare(String(b.grupo))||(a.ordem||0)-(b.ordem||0)).forEach(r=>{const l=fdcLbl(tid,r);if(r.link!=="fdc-luciano"&&!o.includes(l))o.push(l)}));return o}
 let fdcMemo={};
-function fdcAuto(tid,r,i,y){const ym=y+"-"+String(i).padStart(2,"0");if(ym<CP_INI)return[];const lbl=fdcLbl(tid,r);
+function fdcAuto(tid,r,i,y){const ym=y+"-"+String(i).padStart(2,"0");if(ym<CP_INI)return[];const lbs=[fdcLbl(tid,r)].concat((r.alias||[]).map(a=>FDC_PES[tid]+" · "+a));
   if(!fdcMemo[ym])fdcMemo[ym]=cpLines(ym).filter(x=>x.pago&&x.cr&&x.cr.fdc);
-  const oldP=(data.cronograma||[]).filter(r=>String(r.fdc||"").trim()===lbl).flatMap(c=>Object.entries(c.meses||{}).filter(([k,x])=>k<CP_INI&&x&&x.s==="Pago"&&x.pagoEm&&String(x.pagoEm).slice(0,7)===ym&&ym>=CP_INI).map(([k,x])=>{const v=+x.v||0,pd=new Date(x.pagoEm);return{v:Math.round(v*100)/100,d:`${String(pd.getDate()).padStart(2,"0")}.${String(pd.getMonth()+1).padStart(2,"0")} R$ ${fmtMoney(v)} ${c.despesa} (ref. ${fmtMonth(k)})`,key:"old:"+c.id+"|"+k}}));
-  return oldP.concat(fdcMemo[ym].filter(x=>String(x.cr.fdc).trim()===lbl).map(x=>{const v=hasV(x.k&&x.k.valor)?+x.k.valor:+x.valor||0;const pd=x.k&&x.k.pagoEm?new Date(x.k.pagoEm):null;
+  const oldP=(data.cronograma||[]).filter(c=>lbs.includes(String(c.fdc||"").trim())).flatMap(c=>Object.entries(c.meses||{}).filter(([k,x])=>k<CP_INI&&x&&x.s==="Pago"&&x.pagoEm&&String(x.pagoEm).slice(0,7)===ym&&ym>=CP_INI).map(([k,x])=>{const v=+x.v||0,pd=new Date(x.pagoEm);return{v:Math.round(v*100)/100,d:`${String(pd.getDate()).padStart(2,"0")}.${String(pd.getMonth()+1).padStart(2,"0")} R$ ${fmtMoney(v)} ${c.despesa} (ref. ${fmtMonth(k)})`,key:"old:"+c.id+"|"+k}}));
+  return oldP.concat(fdcMemo[ym].filter(x=>lbs.includes(String(x.cr.fdc).trim())).map(x=>{const v=hasV(x.k&&x.k.valor)?+x.k.valor:+x.valor||0;const pd=x.k&&x.k.pagoEm?new Date(x.k.pagoEm):null;
     const dd=pd?String(pd.getDate()).padStart(2,"0")+"."+String(pd.getMonth()+1).padStart(2,"0"):String(x.d||"").padStart(2,"0")+"."+String(i).padStart(2,"0");
     return{v:Math.round(v*100)/100,d:`${dd} R$ ${fmtMoney(v)} ${x.desc}`,key:x.key}}))}
 function fdcVal(tid,r,i,y){y=y||state.year;
@@ -1574,6 +1620,138 @@ function fdcDetail(tid,id,k){const r=(data[tid]||[]).find(x=>x.id===id);if(!r)re
       try{await updRow(tid,id,{m:{[k]:l.length?tot:null},mf:{[k]:f},it:{[k]:l.length?l.map(x=>({d:x.d,v:Math.round(x.v*100)/100})):null},nt:{[k]:NT.trim()?NT:null}});toast("Salvo")}catch(x){toast("Não foi possível salvar.")}
       m.remove();state.editing=false;render()}});
   setTimeout(()=>{const i=m.querySelector("#fdc-dt-n");if(i)i.focus()},30)}
+/* ---------- FDC no formato novo (Fernando): aba do mês com lançamentos na linha + visão do ano recolhível ---------- */
+const FDC_NOVO={"fdc-fernando":1};
+const fdcNome=r=>String(r.curto||r.cat||"").trim();
+const fdcMesSel=()=>{if(state.fdcMes)return state.fdcMes;const cy=new Date().getFullYear();return state.year===cy?(new Date().getMonth()||12):state.year<cy?12:1};
+const fdcSum=L=>Math.round(L.reduce((a,x)=>a+(+x.v||0),0)*100)/100;
+const fdcBR=v=>(+v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+function fdcParseNote(nt){const out=[],mon=s=>{s=String(s||"").trim();return /^-?[\d.]+,\d{1,2}$/.test(s)?+s.replace(/\./g,"").replace(",","."):null};
+  String(nt||"").split("\n").forEach(line=>{line=line.trim();if(!line||/^=+$/.test(line))return;
+    if(line.includes("\t")){const p=line.split("\t").map(x=>x.trim());let vi=p.length-1;while(vi>0&&!p[vi])vi--;const v=mon(p[vi]);if(v==null)return;
+      const dt=/^\d{2}\/\d{2}(\/\d{2,4})?$/.test(p[0])?p[0]:"",rest=p.slice(dt?1:0,vi),pc=rest.find(x=>/^\d+\/\d+$/.test(x))||"";
+      out.push({dt,d:rest.filter(x=>x&&x!==pc).join(" "),pc,v})}
+    else{const m=line.match(/^(.*?)[\s\-–:]*(-?[\d.]+,\d{2})$/);if(m)out.push({dt:"",d:m[1].trim(),pc:"",v:mon(m[2])})}});
+  return out}
+/* lançamentos digitados de uma célula: os gravados (it), senão os lidos da nota da planilha, senão as partes da fórmula */
+function fdcLancs(r,i){const it=(r.it||{})[i],cp=x=>({dt:x.dt||"",d:x.d||"",pc:x.pc||"",v:+x.v||0});
+  if(Array.isArray(it)&&it.length&&it.some(x=>x.d||x.dt))return{L:it.map(cp),src:"it"};
+  const p=fdcParseNote((r.nt||{})[i]);if(p.length)return{L:p,src:"nt"};
+  if(Array.isArray(it)&&it.length>1)return{L:it.map(cp),src:"it"};
+  const f=(r.mf||{})[i];if(f){const ps=String(f).slice(1).split(/(?=[+-])/).filter(Boolean).map(t=>Math.round(+t*100)/100);if(ps.length>1)return{L:ps.map(v=>({dt:"",d:"",pc:"",v})),src:"mf"}}
+  return{L:[],src:""}}
+const fdcDK=(tid,id,i)=>tid+"|"+id+"|"+i;
+/* estado da linha no mês: total, lançamentos (rascunho em edição tem prioridade), do Contas a pagar e divergência com a planilha */
+function fdcRow(tid,r,i){const q=fdcVal(tid,r,i,state.year),dk=fdcDK(tid,r.id,i),dr=(state.fdcDraft||{})[dk];
+  const lc=dr?{L:dr,src:"draft"}:fdcLancs(r,i),man=q.man||[],manS=fdcSum(man.map(v=>({v}))),autoS=fdcSum(q.auto||[]);
+  const total=r.link?q.total:dr?(dr.length||q.auto.length?Math.round((fdcSum(dr)+autoS)*100)/100:null):q.total;
+  const diff=lc.src==="nt"&&Math.abs(fdcSum(lc.L)-manS)>0.005;
+  return{q,dk,L:lc.L,src:lc.src,total,manS,autoS,diff}}
+function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r));fdcMemo={};
+  const wv=rows.filter(r=>fdcRow(tid,r,i).total!=null),done=wv.filter(r=>(r.ck||{})[i]).length,ek=tid+"|"+y+"-"+String(i).padStart(2,"0"),env=(cfg.fdcEnv||{})[ek];
+  const lins=rows.map(r=>+r.lin).filter(Boolean),lr=lins.length?` (linhas ${Math.min(...lins)} a ${Math.max(...lins)})`:"";
+  return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"}" class="${state.fdcView!=="ano"?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button></div>
+    <label class="sr" for="fdc-mes">Mês</label><select class="sel dsel" id="fdc-mes" data-fdcmesn>${MESL.map((m,k)=>`<option value="${k+1}" ${k+1===i?"selected":""}>${m} de ${y}</option>`).join("")}</select>
+    <button class="btn sm" data-fdccopyall="${tid}" title="Copia a coluna de ${esc(MESL[i-1])}${lr}, na ordem das linhas da planilha">Copiar para a planilha</button><button class="btn sm" data-fdcxls="${tid}">Baixar Excel com notas</button><button class="fm-help" data-fdctip aria-expanded="${!!state.fdcTip}" title="Como levar para a planilha">?</button>
+    <span class="grow"></span><span class="fm-prog">Conferidas <b>${done} de ${wv.length}</b></span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}">${env?`✓ Enviado ao ${esc(FDC_PES[tid])} em ${fmtDate(env)}`:`Marcar como enviado ao ${esc(FDC_PES[tid])}`}</button>
+    ${state.fdcTip?`<p class="fm-tip">“Copiar para a planilha” leva os valores e as fórmulas da coluna do mês${lr}, na ordem das linhas: cole na primeira linha. Linhas que não existem no Painel vão em branco. Para levar também as descrições como notas das células, baixe o Excel, copie a coluna do mês e cole na planilha.</p>`:""}</div>`}
+function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(),ml=MESL[i-1].toLowerCase();fdcMemo={};
+  const rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r));
+  if(!rows.length)return `<div class="fm-wrap"><div class="none" style="padding:18px 12px">Nenhuma categoria em ${y}. Abra a Visão do ano para adicionar as categorias.</div></div>`;
+  const S={};rows.forEach(r=>S[r.id]=fdcRow(tid,r,i));
+  let h=`<div class="fm-wrap"><table class="fm-t"><thead><tr><th>Categoria</th><th>Valor do mês</th><th>Lançamentos</th><th>Conferido</th></tr></thead><tbody>`,mt=0;
+  f.groups.forEach(g=>{const L=rows.filter(r=>r.grupo===g.k).sort((a,b)=>(a.ordem||0)-(b.ordem||0));if(!L.length)return;
+    const gt=L.reduce((a,r)=>a+(S[r.id].total||0),0);mt+=gt;const mk=tid+"|"+g.k,more=!!(state.fdcMore||{})[mk];
+    const show=L.filter(r=>more||S[r.id].total!=null||state.fdcOpen===tid+"|"+r.id),hid=L.length-L.filter(r=>S[r.id].total!=null||state.fdcOpen===tid+"|"+r.id).length;
+    h+=`<tr class="fm-g"><td colspan="4">${esc(g.l)}<span class="fm-gt" id="fmg-${g.k}">R$ ${fmtMoney(gt)||"0,00"}</span></td></tr>`;
+    show.forEach(r=>{const s=S[r.id],op=state.fdcOpen===tid+"|"+r.id,n=s.L.length+s.q.auto.length,ck=!!(r.ck||{})[i],ed=!r.link&&!s.L.length&&!s.q.auto.length;
+      h+=`<tr class="fm-row ${op?"on":""}" data-fdcrow="${tid}|${r.id}" tabindex="0" aria-expanded="${op}"><td class="fm-cat"><span class="fm-car" aria-hidden="true">${op?"▾":"▸"}</span>${esc(fdcNome(r))}${r.link?` <span class="fm-link">FDC do Luciano</span>`:""}</td>
+        <td>${ed?`<input class="fm-v" id="fmv-${r.id}" data-fdcv="${tid}|${r.id}|${i}" inputmode="decimal" value="${s.total==null?"":fdcBR(s.total)}" placeholder="–" aria-label="Valor de ${esc(fdcNome(r))} em ${ml}">`:`<b class="fm-vv" id="fmv-${r.id}">${s.total==null?"–":fmtMoney(s.total)}</b>`}${s.diff?`<span class="fm-warn" title="A soma dos lançamentos não bate com o valor da planilha">!</span>`:""}</td>
+        <td>${n?`<span class="fm-cnt">${n}</span>`:'<span class="fm-dash">–</span>'}</td>
+        <td>${s.total!=null?`<button class="fm-ck ${ck?"on":""}" data-fdcck="${tid}|${r.id}|${i}" aria-pressed="${ck}" aria-label="Conferido: ${esc(fdcNome(r))}">${ck?"✓":"–"}</button>`:""}</td></tr>`;
+      if(op)h+=`<tr class="fm-exp"><td colspan="4">${fdcExpHTML(tid,r,i,s)}</td></tr>`});
+    if(hid)h+=`<tr class="fm-more"><td colspan="4"><button class="fm-lnk" data-fdcmore="${mk}">${more?"Esconder linhas sem valor":`Mostrar ${hid} ${hid===1?"linha":"linhas"} sem valor em ${ml}`}</button></td></tr>`});
+  h+=`</tbody><tfoot><tr><td>Total do mês</td><td id="fmt">${fmtMoney(mt)||"0,00"}</td><td colspan="2"></td></tr></tfoot></table></div>
+  <p class="fm-foot">Clique na linha para ver e editar os lançamentos (o valor da linha é a soma deles). Nas linhas sem lançamentos, clique no valor para corrigir direto.</p>`;
+  return h}
+function fdcExpHTML(tid,r,i,s){const dk=s.dk,ml=MESL[i-1].toLowerCase();
+  if(r.link)return `<div class="fm-lx"><p class="fm-msg">Esta linha é o total do FDC do Luciano (despesas fixas e variáveis) e entra sozinha.</p><div class="fm-lf"><button class="btn sm" data-fdcgo="${esc(r.link)}">Abrir FDC do Luciano</button></div></div>`;
+  let h=`<div class="fm-lx" data-lx="${dk}">${r.curto?`<p class="fm-msg">Na planilha: “${esc(r.cat)}”${r.lin?` · linha ${r.lin}`:""}</p>`:""}`;
+  if(s.L.length){h+=`<div class="fm-lh"><span>Data</span><span>Descrição</span><span>Parcela</span><span>Valor</span><span></span></div>`;
+    h+=s.L.map((x,k)=>`<div class="fm-lr"><input class="fm-li" id="fml-${r.id}-${k}-dt" data-fdcl="${dk}|${k}|dt" value="${esc(x.dt)}" placeholder="dd/mm" aria-label="Data"><input class="fm-li fm-ld" id="fml-${r.id}-${k}-d" data-fdcl="${dk}|${k}|d" value="${esc(x.d)}" placeholder="Descrição" aria-label="Descrição"><input class="fm-li" id="fml-${r.id}-${k}-pc" data-fdcl="${dk}|${k}|pc" value="${esc(x.pc)}" placeholder="–" aria-label="Parcela"><input class="fm-li" id="fml-${r.id}-${k}-v" data-fdcl="${dk}|${k}|v" inputmode="decimal" value="${x.v==null||x.v===""?"":fdcBR(x.v)}" placeholder="0,00" aria-label="Valor"><button class="x" data-fdclrm="${dk}|${k}" aria-label="Tirar este lançamento">✕</button></div>`).join("")}
+  else h+=`<p class="fm-msg">${s.manS||s.total!=null&&!s.q.auto.length?"Valor digitado sem lançamentos. Para detalhar, adicione os lançamentos: o valor da linha passa a ser a soma deles.":s.q.auto.length?"Nenhum lançamento digitado.":"Sem valor em "+ml+"."}</p>`;
+  if(s.diff)h+=`<div class="fm-w"><span>A soma dos lançamentos (<b>${fmtMoney(fdcSum(s.L))}</b>) não bate com o valor da planilha (<b>${fmtMoney(s.manS)}</b>).</span><button class="btn sm" data-fdcsum="${dk}">Usar a soma</button><button class="btn sm" data-fdckeep="${dk}">Manter o valor da planilha</button></div>`;
+  if(s.q.auto.length)h+=`<div class="fm-au"><b>Do Contas a pagar (entra sozinho)</b>${s.q.auto.map(a=>`<span>${esc(a.d)}</span>`).join("")}<span class="mut">Para mudar, edite a conta no Contas a pagar.</span></div>`;
+  h+=`<div class="fm-lf"><button class="btn sm" data-fdcladd="${dk}">+ Adicionar lançamento</button>${s.L.length&&!s.diff?`<span class="fm-s">Soma <b id="fms-${r.id}">${fmtMoney(fdcSum(s.L))||"0,00"}</b>${s.q.auto.length?` + Contas a pagar ${fmtMoney(s.autoS)}`:""}</span>`:""}</div></div>`;
+  return h}
+function fdcAnoHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSel();fdcMemo={};
+  const rows=(data[tid]||[]).filter(r=>+r.ano===y),desp=PF&&PF.despGroups?PF.despGroups(tid):[],mv=(r,i)=>fdcVal(tid,r,i,y).total,yr=t=>t.reduce((a,b)=>a+b,0);
+  let h=`<div class="wrap"><table class="grid mx fy"><thead><tr><th>Categoria</th>${MES.map((m,k)=>`<th class="${k+1===cur?"cur":""}">${m.replace(".","")}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+  if(!rows.length)h+=`<tr><td colspan="14"><div class="none" style="padding:18px 12px">Nenhuma categoria em ${y}.</div></td></tr>`;
+  const gt=Array(13).fill(0);
+  f.groups.forEach(g=>{const L=rows.filter(r=>r.grupo===g.k).sort((a,b)=>(a.ordem||0)-(b.ordem||0)),t=Array(13).fill(0);L.forEach(r=>{for(let i=1;i<=12;i++)t[i]+=mv(r,i)||0});for(let i=1;i<=12;i++)gt[i]+=t[i];
+    if(!L.length&&g.k==="desp")return;
+    const yk=tid+"|"+g.k,op=!!(state.fdcYOpen||{})[yk];
+    h+=`<tr class="grp fy-g" data-fdcyg="${yk}" tabindex="0" aria-expanded="${op}"><td><span class="fm-car" aria-hidden="true">${op?"▾":"▸"}</span>${esc(g.l)}</td>${t.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(t))}</span></td></tr>`;
+    if(!op)return;
+    L.forEach(r=>{let tot=0;h+=`<tr><td><div class="fy-c"><span class="cell" tabindex="0" data-medit="${tid}|${r.id}|cat" title="${esc(r.cat||"")}">${esc(fdcNome(r)||"Sem nome")}</span>${state.confirm===tid+"|"+r.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir categoria" data-del="${tid}|${r.id}">✕</button>`}</div></td>`;
+      for(let i=1;i<=12;i++){const q=fdcVal(tid,r,i,y),v=q.total;tot+=v||0;const dg=v!=null&&desp.includes(r.grupo),st=(r.st||{})[i],cp=(r.cp||{})[i];
+        const dot=dg?`<button class="mst ${st==="Pago"?(cp?"ok":"ok nc"):st==="A pagar"?"pend":""}" data-mst="${tid}|${r.id}|${i}" title="${st==="Pago"?(cp?"Pago · com comprovante":"Pago · sem comprovante"):st==="A pagar"?"A pagar":"Sem status"}: clique para marcar" aria-label="Status do valor de ${MESL[i-1]}"></button>`:"";
+        h+=r.link?`<td class="ro ${i===cur?"cur":""}" title="Total do FDC do Luciano"><span class="cell lnk">${v==null?"&nbsp;":fmtMoney(v)}</span></td>`:`<td class="${dg?"hs":""} ${i===cur?"cur":""}">${dot}<span class="cell ${v<0?"neg":""} ${q.parts.length>1?"fx":""} ${q.note?"hasnt":""} ${q.auto.length?"auto":""}" tabindex="0" data-medit="${tid}|${r.id}|${i}" ${q.note?`title="${esc(q.note)}"`:""}>${v==null?"&nbsp;":fmtMoney(v)}</span></td>`}
+      h+=`<td class="ro"><span class="cell" style="font-weight:700">${fmtMoney(tot)}</span></td></tr>`});
+    h+=`<tr><td colspan="14"><button class="addcat" data-addcat="${tid}|${g.k}">+ Adicionar categoria em ${esc(g.l)}</button></td></tr>`});
+  h+=`<tr class="tot"><td><span class="cell">Total do mês</span></td>${gt.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(gt))}</span></td></tr>`;
+  return h+`</tbody></table></div><p class="fm-foot">Clique num grupo para abrir as categorias. A coluna destacada é o mês escolhido acima. Clique num valor para ver o detalhe da célula.</p>`}
+function fdcNovoHTML(tab){return fdcBarHTML(tab)+(state.fdcView==="ano"?fdcAnoHTML(tab):fdcMesHTML(tab))}
+/* recalcula só os totais da aba do mês (sem redesenhar, para não perder o campo em edição) */
+function fdcRefresh(tid){const tab=state.tab;if(!tab||tab.id!==tid)return;const y=state.year,i=fdcMesSel();fdcMemo={};let mt=0;
+  tab.matrix.groups.forEach(g=>{let gt=0;(data[tid]||[]).filter(r=>+r.ano===y&&r.grupo===g.k&&fdcNome(r)).forEach(r=>{const s=fdcRow(tid,r,i);gt+=s.total||0;
+      const v=document.getElementById("fmv-"+r.id);if(v&&v.tagName!=="INPUT")v.textContent=s.total==null?"–":fmtMoney(s.total);
+      const sm=document.getElementById("fms-"+r.id);if(sm)sm.textContent=fmtMoney(fdcSum(s.L))||"0,00"});
+    mt+=gt;const e=document.getElementById("fmg-"+g.k);if(e)e.textContent="R$ "+(fmtMoney(gt)||"0,00")});
+  const t=document.getElementById("fmt");if(t)t.textContent=fmtMoney(mt)||"0,00"}
+function fdcDraftOf(dk){const[tid,id,i]=dk.split("|"),r=(data[tid]||[]).find(x=>x.id===id);if(!r)return null;state.fdcDraft=state.fdcDraft||{};
+  if(!state.fdcDraft[dk])state.fdcDraft[dk]=fdcLancs(r,+i).L.map(x=>Object.assign({},x));return state.fdcDraft[dk]}
+async function fdcSaveL(dk,L){const[tid,id,i]=dk.split("|"),y=state.year;
+  L=L.filter(x=>x.v!=null&&x.v!==""&&!isNaN(+x.v)).map(x=>{let dt=String(x.dt||"").trim();if(/^\d{1,2}\/\d{1,2}$/.test(dt)){const[d,m]=dt.split("/");dt=d.padStart(2,"0")+"/"+m.padStart(2,"0")+"/"+y}
+    return{dt,d:String(x.d||"").trim(),pc:String(x.pc||"").trim(),v:Math.round(+x.v*100)/100}});
+  const tot=fdcSum(L),f=L.length>1?"="+L.map((x,k)=>(k&&x.v>=0?"+":"")+String(x.v)).join(""):null;
+  const nt=L.length?L.map(x=>x.dt?`${x.dt}\t${x.d}\t${x.pc}\t${fdcBR(x.v)}`:`${x.d}${x.d?" - ":""}${fdcBR(x.v)}`).join("\n")+"\n======":null;
+  if(state.fdcDraft)delete state.fdcDraft[dk];
+  try{await updRow(tid,id,{m:{[i]:L.length?tot:null},mf:{[i]:f},it:{[i]:L.length?L:null},nt:{[i]:nt}})}catch(e){toast("Não foi possível salvar. Tente de novo.")}}
+function fdcFlush(){const d=state.fdcDraft||{};Object.keys(d).forEach(dk=>fdcSaveL(dk,d[dk]))}
+document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.closest("#fin-content"))return;
+  const vw=t.closest("[data-fdcview]");if(vw){e.stopPropagation();fdcFlush();state.fdcView=vw.dataset.fdcview;state.fdcOpen=null;render();return}
+  if(t.closest("[data-fdctip]")){e.stopPropagation();state.fdcTip=!state.fdcTip;render();return}
+  const en=t.closest("[data-fdcenv]");if(en){e.stopPropagation();const k=en.dataset.fdcenv;cfg.fdcEnv=Object.assign({},cfg.fdcEnv||{});if(cfg.fdcEnv[k])delete cfg.fdcEnv[k];else cfg.fdcEnv[k]=new Date().toISOString().slice(0,10);await saveCfg();render();return}
+  const ca=t.closest("[data-fdccopyall]");if(ca){e.stopPropagation();fdcMemo={};const tid=ca.dataset.fdccopyall,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===state.year&&+r.lin);if(!rows.length){toast("Nenhuma linha da planilha neste ano.");return}
+    const lins=rows.map(r=>+r.lin),a=Math.min(...lins),b=Math.max(...lins),out=[];for(let l=a;l<=b;l++){const r=rows.find(x=>+x.lin===l);out.push(r?fdcCell(tid,r,i):"")}
+    const ok=await copyText(out.join("\n"));toast(ok?`Copiado: linhas ${a} a ${b} de ${MESL[i-1].toLowerCase()}. Cole na linha ${a} da planilha.`:"Não foi possível copiar.");return}
+  const mo=t.closest("[data-fdcmore]");if(mo){e.stopPropagation();state.fdcMore=Object.assign({},state.fdcMore||{});state.fdcMore[mo.dataset.fdcmore]=!state.fdcMore[mo.dataset.fdcmore];render();return}
+  const yg=t.closest("[data-fdcyg]");if(yg){e.stopPropagation();state.fdcYOpen=Object.assign({},state.fdcYOpen||{});state.fdcYOpen[yg.dataset.fdcyg]=!state.fdcYOpen[yg.dataset.fdcyg];render();return}
+  const gl=t.closest("[data-fdcgo]");if(gl){e.stopPropagation();state.fdcMes=fdcMesSel();go(gl.dataset.fdcgo);return}
+  const ck=t.closest("[data-fdcck]");if(ck){e.stopPropagation();const[tid,id,i]=ck.dataset.fdcck.split("|"),r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;try{await updRow(tid,id,{ck:{[i]:(r.ck||{})[i]?null:true}})}catch(x){toast("Não foi possível salvar.")}return}
+  const ad=t.closest("[data-fdcladd]");if(ad){e.stopPropagation();const dk=ad.dataset.fdcladd,[tid,id,i]=dk.split("|"),r=(data[tid]||[]).find(x=>x.id===id),L=fdcDraftOf(dk);if(!L)return;
+    if(!L.length){const s=fdcRow(tid,r,+i);if(s.manS)L.push({dt:"",d:"Valor digitado",pc:"",v:s.manS})}
+    L.push({dt:"",d:"",pc:"",v:null});state.editing=false;render();state.editing=true;const el=document.getElementById(`fml-${id}-${L.length-1}-dt`);if(el)el.focus();return}
+  const rm=t.closest("[data-fdclrm]");if(rm){e.stopPropagation();const p=rm.dataset.fdclrm.split("|"),k=+p.pop(),dk=p.join("|"),L=fdcDraftOf(dk);if(!L)return;L.splice(k,1);state.editing=false;await fdcSaveL(dk,L);render();return}
+  const su=t.closest("[data-fdcsum],[data-fdckeep]");if(su){e.stopPropagation();const keep=su.dataset.fdckeep!==undefined,dk=keep?su.dataset.fdckeep:su.dataset.fdcsum,[tid,id,i]=dk.split("|"),r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;
+    const s=fdcRow(tid,r,+i),L=s.L.map(x=>Object.assign({},x));if(keep){const d=Math.round((s.manS-fdcSum(L))*100)/100;if(d)L.push({dt:"",d:"Ajuste para bater com a planilha",pc:"",v:d})}
+    state.editing=false;await fdcSaveL(dk,L);toast(keep?"Mantido o valor da planilha":"Valor da linha atualizado para a soma");return}
+  const rw=t.closest("[data-fdcrow]");if(rw&&!t.closest("input,button")){e.stopPropagation();fdcFlush();state.editing=false;const k=rw.dataset.fdcrow;state.fdcOpen=state.fdcOpen===k?null:k;render();return}
+},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t.matches)return;
+  if(t.matches("[data-fdcl]")){const p=t.dataset.fdcl.split("|"),f=p.pop(),k=+p.pop(),dk=p.join("|"),L=fdcDraftOf(dk);if(!L||!L[k])return;state.editing=true;
+    L[k][f]=f==="v"?parseNum(t.value):t.value;if(f==="v")fdcRefresh(p[0])}});
+document.addEventListener("change",async e=>{const t=e.target;if(!t.matches)return;
+  if(t.matches("[data-fdcmesn]")){fdcFlush();state.fdcMes=+t.value;state.fdcOpen=null;render();return}
+  if(t.matches("[data-fdcv]")){const[tid,id,i]=t.dataset.fdcv.split("|"),v=parseNum(t.value);t.value=v==null?"":fdcBR(v);try{await updRow(tid,id,{m:{[i]:v},mf:{[i]:null},it:{[i]:null}})}catch(x){toast("Não foi possível salvar. Tente de novo.")}}});
+document.addEventListener("focusout",e=>{const t=e.target;if(!t.matches||!t.matches("[data-fdcl]"))return;
+  if(t.dataset.fdcl.endsWith("|v")){const n=parseNum(t.value);t.value=n==null?"":fdcBR(n)}
+  const box=t.closest(".fm-lx");setTimeout(()=>{const a=document.activeElement;if(box&&a&&box.contains(a))return;state.editing=false;const dk=box&&box.dataset.lx;const d=state.fdcDraft||{};if(dk&&d[dk])fdcSaveL(dk,d[dk])},120)});
+document.addEventListener("keydown",e=>{const t=e.target;if(!t.matches)return;
+  if(e.key==="Enter"&&t.matches("[data-fdcl],[data-fdcv]")){e.preventDefault();t.blur();return}
+  if((e.key==="Enter"||e.key===" ")&&t.matches("[data-fdcrow],[data-fdcyg]")){e.preventDefault();t.click()}});
 function startMatrixEdit(el){
   const[tid,id,k]=el.dataset.medit.split("|");const r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;
   if(k!=="cat"&&FDC_COPY[tid])return fdcDetail(tid,id,+k);
@@ -2277,7 +2455,7 @@ window.FIN={
 (async()=>{
   try{if(window.claude&&claude.use){const [d,dl,u,as]=await Promise.all([claude.use("db"),claude.use("downloads"),claude.use("user"),claude.use("assets")]);db=d;downloads=dl;userNs=u;assetsNs=as||null;try{myId=u?await u.id():null}catch(e){myId=null}}}catch(e){console.warn(e)}
   if(db){try{db.doc("config/cartao").onSnapshot(s=>{if(s.exists){const v=s.data()||{};const m=v.meses||{};Object.keys(m).forEach(k=>{if(/^\d{4}-\d{2}$/.test(k)&&m[k]&&typeof m[k]==="object"){const x=m[k];CC_MESES[k]={nome:String(x.nome||k),pasta:/^https:\/\//.test(x.pasta||"")?x.pasta:CC_PASTA,planilha:/^https:\/\//.test(x.planilha||"")?x.planilha:PARC_SHEET}}});scheduleRender()}},()=>{})}catch(e){}}
-  if(db){try{db.doc("config/painel").onSnapshot(s=>{if(s.exists){const v=s.data();if(v.parcelasRef&&v.parcelasRef!==cfg.parcelasRef){cfg.parcelasRef=v.parcelasRef;scheduleRender()}}},()=>{})}catch(e){}}
+  if(db){try{db.doc("config/painel").onSnapshot(s=>{if(s.exists){const v=s.data();if(v.parcelasRef&&v.parcelasRef!==cfg.parcelasRef){cfg.parcelasRef=v.parcelasRef;scheduleRender()}if(v.fdcEnv&&JSON.stringify(v.fdcEnv)!==JSON.stringify(cfg.fdcEnv||{})){cfg.fdcEnv=v.fdcEnv;scheduleRender()}}},()=>{})}catch(e){}}
   setSync();for(const k in subs)delete subs[k];
   TABS.forEach(t=>tableIds(t).forEach(subscribe));
   render();
