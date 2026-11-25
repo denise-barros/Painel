@@ -423,7 +423,7 @@ table th,table td{text-align:center!important}
 table.fm-t{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
 table.fm-t td{height:34px;padding:0 12px;border-bottom:1px solid var(--line);vertical-align:middle}
 table.fm-t tfoot td{height:40px;background:var(--accent-soft);color:var(--accent);font-weight:600;border-bottom:0;font-size:12px}
-.fm-tabs{display:flex;gap:4px;max-width:780px;margin:0 auto 8px}.fm-tabs button{border:1px solid var(--line);background:var(--surface);border-radius:var(--pill);padding:5px 14px;font:inherit;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer}.fm-tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.fm-tabs button.on em{color:var(--on-accent)}.fm-tabs em{font-style:normal;font-weight:400;color:var(--ink);margin-left:7px;font-variant-numeric:tabular-nums}
+.fm-tabs{display:flex;gap:4px;margin:0 0 0 8px}.fm-tabs button{border:1px solid var(--line);background:var(--surface);border-radius:var(--pill);padding:5px 14px;font:inherit;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer}.fm-tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.fm-tabs button.on em{color:var(--on-accent)}.fm-tabs em{font-style:normal;font-weight:400;color:var(--ink);margin-left:7px;font-variant-numeric:tabular-nums}
 table.fm-t th{background:var(--sunk);font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
 .fm-tp{display:inline-block;font-size:10px;font-weight:500;border-radius:var(--pill);padding:1px 9px}.fm-tp.f{background:var(--accent-soft);color:var(--accent)}.fm-tp.v{background:var(--neg-soft);color:var(--neg)}
 tr.fm-g td{height:30px;background:var(--sunk);border-bottom:1px solid var(--line)}
@@ -1656,6 +1656,7 @@ function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[
   const ys=[...new Set([cy-1,cy,cy+1,y])].sort(),ml=MESL[i-1].toLowerCase();
   return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"}" class="${state.fdcView!=="ano"?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button></div>
     <label class="sr" for="fdc-per">Período</label><select class="sel dsel" id="fdc-per" data-fdcper>${ys.map(a=>`<optgroup label="${a}">${MESL.map((m,k)=>`<option value="${a}-${k+1}" ${a===y&&k+1===i?"selected":""}>${m} de ${a}</option>`).join("")}</optgroup>`).join("")}</select>
+    ${state.fdcView!=="ano"?`<div class="fm-tabs" role="tablist" aria-label="Tipo de despesa"><button role="tab" data-fdctipo="" aria-selected="${!state.fdcTipo}" class="${!state.fdcTipo?"on":""}">Todas</button>${tab.matrix.groups.filter(g=>rows.some(r=>r.grupo===g.k)).map(g=>`<button role="tab" data-fdctipo="${g.k}" aria-selected="${state.fdcTipo===g.k}" class="${state.fdcTipo===g.k?"on":""}">${g.k==="fix"?"Fixas":g.k==="var"?"Variáveis":esc(g.l)}</button>`).join("")}</div>`:""}
     <span class="grow"></span>
     <details class="fm-dd"><summary class="btn sm">Levar para a planilha ▾</summary><div class="fm-ddm">
       <button data-fdccopyall="${tid}"><b>Copiar a coluna de ${ml}</b><span>Valores e fórmulas${lr?", "+lr:""}, na ordem da planilha. Cole na primeira linha.</span></button>
@@ -1666,7 +1667,7 @@ function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(
   const S={};rows.forEach(r=>S[r.id]=fdcRow(tid,r,i));const gi=k=>f.groups.findIndex(g=>g.k===k);
   const all=rows.slice().sort((a,b)=>gi(a.grupo)-gi(b.grupo)||(a.ordem||0)-(b.ordem||0)),tot=k=>all.filter(r=>!k||r.grupo===k).reduce((a,r)=>a+(S[r.id].total||0),0);
   const tp=state.fdcTipo||"",gs=f.groups.filter(g=>all.some(r=>r.grupo===g.k)),lbl=k=>k==="fix"?"Fixa":k==="var"?"Variável":"Despesa";
-  let h=`<div class="fm-tabs" role="tablist" aria-label="Tipo de despesa"><button role="tab" data-fdctipo="" aria-selected="${!tp}" class="${!tp?"on":""}">Todas</button>${gs.map(g=>`<button role="tab" data-fdctipo="${g.k}" aria-selected="${tp===g.k}" class="${tp===g.k?"on":""}">${g.k==="fix"?"Fixas":g.k==="var"?"Variáveis":esc(g.l)}</button>`).join("")}</div>`;
+  let h="";
   const L=all.filter(r=>!tp||r.grupo===tp),more=!!(state.fdcMore||{})[tid],vis=r=>S[r.id].total!=null||state.fdcOpen===tid+"|"+r.id,hid=L.filter(r=>!vis(r)).length;
   h+=`<div class="fm-wrap"><table class="fm-t"><colgroup><col style="width:34%"><col style="width:14%"><col style="width:20%"><col style="width:16%"><col style="width:16%"></colgroup><thead><tr><th>Categoria</th><th>Tipo</th><th>Valor do mês</th><th>Lançamentos</th><th>Conferido</th></tr></thead><tbody>`;
   L.filter(r=>more||vis(r)).forEach(r=>{const s=S[r.id],op=state.fdcOpen===tid+"|"+r.id,n=s.L.length+s.q.auto.length,ck=!!(r.ck||{})[i],ed=!r.link&&!s.L.length&&!s.q.auto.length;
