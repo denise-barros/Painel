@@ -1569,7 +1569,10 @@ function fdcAuto(tid,r,i,y){const ym=y+"-"+String(i).padStart(2,"0");if(ym<CP_IN
   return oldP.concat(fdcMemo[ym].filter(x=>lbs.includes(String(x.cr.fdc).trim())).map(x=>{const v=hasV(x.k&&x.k.valor)?+x.k.valor:+x.valor||0;const pd=x.k&&x.k.pagoEm?new Date(x.k.pagoEm):null;
     const dd=pd?String(pd.getDate()).padStart(2,"0")+"."+String(pd.getMonth()+1).padStart(2,"0"):String(x.d||"").padStart(2,"0")+"."+String(i).padStart(2,"0");
     return{v:Math.round(v*100)/100,d:`${dd} R$ ${fmtMoney(v)} ${x.desc}`,key:x.key}}))}
+/* a partir de novembro de 2026 o fechamento é feito só pelo Painel; antes disso valem os números das planilhas */
+const FDC_PAINEL_INI="2026-11";
 function fdcVal(tid,r,i,y){y=y||state.year;
+  if(r.link==="fdc-luciano"&&y+"-"+String(i).padStart(2,"0")<FDC_PAINEL_INI&&hasV((r.m||{})[i])){const v=Math.round(+r.m[i]*100)/100;return{total:v,parts:[v],auto:[],note:(r.nt||{})[i]||"",link:true}}
   if(r.link==="fdc-luciano"){const L=(data["fdc-luciano"]||[]).filter(x=>+x.ano===y&&(x.grupo==="fix"||x.grupo==="var"));let t=0,any=false;L.forEach(x=>{const q=fdcVal("fdc-luciano",x,i,y);if(q.total!=null){t+=q.total;any=true}});return{total:any?Math.round(t*100)/100:null,parts:any?[Math.round(t*100)/100]:[],auto:[],note:(r.nt||{})[i]||"",link:true}}
   const mf=(r.mf||{})[i],mv=(r.m||{})[i],man=mf?String(mf).slice(1).split(/(?=[+-])/).filter(Boolean).map(t=>Math.round(+t*100)/100):(mv==null||mv===""?[]:[+mv]);
   const auto=FDC_PES[tid]?fdcAuto(tid,r,i,y):[],parts=man.concat(auto.map(a=>a.v)),tot=parts.length?Math.round(parts.reduce((a,b)=>a+b,0)*100)/100:null;
@@ -1756,7 +1759,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
   const vw=t.closest("[data-fdcview]");if(vw){e.stopPropagation();fdcFlush();state.fdcView=vw.dataset.fdcview;state.fdcOpen=null;render();return}
   if(t.closest("[data-fdctip]")){e.stopPropagation();state.fdcTip=!state.fdcTip;render();return}
   const en=t.closest("[data-fdcenv]");if(en){e.stopPropagation();const k=en.dataset.fdcenv;cfg.fdcEnv=Object.assign({},cfg.fdcEnv||{});const on=!cfg.fdcEnv[k];if(on)cfg.fdcEnv[k]=new Date().toISOString().slice(0,10);else delete cfg.fdcEnv[k];await saveCfg();
-    if(on&&k.startsWith("fdc-fernando|"))await fdcFechar(k.split("|")[1]);render();return}
+    if(on&&k.startsWith("fdc-fernando|")&&k.split("|")[1]>=FDC_PAINEL_INI)await fdcFechar(k.split("|")[1]);render();return}
   const ca=t.closest("[data-fdccopyall]");if(ca){e.stopPropagation();const dd=ca.closest("details");if(dd)dd.open=false;fdcMemo={};const[tid,ra,rb]=ca.dataset.fdccopyall.split("|"),i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===state.year&&+r.lin);if(!rows.length){toast("Nenhuma linha da planilha neste ano.");return}
     const lins=rows.map(r=>+r.lin),a=ra?+ra:Math.min(...lins),b=rb?+rb:Math.max(...lins),out=[];for(let l=a;l<=b;l++){const r=rows.find(x=>+x.lin===l);out.push(r?fdcCell(tid,r,i):"")}
     const ok=await copyText(out.join("\n"));toast(ok?`Copiado: linhas ${a} a ${b} de ${MESL[i-1].toLowerCase()}. Cole na linha ${a} da planilha.`:"Não foi possível copiar.");return}
