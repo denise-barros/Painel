@@ -1627,15 +1627,26 @@ function fdcDetail(tid,id,k){const r=(data[tid]||[]).find(x=>x.id===id);if(!r)re
 /* ---------- FDC no formato novo (Fernando): aba do mês com lançamentos na linha + visão do ano recolhível ---------- */
 const FDC_NOVO={"fdc-fernando":1};
 const fdcNome=r=>String(r.curto||r.cat||"").trim();
-const fdcMesSel=()=>{if(state.fdcMes)return state.fdcMes;const cy=new Date().getFullYear();return state.year===cy?(new Date().getMonth()||12):state.year<cy?12:1};
+const fdcMesSel=()=>{if(state.fdcMes)return state.fdcMes;const cy=new Date().getFullYear();return state.year===cy?new Date().getMonth()+1:state.year<cy?12:1};
 const fdcSum=L=>Math.round(L.reduce((a,x)=>a+(+x.v||0),0)*100)/100;
 const fdcBR=v=>(+v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
-function fdcParseNote(nt){const out=[],mon=s=>{s=String(s||"").trim();return /^-?[\d.]+,\d{1,2}$/.test(s)?+s.replace(/\./g,"").replace(",","."):null};
-  String(nt||"").split("\n").forEach(line=>{line=line.trim();if(!line||/^=+$/.test(line))return;
-    if(line.includes("\t")){const p=line.split("\t").map(x=>x.trim());let vi=p.length-1;while(vi>0&&!p[vi])vi--;const v=mon(p[vi]);if(v==null)return;
-      const dt=/^\d{2}\/\d{2}(\/\d{2,4})?$/.test(p[0])?p[0]:"",rest=p.slice(dt?1:0,vi),pc=rest.find(x=>/^\d+\/\d+$/.test(x))||"";
-      out.push({dt,d:rest.filter(x=>x&&x!==pc).join(" "),pc,v})}
-    else{const m=line.match(/^(.*?)[\s\-–:]*(-?[\d.]+,\d{2})$/);if(m)out.push({dt:"",d:m[1].trim(),pc:"",v:mon(m[2])})}});
+/* lê a nota da planilha: data no começo (05.01, 13/08, 06/04/2026), valor (R$ 1.533,33, R$5200, 1816,70, 123.20; com vários R$ na linha, o último), parcela (1/6, PARC 1/6); linhas só com texto completam a descrição */
+function fdcParseNote(nt){const out=[];let pend="";
+  const num=s=>{s=s.replace(/\s/g,"");if(s.includes(","))return +s.replace(/\./g,"").replace(",",".");return +s};
+  String(nt||"").split("\n").forEach(raw=>{let t=raw.replace(/\t/g," ").replace(/\s+/g," ").trim();if(!t||/^=+$/.test(t))return;
+    let dt="",pc="",v=null;
+    const md=t.match(/^(\d{1,2}[\/.]\d{1,2}(?:[\/.]\d{2,4})?)(?![\d,])\s*/);if(md){dt=md[1].replace(/\./g,"/");t=t.slice(md[0].length)}
+    const rr=[...t.matchAll(/R\$\s*(-?[\d.,]*\d)/g)];
+    if(rr.length){v=num(rr[rr.length-1][1]);t=t.replace(/(?:US|R)?\$\s*-?[\d.,]*\d/g," ")}
+    else{const re=/(^|[\s(])(-?\d{1,3}(?:\.\d{3})+,\d{2}|-?\d+,\d{2}|-?\d+\.\d{2})(?![\d])/g;let m,last=null;while((m=re.exec(t)))last=m;if(last){v=num(last[2]);const k=t.lastIndexOf(last[2]);t=t.slice(0,k)+" "+t.slice(k+last[2].length)}}
+    const mp=t.match(/(?:PARC(?:ELA)?\.?\s*)?\b(\d{1,2}\/\d{1,2})\b/i);if(mp){pc=mp[1];t=t.replace(mp[0]," ")}
+    const d=t.replace(/\s+/g," ").replace(/^[\s\-–:·]+|[\s\-–:·]+$/g,"").trim(),last=out[out.length-1];
+    if(v==null||isNaN(v)){if(dt){out.push({dt,d:[pend,d].filter(Boolean).join(" · "),pc,v:null});pend=""}
+      else if(d){if(last&&!last.d)last.d=d;else pend=[pend,d].filter(Boolean).join(" · ")}return}
+    v=Math.round(v*100)/100;
+    if(!d&&!dt&&last&&last.v==null){last.v=v;if(pc&&!last.pc)last.pc=pc;return}
+    out.push({dt,d:[pend,d].filter(Boolean).join(" · "),pc,v});pend=""});
+  if(pend){if(out.length){const l=out[out.length-1];l.d=[l.d,pend].filter(Boolean).join(" · ")}else out.push({dt:"",d:pend,pc:"",v:null})}
   return out}
 /* lançamentos digitados de uma célula: os gravados (it), senão os lidos da nota da planilha, senão as partes da fórmula */
 function fdcLancs(r,i){const it=(r.it||{})[i],cp=x=>({dt:x.dt||"",d:x.d||"",pc:x.pc||"",v:+x.v||0});
@@ -1648,6 +1659,7 @@ const fdcDK=(tid,id,i)=>tid+"|"+id+"|"+i;
 /* estado da linha no mês: total, lançamentos (rascunho em edição tem prioridade), do Contas a pagar e divergência com a planilha */
 function fdcRow(tid,r,i){const q=fdcVal(tid,r,i,state.year),dk=fdcDK(tid,r.id,i),dr=(state.fdcDraft||{})[dk];
   const lc=dr?{L:dr,src:"draft"}:fdcLancs(r,i),man=q.man||[],manS=fdcSum(man.map(v=>({v}))),autoS=fdcSum(q.auto||[]);
+  if(lc.src==="nt"){const nul=lc.L.filter(x=>x.v==null);if(nul.length===1&&man.length)nul[0].v=Math.round((manS-fdcSum(lc.L))*100)/100}
   const total=r.link?q.total:dr?(dr.length||q.auto.length?Math.round((fdcSum(dr)+autoS)*100)/100:null):q.total;
   const diff=lc.src==="nt"&&Math.abs(fdcSum(lc.L)-manS)>0.005;
   return{q,dk,L:lc.L,src:lc.src,total,manS,autoS,diff}}
@@ -1668,16 +1680,15 @@ function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(
   const all=rows.slice().sort((a,b)=>gi(a.grupo)-gi(b.grupo)||(a.ordem||0)-(b.ordem||0)),tot=k=>all.filter(r=>!k||r.grupo===k).reduce((a,r)=>a+(S[r.id].total||0),0);
   const tp=state.fdcTipo||"",gs=f.groups.filter(g=>all.some(r=>r.grupo===g.k)),lbl=k=>k==="fix"?"Fixa":k==="var"?"Variável":"Despesa";
   let h="";
-  const L=all.filter(r=>!tp||r.grupo===tp),more=!!(state.fdcMore||{})[tid],vis=r=>S[r.id].total!=null||state.fdcOpen===tid+"|"+r.id,hid=L.filter(r=>!vis(r)).length;
+  const L=all.filter(r=>!tp||r.grupo===tp);
   h+=`<div class="fm-wrap"><table class="fm-t"><colgroup><col style="width:34%"><col style="width:14%"><col style="width:20%"><col style="width:16%"><col style="width:16%"></colgroup><thead><tr><th>Categoria</th><th>Tipo</th><th>Valor do mês</th><th>Lançamentos</th><th>Conferido</th></tr></thead><tbody>`;
-  L.filter(r=>more||vis(r)).forEach(r=>{const s=S[r.id],op=state.fdcOpen===tid+"|"+r.id,n=s.L.length+s.q.auto.length,ck=!!(r.ck||{})[i],ed=!r.link&&!s.L.length&&!s.q.auto.length;
+  L.forEach(r=>{const s=S[r.id],op=state.fdcOpen===tid+"|"+r.id,n=s.L.length+s.q.auto.length,ck=!!(r.ck||{})[i],ed=!r.link&&!s.L.length&&!s.q.auto.length;
     h+=`<tr class="fm-row ${op?"on":""}" data-fdcrow="${tid}|${r.id}" tabindex="0" aria-expanded="${op}"><td class="fm-cat">${esc(fdcNome(r))}${r.link?`<span class="fm-link">Luciano ↗</span>`:""}</td>
       <td><span class="fm-tp ${r.grupo==="var"?"v":"f"}">${lbl(r.grupo)}</span></td>
       <td>${ed?`<input class="fm-v" id="fmv-${r.id}" data-fdcv="${tid}|${r.id}|${i}" inputmode="decimal" value="${s.total==null?"":fdcBR(s.total)}" placeholder="–" aria-label="Valor de ${esc(fdcNome(r))} em ${ml}">`:`<span class="fm-vv" id="fmv-${r.id}">${s.total==null?"–":fmtMoney(s.total)}</span>`}${s.diff?`<span class="fm-warn" title="A soma dos lançamentos não bate com o valor da planilha">!</span>`:""}</td>
       <td>${n?`<span class="fm-cnt">${n}</span>`:""}</td>
       <td>${s.total!=null?`<button class="fm-ck ${ck?"on":""}" data-fdcck="${tid}|${r.id}|${i}" aria-pressed="${ck}" aria-label="Conferido: ${esc(fdcNome(r))}">${ck?"✓":"–"}</button>`:""}</td></tr>`;
     if(op)h+=`<tr class="fm-exp"><td colspan="5">${fdcExpHTML(tid,r,i,s)}</td></tr>`});
-  if(hid)h+=`<tr class="fm-more"><td colspan="5"><button class="fm-lnk" data-fdcmore="${tid}">${more?"Esconder linhas sem valor":`Mostrar ${hid} ${hid===1?"linha":"linhas"} sem valor em ${ml}`}</button></td></tr>`;
   const wv=all.filter(r=>S[r.id].total!=null),done=wv.filter(r=>(r.ck||{})[i]).length,ek=tid+"|"+y+"-"+String(i).padStart(2,"0"),env=(cfg.fdcEnv||{})[ek];
   h+=`</tbody><tfoot><tr><td>Total ${tp==="fix"?"das fixas":tp==="var"?"das variáveis":"do mês"}</td><td></td><td id="fmt">${fmtMoney(tot(tp))||"0,00"}</td><td colspan="2"><span class="fm-prog">Conferidas ${done} de ${wv.length}</span><button class="fm-env ${env?"on":""}" data-fdcenv="${ek}" title="Envio do fechamento ao ${esc(FDC_PES[tid])}">${env?`✓ Enviado em ${fmtDate(env)}`:"Marcar como enviado"}</button></td></tr></tfoot></table></div>
   <p class="fm-foot">Clique na linha para ver e editar os lançamentos (o valor da linha é a soma deles). Nas linhas sem lançamentos, clique no valor para corrigir direto.</p>`;
@@ -1699,7 +1710,7 @@ function fdcAnoHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSe
   const gt=Array(13).fill(0);
   f.groups.forEach(g=>{const L=rows.filter(r=>r.grupo===g.k).sort((a,b)=>(a.ordem||0)-(b.ordem||0)),t=Array(13).fill(0);L.forEach(r=>{for(let i=1;i<=12;i++)t[i]+=mv(r,i)||0});for(let i=1;i<=12;i++)gt[i]+=t[i];
     if(!L.length&&g.k==="desp")return;
-    const yk=tid+"|"+g.k,op=!!(state.fdcYOpen||{})[yk];
+    const yk=tid+"|"+g.k,op=(state.fdcYOpen||{})[yk]!==false;
     h+=`<tr class="grp fy-g" data-fdcyg="${yk}" tabindex="0" aria-expanded="${op}"><td><span class="fm-car" aria-hidden="true">${op?"▾":"▸"}</span>${esc(g.l)}</td>${t.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(t))}</span></td></tr>`;
     if(!op)return;
     L.forEach(r=>{let tot=0;h+=`<tr><td><div class="fy-c"><span class="cell" tabindex="0" data-medit="${tid}|${r.id}|cat" title="${esc(r.cat||"")}">${esc(fdcNome(r)||"Sem nome")}</span>${state.confirm===tid+"|"+r.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir categoria" data-del="${tid}|${r.id}">✕</button>`}</div></td>`;
@@ -1709,7 +1720,7 @@ function fdcAnoHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSe
       h+=`<td class="ro"><span class="cell" style="font-weight:700">${fmtMoney(tot)}</span></td></tr>`});
     h+=`<tr><td colspan="14"><button class="addcat" data-addcat="${tid}|${g.k}">+ Adicionar categoria em ${esc(g.l)}</button></td></tr>`});
   h+=`<tr class="tot"><td><span class="cell">Total do mês</span></td>${gt.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(gt))}</span></td></tr>`;
-  return h+`</tbody></table></div><p class="fm-foot">Clique num grupo para abrir as categorias. A coluna destacada é o mês escolhido acima. Clique num valor para ver o detalhe da célula.</p>`}
+  return h+`</tbody></table></div><p class="fm-foot">Clique num grupo para recolher ou abrir as categorias. A coluna destacada é o mês escolhido acima. Clique num valor para ver o detalhe da célula.</p>`}
 function fdcNovoHTML(tab){return fdcBarHTML(tab)+(state.fdcView==="ano"?fdcAnoHTML(tab):fdcMesHTML(tab))}
 /* recalcula só os totais da aba do mês (sem redesenhar, para não perder o campo em edição) */
 function fdcRefresh(tid){const tab=state.tab;if(!tab||tab.id!==tid)return;const y=state.year,i=fdcMesSel(),tp=state.fdcTipo||"";fdcMemo={};let mt=0,ft=0;
@@ -1737,7 +1748,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
     const ok=await copyText(out.join("\n"));toast(ok?`Copiado: linhas ${a} a ${b} de ${MESL[i-1].toLowerCase()}. Cole na linha ${a} da planilha.`:"Não foi possível copiar.");return}
   const tpb=t.closest("[data-fdctipo]");if(tpb){e.stopPropagation();fdcFlush();state.fdcTipo=tpb.dataset.fdctipo;state.fdcOpen=null;render();return}
   const mo=t.closest("[data-fdcmore]");if(mo){e.stopPropagation();state.fdcMore=Object.assign({},state.fdcMore||{});state.fdcMore[mo.dataset.fdcmore]=!state.fdcMore[mo.dataset.fdcmore];render();return}
-  const yg=t.closest("[data-fdcyg]");if(yg){e.stopPropagation();state.fdcYOpen=Object.assign({},state.fdcYOpen||{});state.fdcYOpen[yg.dataset.fdcyg]=!state.fdcYOpen[yg.dataset.fdcyg];render();return}
+  const yg=t.closest("[data-fdcyg]");if(yg){e.stopPropagation();state.fdcYOpen=Object.assign({},state.fdcYOpen||{});state.fdcYOpen[yg.dataset.fdcyg]=state.fdcYOpen[yg.dataset.fdcyg]===false;render();return}
   const gl=t.closest("[data-fdcgo]");if(gl){e.stopPropagation();state.fdcMes=fdcMesSel();go(gl.dataset.fdcgo);return}
   const ck=t.closest("[data-fdcck]");if(ck){e.stopPropagation();const[tid,id,i]=ck.dataset.fdcck.split("|"),r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;try{await updRow(tid,id,{ck:{[i]:(r.ck||{})[i]?null:true}})}catch(x){toast("Não foi possível salvar.")}return}
   const ad=t.closest("[data-fdcladd]");if(ad){e.stopPropagation();const dk=ad.dataset.fdcladd,[tid,id,i]=dk.split("|"),r=(data[tid]||[]).find(x=>x.id===id),L=fdcDraftOf(dk);if(!L)return;
