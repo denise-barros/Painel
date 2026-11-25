@@ -618,7 +618,7 @@ const TABS=[
    {id:"rep-contas",title:"Fernando x Leticia",encontro:true,cols:[SE("lado","Pendência de",ENC_LADOS),TX("item","Item",{w:220}),SE("tipo","Tipo",["Fixo","Parcelado","Avulso"]),{k:"parc",l:"Total de parcelas (se parcelado)",t:"num",w:80},SE("status","Status",ENC_ST),SE("nofech","Entra no fechamento do Fernando",["Não","Sim"]),LG("obs","Observações",{w:200})]},
    {id:"rep-dev",title:"Devoluções Fernando x Leticia",sort:"data",cols:[DT("data","Data da devolução"),SE("quem","Quem devolveu",["Fernando","Leticia"]),ENC_REF,M("valor","Valor devolvido"),LG("obs","Observações",{w:220})],
     kpis:rows=>{let f=0,l=0;rows.forEach(r=>{if(r.quem==="Leticia")l+=+r.valor||0;else f+=+r.valor||0});return[{l:"Devolvido pelo Fernando",v:fmtMoney(f),c:"pos"},{l:"Devolvido pela Leticia",v:fmtMoney(l),c:"pos"}]}}]},
- {id:"parcelas",g:"Controles",l:"Cartão de crédito",desc:"Fatura de cada cartão e parcelas em andamento. A pasta do mês, em 02 Financeiro › Cartão de crédito, guarda a planilha de parcelas e as faturas.",
+ {id:"parcelas",g:"Controles",l:"Cartões de crédito",desc:"Fatura de cada cartão e parcelas em andamento. A pasta do mês, em 02 Financeiro › Cartão de crédito, guarda a planilha de parcelas e as faturas.",
   src:[["Cartão de crédito · pasta do mês",CC_MESES[ccMes()].pasta],["Planilha de parcelas",PARC_SHEET],["Parcelas de viagens - C6",DRIVE+"1ng6LipVuruC2SMdu_MYMGGgaRt6khrvImv_pj0HVIyo/edit"]],
   parcelas:true,
   tables:[{id:"parcelas",title:"Cartão de crédito",sort:"cartao",cols:[
@@ -634,7 +634,7 @@ const TABS=[
     rowClass:r=>r.total&&(+r.atual||0)>=+r.total?"hl":"",
     kpis:(rows,ctx)=>{let p=0,s=0,f=0;rows.forEach(r=>{p+=+r.vparc||0;s+=(+r.vparc||0)*Math.max(0,(+r.total||0)-(+r.atual||0));if(r.total&&(+r.atual||0)>=+r.total)f++});
       return[{l:"Fatura de "+fmtMonth(ctx.ref),v:fmtMoney(p)},{l:"Saldo restante",v:fmtMoney(s)},{l:"Encerram nesta fatura",v:String(f)}]}}]},
- {id:"solicitacoes",g:"Solicitações",l:"Novas solicitações de pagamento",desc:"Pagamentos fora das contas cadastradas: recebida → pronta para pagar → paga → reembolso, quando houver.",
+ {id:"solicitacoes",g:"Solicitações",l:"Solicitações de pagamento",desc:"Pagamentos fora das contas cadastradas: recebida → pronta para pagar → paga → reembolso, quando houver.",
   src:[["Solicitações de pagamento",DRIVE+"1gpj5PvnNl0_laKbz6y5XHNPQf0x7CHzR00ZEaYk_gL0/edit"]],
   tables:[{id:"solicitacoes",title:"Solicitações",sort:"data",cols:[
     DT("data","Data do pedido"),TX("solic","Solicitante",{f:true}),SE("cat","Categoria",SOL_CAT),TX("descr","Descrição",{w:220}),TX("fav","Favorecido (quem recebe)",{w:160}),
@@ -646,7 +646,7 @@ const TABS=[
       const rec=n("recebida"),pr=n("pronta"),sc=E.filter(([,e])=>e.semComp),ra=E.filter(([,e])=>e.reembAberto),vc=E.filter(([,e])=>e.vencida);
       return[pr.length?{l:"Prontas para pagar",v:pr.length+" · "+sv(pr)}:null,vc.length?{l:"Vencidas",v:String(vc.length),c:"neg"}:null,rec.length?{l:"Faltam dados",v:String(rec.length)}:null,
         sc.length?{l:"Sem comprovante",v:String(sc.length)}:null,ra.length?{l:"Reembolsos a receber",v:ra.length+" · "+sv(ra)}:null].filter(Boolean)}}]},
- {id:"assinaturas",g:"Solicitações",l:"Assinaturas de softwares",desc:"Assinaturas da companhia cadastradas nos cartões pessoais do Fernando e da Leticia.",
+ {id:"assinaturas",g:"Solicitações",l:"Assinaturas",desc:"Assinaturas da companhia cadastradas nos cartões pessoais do Fernando e da Leticia.",
   src:[["Assinaturas de softwares",DRIVE+"1pXLDIVBkaxUf9MfsyldCNnTAiyiSMCZpkDp_ItECRho/edit"]],
   tables:[{id:"assinaturas",title:"Cobranças",sort:"data",cols:[
     DT("data","Data"),TX("descr","Descrição",{w:170,f:true}),SE("moeda","Moeda",["BRL","USD","EUR"]),M("vme","Valor em moeda estrangeira",{sum:false}),M("brl","Valor em BRL"),
@@ -666,14 +666,17 @@ const IC={
  fdc:'<svg viewBox="0 0 24 24"><path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/></svg>',
  ctrl:'<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9.5 9h5M9.5 12.5h5"/></svg>',
  cred:'<svg viewBox="0 0 24 24"><path d="M3.5 9.5 12 4.5l8.5 5M5.5 10v7M10 10v7M14 10v7M18.5 10v7M3.5 20h17"/></svg>',
+ cart:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M3.5 10h17M7 15h3"/></svg>',
+ reemb:'<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9.5 9h5M9.5 12.5h5"/></svg>',
+ soc:'<svg viewBox="0 0 24 24"><path d="M3.5 9.5 12 4.5l8.5 5M5.5 10v7M10 10v7M14 10v7M18.5 10v7M3.5 20h17"/></svg>',
  sol:'<svg viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9.5 3.5h5v2.5h-5zM9 11h.01M12 11h3.5M9 15h.01M12 15h3.5"/></svg>'};
 const GROUPS=[
  {k:"home",l:"Visão geral",d:"Resumo dos saldos, compromissos, recebimentos e pendências.",t:"t-indigo",tabs:["visao"]},
- {k:"cal",l:"Pagamentos",d:"Contas a pagar do mês.",t:"t-green",tabs:["contas"]},
+ {k:"cal",l:"Pagamentos",d:"Contas a pagar do mês e solicitações de pagamento.",t:"t-green",tabs:["contas","solicitacoes"]},
+ {k:"cart",l:"Cartões e assinaturas",d:"Cartões de crédito (parcelas e faturas) e o mapa das assinaturas.",t:"t-amber",tabs:["parcelas","assinaturas"]},
+ {k:"reemb",l:"Reembolsos",d:"Reembolsos corporativos (inclusive assinaturas) e médicos.",t:"t-violet",tabs:["reemb-corp","reemb-med"]},
  {k:"fdc",l:"Fluxos de caixa e prestação de contas",d:"Fluxos de caixa (Leticia e Camburi) e prestação de contas (Fernando, Luciano e Crianças).",t:"t-blue",tabs:["fdc-leticia","fdc-camburi","fdc-fernando","fdc-luciano","fdc-criancas"],sub:[{l:"Fluxos de caixa",tabs:["fdc-leticia","fdc-camburi"]},{l:"Prestação de contas",tabs:["fdc-fernando","fdc-luciano","fdc-criancas"]}]},
- {k:"ctrl",l:"Controles financeiros",d:"Assinaturas de softwares e reembolsos a receber (corporativos e médicos).",t:"t-violet",tabs:["assinaturas","reemb-corp","reemb-med"]},
- {k:"cred",l:"Crédito e movimentações entre sócios",d:"Empréstimos, repasses entre sócios e cartões de crédito.",t:"t-amber",tabs:["emprestimos","repasses","parcelas"]},
- {k:"sol",l:"Novas solicitações de pagamentos",d:"Registro, aprovação e controle de status das solicitações.",t:"t-rose",tabs:["solicitacoes"]}];
+ {k:"soc",l:"Sócios",d:"Empréstimos e repasses entre Fernando e Leticia.",t:"t-blue",tabs:["emprestimos","repasses"]}];
 const groupOf=id=>GROUPS.find(g=>g.tabs.includes(id));
 
 
@@ -1602,7 +1605,7 @@ function homeHTML(){
   const m=state.month,cr=data.cronograma||[],ctx=ctxFor();
   const cm=r=>(r.meses||{})[m]||{};
   const pagoMes=sumBy(cr.filter(r=>["Pago","Emitido"].includes(cm(r).s)),r=>cm(r).v);
-  const semPg=cr.filter(r=>cronoDue(r,m)&&execOk(r)&&!["Pago","Emitido","Não se aplica"].includes(cm(r).s));
+  const CPL=m>=CP_INI?cpLines(m):null;const semPg=cr.filter(r=>r.despesa&&cronoDue(r,m)&&execOk(r)&&!["Sob demanda","Só controle"].includes(r.tipo)&&!(CPL?CPL.filter(x=>x.cr&&x.cr.id===r.id).every(x=>x.pago):["Pago","Emitido","Não se aplica"].includes(cm(r).s)));
   const rc=data["reemb-corp"]||[],rm=data["reemb-med"]||[],as=data.assinaturas||[],sl=data.solicitacoes||[],em=data.emprestimos||[],pa=(data.parcelas||[]).filter(execOk);
   const solAb=sl.filter(r=>r.status==="Pendente"||r.status==="Aguardando transferência");
   const fech=sumBy(data["rep-fech"]||[],r=>r.valor),rec=sumBy(data["rep-transf"]||[],r=>r.valor);
