@@ -455,7 +455,7 @@ tr.fm-exp>td{height:auto;background:var(--accent-soft);padding:4px 16px 14px;bor
 .fm-au{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:10.5px;display:flex;flex-direction:column;gap:2px;margin-top:4px}
 .fm-foot{margin:8px 0 0;color:var(--muted);font-size:10.5px}
 .fy td.cur,.fy th.cur{box-shadow:inset 2px 0 0 var(--accent),inset -2px 0 0 var(--accent)}
-.fy{font-size:9.5px}.fy th{padding:8px 2px!important;letter-spacing:.03em!important}.fy td .cell{padding:6px 2px}.fy td:first-child,.fy th:first-child{min-width:130px}.fy td.hs .cell{padding-left:12px}.fy-c{display:flex;align-items:center;justify-content:space-between;gap:2px}.fy td:first-child,.fy th:first-child{text-align:left!important;padding-left:12px!important}.fy td:first-child .cell{padding-left:0}.fy-c .x{padding:2px 4px;font-size:9px;opacity:0}.fy tr:hover .fy-c .x,.fy-c .x:focus{opacity:1}.fy tr.tot td,.fy tr.tot td:first-child{background:var(--sunk);color:var(--ink)}.fy tr.fy-g{cursor:pointer}.fy tr.fy-g td{background:var(--surface)}.fy tr.fy-g:hover td{background:var(--sunk)}
+.fy{font-size:9.5px}.fy th{padding:8px 2px!important;letter-spacing:.03em!important}.fy td .cell{padding:6px 2px}.fy td:first-child,.fy th:first-child{min-width:130px}.fy td.hs .cell{padding-left:12px}.fy-c{display:flex;align-items:center;justify-content:space-between;gap:2px}.fy td:first-child,.fy th:first-child{text-align:left!important;padding-left:12px!important}.fy td:first-child .cell{padding-left:0}.fy-c .x{padding:2px 4px;font-size:9px;opacity:0}.fy tr:hover .fy-c .x,.fy-c .x:focus{opacity:1}.fy tr.tot td,.fy tr.tot td:first-child{background:var(--sunk);color:var(--ink)}.fc .fc-in{width:84px;font-size:9.5px}.fc tr.fc-s td{background:var(--surface)}.fy tr.fy-g{cursor:pointer}.fy tr.fy-g td{background:var(--surface)}.fy tr.fy-g:hover td{background:var(--sunk)}
 @media (max-width:640px){.fm-lh{display:none}.fm-lr{grid-template-columns:70px minmax(0,1fr) 90px 28px}.fm-lr .fm-li[data-fdcl$="|pc"]{display:none}}
 
 </style>
@@ -592,14 +592,14 @@ const QUEM=["Leticia","Fernando","Luciano","Camburi","Crianças","Mindset","Mist
 const SOL_CAT=["Médicos","Terapeutas","Prestadores de serviços","Funcionários","Casa","Compras","Viagens","Escola","Devolução","Outros"];
 const DRIVE="https://docs.google.com/spreadsheets/d/";
 const FLUXOS={
-  "fdc-leticia":{l:"Leticia",desc:"Fechamento mensal e envio para Leticia.",src:[["Fluxo de Caixa Leticia 2026",DRIVE+"1qRT_kGecnoXkFNhuGdBRK6IZRNMESdqNJyRUKlVmc9E/edit"]],
-    groups:[{k:"rec",l:"Recebimentos",s:1},{k:"fix",l:"Pagamentos fixos",s:-1},{k:"var",l:"Pagamentos variáveis",s:-1}]},
+  "fdc-leticia":{l:"Leticia",t:"Fluxo de caixa da Leticia",env:"Leticia",caixa:true,desc:"Fechamento mensal e envio para Leticia.",src:[["Fluxo de Caixa Leticia 2026",DRIVE+"1qRT_kGecnoXkFNhuGdBRK6IZRNMESdqNJyRUKlVmc9E/edit"]],
+    groups:[{k:"rec",l:"Recebimentos",s:1,t:"Receita",f:"Receitas"},{k:"fix",l:"Pagamentos fixos",s:-1,t:"Fixa",f:"Fixas",c:"f"},{k:"var",l:"Pagamentos variáveis",s:-1,t:"Variável",f:"Variáveis",c:"v"}]},
   "fdc-luciano":{l:"Luciano",t:"Prestação de contas do Luciano",env:"Fernando",desc:"Fechamento mensal e envio para o Fernando todo dia 04.",src:[["FDC Mensal Luciano","https://drive.google.com/file/d/1GJewPx4H2X8ki0H6tiiD6_J59zOGoHiT/view"]],
     groups:[{k:"fix",l:"Despesas fixas",s:-1,t:"Fixa",f:"Fixas"},{k:"var",l:"Despesas variáveis",s:-1,t:"Variável",f:"Variáveis"}]},
   "fdc-fernando":{l:"Fernando",t:"Prestação de contas do Fernando",env:"Fernando",desc:"Fechamento mensal e envio para o Fernando todo dia 04.",src:[["FDC Mensal Fernando","https://drive.google.com/file/d/14PSzzdxmFszDyYzLTwhBzoABFfW1wM5i/view"]],
     groups:[{k:"fix",l:"Despesas fixas",s:0,t:"Fixa",f:"Fixas"},{k:"var",l:"Despesas variáveis",s:0,t:"Variável",f:"Variáveis"},{k:"desp",l:"Despesas",s:0,t:"Despesa",f:"Despesas"}]},
-  "fdc-camburi":{l:"Camburi",desc:"Visão geral dos gastos do mês. Enviar para Thais mensalmente.",src:[["Camburi 2026",DRIVE+"1ELd0-mqfcZzZUxrq7nSs_tQBHuazN2Iqa3YROlorZAM/edit"]],
-    groups:[{k:"ent",l:"Entradas (aportes e aluguéis)",s:1},{k:"sai",l:"Saídas",s:-1}]},
+  "fdc-camburi":{l:"Camburi",t:"Fluxo de caixa do Camburi",env:"Thais",desc:"Visão geral dos gastos do mês. Enviar para Thais mensalmente.",src:[["Camburi 2026",DRIVE+"1ELd0-mqfcZzZUxrq7nSs_tQBHuazN2Iqa3YROlorZAM/edit"]],
+    groups:[{k:"ent",l:"Entradas (aportes e aluguéis)",s:1,t:"Entrada",f:"Entradas"},{k:"sai",l:"Saídas",s:-1,t:"Saída",f:"Saídas",c:"v"}]},
   "fdc-criancas":{l:"Crianças",t:"Prestação de contas da Anna e Spike",env:"Andrew",desc:"Visão geral dos gastos do mês de Anna e Spike. Enviar para Andrew mensalmente.",src:[["Kids accounts","https://drive.google.com/file/d/1VQgdEuQFpic1xu0gY9M_CVCBs25bF8Vv/view"]],
     groups:[{k:"andrew",l:"Pago por Andrew",s:0,t:"Andrew",f:"Pago por Andrew"},{k:"leticia",l:"Pago por Leticia",s:0,t:"Leticia",f:"Pago por Leticia"},{k:"comp",l:"Despesas compartilhadas",s:0,t:"Compartilhada",f:"Compartilhadas"}]}
 };
@@ -764,7 +764,7 @@ async function delRow(tid,id){
   if(db){await track(colRef(tid).doc(id).delete());return}
   data[tid]=(data[tid]||[]).filter(x=>x.id!==id);scheduleRender();
 }
-async function saveCfg(){if(db){try{await track(db.doc("config/painel").set({parcelasRef:cfg.parcelasRef,fdcEnv:cfg.fdcEnv||{}}))}catch(e){console.warn(e)}}}
+async function saveCfg(){if(db){try{await track(db.doc("config/painel").set({parcelasRef:cfg.parcelasRef,fdcEnv:cfg.fdcEnv||{},fdcCaixa:cfg.fdcCaixa||{}}))}catch(e){console.warn(e)}}}
 const fmtStampBR=ts=>{if(!ts)return"";const d=new Date(ts);const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} às ${p(d.getHours())}:${p(d.getMinutes())}`};
 const fmtStampShort=ts=>{if(!ts)return"";const d=new Date(ts);const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)} ${p(d.getHours())}:${p(d.getMinutes())}`};
 function stampPatch(tid,r,patch){
@@ -1626,7 +1626,7 @@ function fdcDetail(tid,id,k){const r=(data[tid]||[]).find(x=>x.id===id);if(!r)re
       m.remove();state.editing=false;render()}});
   setTimeout(()=>{const i=m.querySelector("#fdc-dt-n");if(i)i.focus()},30)}
 /* ---------- FDC no formato novo (Fernando): aba do mês com lançamentos na linha + visão do ano recolhível ---------- */
-const FDC_NOVO={"fdc-fernando":1,"fdc-luciano":1,"fdc-criancas":1};
+const FDC_NOVO={"fdc-fernando":1,"fdc-luciano":1,"fdc-criancas":1,"fdc-leticia":1,"fdc-camburi":1};
 const fdcNome=r=>String(r.curto||r.cat||"").trim();
 const fdcMesSel=()=>{if(state.fdcMes)return state.fdcMes;const cy=new Date().getFullYear();return state.year===cy?new Date().getMonth()+1:state.year<cy?12:1};
 const fdcSum=L=>Math.round(L.reduce((a,x)=>a+(+x.v||0),0)*100)/100;
@@ -1672,9 +1672,9 @@ function fdcBlocks(rows,tab){const L=rows.filter(r=>+r.lin).sort((a,b)=>a.lin-b.
   if(out.length<2)return out.map(b=>Object.assign(b,{l:""}));return out.map(b=>Object.assign(b,{l:[...b.g].map(k=>(tab.matrix.groups.find(g=>g.k===k)||{}).l||k).join(" e ")}))}
 function fdcBarHTML(tab){const tid=tab.id,y=state.year,i=fdcMesSel(),rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r)&&tab.matrix.groups.some(g=>g.k===r.grupo)),cy=new Date().getFullYear(),gs=tab.matrix.groups.filter(g=>rows.some(r=>r.grupo===g.k)),tp=gs.some(g=>g.k===state.fdcTipo)?state.fdcTipo:"";
   const ys=[...new Set([cy-1,cy,cy+1,y])].sort(),ml=MESL[i-1].toLowerCase();
-  return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"}" class="${state.fdcView!=="ano"?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button></div>
+  return `<div class="fm-bar"><div class="seg" role="tablist" aria-label="Visão"><button role="tab" data-fdcview="mes" aria-selected="${state.fdcView!=="ano"&&!(state.fdcView==="caixa"&&tab.matrix.caixa)}" class="${state.fdcView!=="ano"&&!(state.fdcView==="caixa"&&tab.matrix.caixa)?"on":""}">Mês</button><button role="tab" data-fdcview="ano" aria-selected="${state.fdcView==="ano"}" class="${state.fdcView==="ano"?"on":""}">Visão do ano</button>${tab.matrix.caixa?`<button role="tab" data-fdcview="caixa" aria-selected="${state.fdcView==="caixa"}" class="${state.fdcView==="caixa"?"on":""}">Fluxo de caixa</button>`:""}</div>
     <label class="sr" for="fdc-per">Período</label><select class="sel dsel" id="fdc-per" data-fdcper>${ys.map(a=>`<optgroup label="${a}">${MESL.map((m,k)=>`<option value="${a}-${k+1}" ${a===y&&k+1===i?"selected":""}>${m} de ${a}</option>`).join("")}</optgroup>`).join("")}</select>
-    ${state.fdcView!=="ano"&&gs.length>1?`<div class="seg" role="tablist" aria-label="Filtro"><button role="tab" data-fdctipo="" aria-selected="${!tp}" class="${!tp?"on":""}">Todas</button>${gs.map(g=>`<button role="tab" data-fdctipo="${g.k}" aria-selected="${tp===g.k}" class="${tp===g.k?"on":""}">${esc(g.f||g.l)}</button>`).join("")}</div>`:""}
+    ${state.fdcView!=="ano"&&state.fdcView!=="caixa"&&gs.length>1?`<div class="seg" role="tablist" aria-label="Filtro"><button role="tab" data-fdctipo="" aria-selected="${!tp}" class="${!tp?"on":""}">Todas</button>${gs.map(g=>`<button role="tab" data-fdctipo="${g.k}" aria-selected="${tp===g.k}" class="${tp===g.k?"on":""}">${esc(g.f||g.l)}</button>`).join("")}</div>`:""}
     <span class="grow"></span>
     <details class="fm-dd"><summary class="btn sm">Levar para a planilha ▾</summary><div class="fm-ddm">
       ${fdcBlocks(rows,tab).map(b=>`<button data-fdccopyall="${tid}|${b.a}|${b.b}"><b>Copiar ${b.l?esc(b.l.toLowerCase())+" de":"a coluna de"} ${ml}</b><span>Valores e fórmulas, linhas ${b.a} a ${b.b}, na ordem da planilha. Cole na linha ${b.a}.</span></button>`).join("")}
@@ -1690,7 +1690,7 @@ function fdcMesHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,i=fdcMesSel(
   h+=`<div class="fm-wrap"><table class="fm-t"><colgroup><col style="width:34%"><col style="width:14%"><col style="width:20%"><col style="width:16%"><col style="width:16%"></colgroup><thead><tr><th>Categoria</th><th>Tipo</th><th>Valor do mês</th><th>Lançamentos</th><th>Conferido</th></tr></thead><tbody>`;
   L.forEach(r=>{const s=S[r.id],op=state.fdcOpen===tid+"|"+r.id,n=s.L.length+s.q.auto.length,ck=!!(r.ck||{})[i],ed=!r.link&&!s.L.length&&!s.q.auto.length;
     h+=`<tr class="fm-row ${op?"on":""}" data-fdcrow="${tid}|${r.id}" tabindex="0" aria-expanded="${op}"><td class="fm-cat">${esc(fdcNome(r))}${r.link?`<span class="fm-link">Luciano ↗</span>`:""}</td>
-      <td><span class="fm-tp ${G(r.grupo).s===1?"r":pc(r.grupo)}">${esc(lbl(r.grupo))}</span></td>
+      <td><span class="fm-tp ${G(r.grupo).s===1?"r":G(r.grupo).c||pc(r.grupo)}">${esc(lbl(r.grupo))}</span></td>
       <td>${ed?`<input class="fm-v" id="fmv-${r.id}" data-fdcv="${tid}|${r.id}|${i}" inputmode="decimal" value="${s.total==null?"":fdcBR(s.total)}" placeholder="–" aria-label="Valor de ${esc(fdcNome(r))} em ${ml}">`:`<span class="fm-vv" id="fmv-${r.id}">${s.total==null?"–":fmtMoney(s.total)}</span>`}${s.diff?`<span class="fm-warn" title="A soma dos lançamentos não bate com o valor da planilha">!</span>`:""}</td>
       <td>${n?`<span class="fm-cnt">${n}</span>`:""}</td>
       <td>${s.total!=null?`<button class="fm-ck ${ck?"on":""}" data-fdcck="${tid}|${r.id}|${i}" aria-pressed="${ck}" aria-label="Conferido: ${esc(fdcNome(r))}">${ck?"✓":"–"}</button>`:""}</td></tr>`;
@@ -1727,7 +1727,24 @@ function fdcAnoHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSe
     h+=`<tr><td colspan="14"><button class="addcat" data-addcat="${tid}|${g.k}">+ Adicionar categoria em ${esc(g.l)}</button></td></tr>`});
   h+=`<tr class="tot"><td><span class="cell">Total do mês</span></td>${gt.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(gt))}</span></td></tr>`;
   return h+`</tbody></table></div><p class="fm-foot">Clique num grupo para abrir as categorias. A coluna destacada é o mês escolhido acima. Clique num valor para ver o detalhe da célula.</p>`}
-function fdcNovoHTML(tab){return fdcBarHTML(tab)+(state.fdcView==="ano"?fdcAnoHTML(tab):fdcMesHTML(tab))}
+function fdcNovoHTML(tab){const v=state.fdcView==="caixa"&&!tab.matrix.caixa?"mes":state.fdcView;return fdcBarHTML(tab)+(v==="ano"?fdcAnoHTML(tab):v==="caixa"?fdcCaixaHTML(tab):fdcMesHTML(tab))}
+/* fluxo de caixa (Leticia): saldo inicial + receitas − saídas = saldo final, mês a mês; o saldo inicial de janeiro é digitado */
+function fdcCaixaHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSel();fdcMemo={};
+  const rows=(data[tid]||[]).filter(r=>+r.ano===y&&fdcNome(r)),gt=k=>{const t=Array(13).fill(0);rows.filter(r=>r.grupo===k).forEach(r=>{for(let i=1;i<=12;i++)t[i]+=fdcVal(tid,r,i,y).total||0});return t};
+  const rec=Array(13).fill(0),sai=Array(13).fill(0),G=f.groups.map(g=>({g,t:gt(g.k)}));G.forEach(({g,t})=>{for(let i=1;i<=12;i++){if(g.s===1)rec[i]+=t[i];else sai[i]+=t[i]}});
+  const sk=tid+"|"+y,s0=(cfg.fdcCaixa||{})[sk],ini=Array(13).fill(0),fim=Array(13).fill(0),res=Array(13).fill(0);let sal=+s0||0;
+  for(let i=1;i<=12;i++){ini[i]=sal;res[i]=Math.round((rec[i]-sai[i])*100)/100;sal=Math.round((sal+res[i])*100)/100;fim[i]=sal}
+  const sum=t=>t.slice(1).reduce((a,b)=>a+b,0),c=(v,i,cls)=>`<td class="ro ${i===cur?"cur":""}"><span class="cell ${cls||""}">${v?fmtMoney(v):"–"}</span></td>`;
+  const line=(l,t,o)=>`<tr class="${o&&o.tr||""}"><td><span class="cell">${l}</span></td>${t.slice(1).map((v,k)=>c(v,k+1,o&&o.sg?(v<0?"neg":v>0?"pos":""):"")).join("")}<td class="ro"><span class="cell" style="font-weight:700">${o&&o.nt?"":fmtMoney(sum(t))}</span></td></tr>`;
+  let h=`<div class="wrap"><table class="grid mx fy fc"><thead><tr><th>Fluxo de caixa</th>${MES.map((m,k)=>`<th class="${k+1===cur?"cur":""}">${m.replace(".","")}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+  h+=`<tr class="fc-s"><td><span class="cell">Saldo inicial</span></td><td class="${cur===1?"cur":""}"><input class="fm-v fc-in" id="fc-ini" data-fdcsaldo="${sk}" inputmode="decimal" value="${s0==null||s0===""?"":fdcBR(s0)}" placeholder="Digite" aria-label="Saldo inicial de janeiro de ${y}"></td>${ini.slice(2).map((v,k)=>c(v,k+2)).join("")}<td></td></tr>`;
+  G.filter(x=>x.g.s===1).forEach(({g,t})=>h+=line(esc(g.l),t));
+  h+=line("Total de receitas",rec,{tr:"sub"});
+  G.filter(x=>x.g.s!==1).forEach(({g,t})=>h+=line(esc(g.l),t));
+  h+=line("Total de saídas",sai,{tr:"sub"});
+  h+=line("Resultado do mês",res,{tr:"sub",sg:true});
+  h+=`<tr class="tot"><td><span class="cell">Saldo final (caixa)</span></td>${fim.slice(1).map((v,k)=>c(v,k+1,v<0?"neg":"")).join("")}<td class="ro"><span class="cell">${fmtMoney(fim[12])}</span></td></tr>`;
+  return h+`</tbody></table></div><p class="fm-foot">O saldo inicial de cada mês é o saldo final do mês anterior. Digite o saldo de caixa do começo de janeiro de ${y}. Os valores vêm da aba Mês (receitas, pagamentos fixos e variáveis).</p>`}
 /* recalcula só os totais da aba do mês (sem redesenhar, para não perder o campo em edição) */
 function fdcRefresh(tid){const tab=state.tab;if(!tab||tab.id!==tid)return;const y=state.year,i=fdcMesSel(),tp=state.fdcTipo||"";fdcMemo={};let mt=0,ft=0;
   tab.matrix.groups.forEach(g=>{let gt=0;(data[tid]||[]).filter(r=>+r.ano===y&&r.grupo===g.k&&fdcNome(r)).forEach(r=>{const s=fdcRow(tid,r,i);gt+=s.total||0;
@@ -1779,6 +1796,7 @@ document.addEventListener("input",e=>{const t=e.target;if(!t.matches)return;
   if(t.matches("[data-fdcl]")){const p=t.dataset.fdcl.split("|"),f=p.pop(),k=+p.pop(),dk=p.join("|"),L=fdcDraftOf(dk);if(!L||!L[k])return;state.editing=true;
     L[k][f]=f==="v"?parseNum(t.value):t.value;if(f==="v")fdcRefresh(p[0])}});
 document.addEventListener("change",async e=>{const t=e.target;if(!t.matches)return;
+  if(t.matches("[data-fdcsaldo]")){const v=parseNum(t.value);cfg.fdcCaixa=Object.assign({},cfg.fdcCaixa||{});if(v==null)delete cfg.fdcCaixa[t.dataset.fdcsaldo];else cfg.fdcCaixa[t.dataset.fdcsaldo]=v;await saveCfg();render();return}
   if(t.matches("[data-fdcper]")){fdcFlush();const[a,m]=t.value.split("-");state.year=+a;state.fdcMes=+m;state.fdcOpen=null;render();return}
   if(t.matches("[data-fdcv]")){const[tid,id,i]=t.dataset.fdcv.split("|"),v=parseNum(t.value);t.value=v==null?"":fdcBR(v);try{await updRow(tid,id,{m:{[i]:v},mf:{[i]:null},it:{[i]:null}})}catch(x){toast("Não foi possível salvar. Tente de novo.")}}});
 document.addEventListener("focusout",e=>{const t=e.target;if(!t.matches||!t.matches("[data-fdcl]"))return;
@@ -2490,7 +2508,7 @@ window.FIN={
 (async()=>{
   try{if(window.claude&&claude.use){const [d,dl,u,as]=await Promise.all([claude.use("db"),claude.use("downloads"),claude.use("user"),claude.use("assets")]);db=d;downloads=dl;userNs=u;assetsNs=as||null;try{myId=u?await u.id():null}catch(e){myId=null}}}catch(e){console.warn(e)}
   if(db){try{db.doc("config/cartao").onSnapshot(s=>{if(s.exists){const v=s.data()||{};const m=v.meses||{};Object.keys(m).forEach(k=>{if(/^\d{4}-\d{2}$/.test(k)&&m[k]&&typeof m[k]==="object"){const x=m[k];CC_MESES[k]={nome:String(x.nome||k),pasta:/^https:\/\//.test(x.pasta||"")?x.pasta:CC_PASTA,planilha:/^https:\/\//.test(x.planilha||"")?x.planilha:PARC_SHEET}}});scheduleRender()}},()=>{})}catch(e){}}
-  if(db){try{db.doc("config/painel").onSnapshot(s=>{if(s.exists){const v=s.data();if(v.parcelasRef&&v.parcelasRef!==cfg.parcelasRef){cfg.parcelasRef=v.parcelasRef;scheduleRender()}if(v.fdcEnv&&JSON.stringify(v.fdcEnv)!==JSON.stringify(cfg.fdcEnv||{})){cfg.fdcEnv=v.fdcEnv;scheduleRender()}}},()=>{})}catch(e){}}
+  if(db){try{db.doc("config/painel").onSnapshot(s=>{if(s.exists){const v=s.data();if(v.parcelasRef&&v.parcelasRef!==cfg.parcelasRef){cfg.parcelasRef=v.parcelasRef;scheduleRender()}if(v.fdcEnv&&JSON.stringify(v.fdcEnv)!==JSON.stringify(cfg.fdcEnv||{})){cfg.fdcEnv=v.fdcEnv;scheduleRender()}if(v.fdcCaixa&&JSON.stringify(v.fdcCaixa)!==JSON.stringify(cfg.fdcCaixa||{})){cfg.fdcCaixa=v.fdcCaixa;scheduleRender()}}},()=>{})}catch(e){}}
   setSync();for(const k in subs)delete subs[k];
   TABS.forEach(t=>tableIds(t).forEach(subscribe));
   render();
