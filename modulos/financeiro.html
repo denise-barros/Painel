@@ -1718,7 +1718,7 @@ function fdcAnoHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSe
   const gt=Array(13).fill(0);
   f.groups.forEach(g=>{const L=rows.filter(r=>r.grupo===g.k).sort((a,b)=>(a.ordem||0)-(b.ordem||0)),t=Array(13).fill(0);L.forEach(r=>{for(let i=1;i<=12;i++)t[i]+=mv(r,i)||0});for(let i=1;i<=12;i++)gt[i]+=t[i];
     if(!L.length&&g.k==="desp")return;
-    const yk=tid+"|"+g.k,op=(state.fdcYOpen||{})[yk]!==false;
+    const yk=tid+"|"+g.k,op=!!(state.fdcYOpen||{})[yk];
     h+=`<tr class="grp fy-g" data-fdcyg="${yk}" tabindex="0" aria-expanded="${op}"><td><span class="fm-car" aria-hidden="true">${op?"▾":"▸"}</span>${esc(g.l)}</td>${t.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(t))}</span></td></tr>`;
     if(!op)return;
     L.forEach(r=>{let tot=0;h+=`<tr><td><div class="fy-c"><span class="cell" tabindex="0" data-medit="${tid}|${r.id}|cat" title="${esc(r.cat||"")}">${esc(fdcNome(r)||"Sem nome")}</span>${state.confirm===tid+"|"+r.id?`<span class="confirm"><button class="btn sm danger armed" data-delyes="${tid}|${r.id}">Excluir</button><button class="btn sm" data-delno>Manter</button></span>`:`<button class="x" aria-label="Excluir categoria" data-del="${tid}|${r.id}">✕</button>`}</div></td>`;
@@ -1728,7 +1728,7 @@ function fdcAnoHTML(tab){const f=tab.matrix,tid=tab.id,y=state.year,cur=fdcMesSe
       h+=`<td class="ro"><span class="cell" style="font-weight:700">${fmtMoney(tot)}</span></td></tr>`});
     h+=`<tr><td colspan="14"><button class="addcat" data-addcat="${tid}|${g.k}">+ Adicionar categoria em ${esc(g.l)}</button></td></tr>`});
   h+=`<tr class="tot"><td><span class="cell">Total do mês</span></td>${gt.slice(1).map((v,k)=>`<td class="ro ${k+1===cur?"cur":""}"><span class="cell">${v?fmtMoney(v):"–"}</span></td>`).join("")}<td class="ro"><span class="cell">${fmtMoney(yr(gt))}</span></td></tr>`;
-  return h+`</tbody></table></div><p class="fm-foot">Clique num grupo para recolher ou abrir as categorias. A coluna destacada é o mês escolhido acima. Clique num valor para ver o detalhe da célula.</p>`}
+  return h+`</tbody></table></div><p class="fm-foot">Clique num grupo para abrir as categorias. A coluna destacada é o mês escolhido acima. Clique num valor para ver o detalhe da célula.</p>`}
 function fdcNovoHTML(tab){return fdcBarHTML(tab)+(state.fdcView==="ano"?fdcAnoHTML(tab):fdcMesHTML(tab))}
 /* recalcula só os totais da aba do mês (sem redesenhar, para não perder o campo em edição) */
 function fdcRefresh(tid){const tab=state.tab;if(!tab||tab.id!==tid)return;const y=state.year,i=fdcMesSel(),tp=state.fdcTipo||"";fdcMemo={};let mt=0,ft=0;
@@ -1765,7 +1765,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
     const ok=await copyText(out.join("\n"));toast(ok?`Copiado: linhas ${a} a ${b} de ${MESL[i-1].toLowerCase()}. Cole na linha ${a} da planilha.`:"Não foi possível copiar.");return}
   const tpb=t.closest("[data-fdctipo]");if(tpb){e.stopPropagation();fdcFlush();state.fdcTipo=tpb.dataset.fdctipo;state.fdcOpen=null;render();return}
   const mo=t.closest("[data-fdcmore]");if(mo){e.stopPropagation();state.fdcMore=Object.assign({},state.fdcMore||{});state.fdcMore[mo.dataset.fdcmore]=!state.fdcMore[mo.dataset.fdcmore];render();return}
-  const yg=t.closest("[data-fdcyg]");if(yg){e.stopPropagation();state.fdcYOpen=Object.assign({},state.fdcYOpen||{});state.fdcYOpen[yg.dataset.fdcyg]=state.fdcYOpen[yg.dataset.fdcyg]===false;render();return}
+  const yg=t.closest("[data-fdcyg]");if(yg){e.stopPropagation();state.fdcYOpen=Object.assign({},state.fdcYOpen||{});state.fdcYOpen[yg.dataset.fdcyg]=!state.fdcYOpen[yg.dataset.fdcyg];render();return}
   const gl=t.closest("[data-fdcgo]");if(gl){e.stopPropagation();state.fdcMes=fdcMesSel();go(gl.dataset.fdcgo);return}
   const ck=t.closest("[data-fdcck]");if(ck){e.stopPropagation();const[tid,id,i]=ck.dataset.fdcck.split("|"),r=(data[tid]||[]).find(x=>x.id===id);if(!r)return;try{await updRow(tid,id,{ck:{[i]:(r.ck||{})[i]?null:true}})}catch(x){toast("Não foi possível salvar.")}return}
   const ad=t.closest("[data-fdcladd]");if(ad){e.stopPropagation();const dk=ad.dataset.fdcladd,[tid,id,i]=dk.split("|"),r=(data[tid]||[]).find(x=>x.id===id),L=fdcDraftOf(dk);if(!L)return;
