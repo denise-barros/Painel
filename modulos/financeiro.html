@@ -693,11 +693,12 @@ function colRef(tid){return db.collection("abas/"+tid+"/linhas")}
 let PF=null;try{const P=window.parent;if(P&&P!==window&&P.CEFIN)PF=P.CEFIN}catch(e){PF=null}
 if(PF){subs["dp-emp"]=true;data["dp-emp"]=[]}
 if(PF)PF.watch(t=>{if(t==="dp-emp"){scheduleRender();return}if(!subs[t])return;if(PF.failed(t)){state.banner="Não foi possível carregar parte dos dados. Recarregue a página.";}else data[t]=PF.rows(t);scheduleRender()});
+const LOADED=new Set();const isLoaded=t=>PF&&PF.has(t)?(PF.ready?PF.ready(t):true):(!db||LOADED.has(t));
 function subscribe(tid){
   if(subs[tid])return; subs[tid]=true; data[tid]=data[tid]||[];
   if(PF&&PF.has(tid)){data[tid]=PF.rows(tid);return}
   if(!db)return;
-  colRef(tid).onSnapshot(s=>{data[tid]=s.docs.map(d=>Object.assign({id:d.id},d.data()));scheduleRender()},e=>{console.warn(e);state.banner="Não foi possível carregar parte dos dados. Recarregue a página.";scheduleRender()});
+  colRef(tid).onSnapshot(s=>{data[tid]=s.docs.map(d=>Object.assign({id:d.id},d.data()));LOADED.add(tid);scheduleRender()},e=>{console.warn(e);state.banner="Não foi possível carregar parte dos dados. Recarregue a página.";scheduleRender()});
 }
 function deepMerge(t,p){for(const k in p){if(p[k]&&typeof p[k]==="object"&&!Array.isArray(p[k])){t[k]=t[k]&&typeof t[k]==="object"?t[k]:{};deepMerge(t[k],p[k])}else t[k]=p[k]}}
 async function addRow(tid,obj){
@@ -1004,13 +1005,7 @@ function rbBar(tid,r){const C=RB_CFG[tid],n=rbN(tid,r),off=n<0;let h="";
     h+=`<${tag} ${ck?`type="button" data-rbst="${tid}|${r.id}|${i}" title="${esc(tip)}" `:""}class="sol-dot ${on?"on":cur?"cur":""}${i?" ln":""}${ln?" lnon":""}${ck?" pgb":""}"><span>${on?"✓":""}</span>${esc(lab).replace("&lt;br&gt;","<br>")}</${tag}>`}
   return `<div class="sol-st rb3${off?" off":""}">${h}</div>`}
 function tkBtn(tid,r,k,t){const b=solHas(r,k);return `<button type="button" class="sol-apb ${b?"on":""}" data-tk="${tid}|${r.id}|${k}" aria-pressed="${b}" title="${b?esc(t)+" recebido · clique para desmarcar":"Clique para marcar "+esc(t.toLowerCase())+" como recebido"}">${b?"✓":""}</button>`}
-function asnCorpHTML(){const P=(data.assinaturas||[]).filter(r=>execOk(r)&&asnReemb(r)&&asnEt(r)!=="Recebido"&&r.data);if(!P.length)return "";
-  const G={};P.forEach(r=>{const m=r.data.slice(0,7);(G[m]=G[m]||[]).push(r)});const sum=l=>l.reduce((n,r)=>n+(+r.brl||0),0);
-  const ms=Object.keys(G).sort().reverse();
-  return `<div class="asn-corp"><div class="asn-corp-h"><h3>Assinaturas da companhia a reembolsar</h3><span>${P.length} cobrança${P.length===1?"":"s"} · ${fmtMoney(sum(P))}</span><button class="btn sm" data-asngo="">Abrir em Assinaturas</button></div>
-  <div class="wrap"><table class="grid atb asn-map"><thead><tr><th>Mês da cobrança</th><th>Cobranças</th><th>A solicitar</th><th>Solicitado (aguardando)</th><th>Total</th><th>Detalhe</th></tr></thead><tbody>${ms.map(m=>{const l=G[m],a=l.filter(r=>asnEt(r)==="A solicitar"),so=l.filter(r=>asnEt(r)==="Solicitado");
-    return `<tr><td><b>${esc(fmtMonth(m))}</b></td><td>${l.length}</td><td class="${a.length?"neg":""}">${a.length?fmtMoney(sum(a)):"–"}</td><td>${so.length?fmtMoney(sum(so)):"–"}</td><td>${fmtMoney(sum(l))}</td><td><button class="btn sm" data-asngo="${m}">Ver cobranças</button></td></tr>`}).join("")}</tbody></table></div></div>`}
-function rbHTML(tb,rows,h){const tid=tb.id,med=tid==="reemb-med";if(!med)subscribe("reemb-contratos");if(!med){subscribe("assinaturas");h+=asnCorpHTML()}
+function rbHTML(tb,rows,h){const tid=tb.id,med=tid==="reemb-med";if(!med)subscribe("reemb-contratos");if(!med){subscribe("assinaturas");asnSync()}
   const aberto=r=>{const n=rbN(tid,r);return n>0&&n<3},mv=v=>hasV(v)?fmtMoney(v):"";
   const head=med?["Data","Paciente","Especialidade","Categoria","Valor pago","Reembolsado","% reembolsado","Nota fiscal","Comprovante","Etapa"]
     :["Data","Descrição","Categoria","Referência","Valor em R$","Forma de pagamento","Contrato","Comprovante","Etapa"];
@@ -1058,7 +1053,7 @@ function listHTML(tb,ctx,multi){
   if(tb.id==="reemb-corp"||tb.id==="reemb-med")return rbHTML(tb,rows,h);
   if(tb.id==="reemb-contratos")return ctHTML(tb,rows,h);
   if(tb.id==="emp-contratos")return ectHTML(tb,rows,h);
-  if(tb.id==="assinaturas"){const v=state.asnView||"mapa";h=h.replace(/<section class="tbl tb-assinaturas">/,`<section class="tbl tb-assinaturas"><div class="seg subtabs asn-seg" role="tablist" aria-label="Visão das assinaturas">${[["mapa","Todas as assinaturas"],["reemb","Reembolso da companhia"],["cob","Cobranças do mês"]].map(([k,l])=>`<button role="tab" data-asnv="${k}" class="${v===k?"on":""}" aria-selected="${v===k}">${l}</button>`).join("")}</div>`);
+  if(tb.id==="assinaturas"){subscribe("reemb-corp");asnSync();const v=state.asnView||"mapa";h=h.replace(/<section class="tbl tb-assinaturas">/,`<section class="tbl tb-assinaturas"><div class="seg subtabs asn-seg" role="tablist" aria-label="Visão das assinaturas">${[["mapa","Todas as assinaturas"],["reemb","Reembolso da companhia"],["cob","Cobranças do mês"]].map(([k,l])=>`<button role="tab" data-asnv="${k}" class="${v===k?"on":""}" aria-selected="${v===k}">${l}</button>`).join("")}</div>`);
     if(v==="mapa")return asnMapaHTML(tb,h);if(v==="reemb")return asnReembHTML(tb,rows,h);}
   if(tb.id==="parcelas"){const v=state.ccView||"prox";h=h.replace(/<section class="tbl tb-parcelas">/,`<section class="tbl tb-parcelas"><div class="seg subtabs asn-seg" role="tablist" aria-label="Visão dos cartões">${[["prox","Próximos meses"],["motivo","Por motivo"],["fech","Fechamento do mês"],["todas","Todas as parcelas"]].map(([k,l])=>`<button role="tab" data-ccv="${k}" class="${v===k?"on":""}" aria-selected="${v===k}">${l}</button>`).join("")}</div>`);
     if(v!=="todas")return ccHTML(v,rows,h);}
@@ -1162,7 +1157,17 @@ function crHTML(tb,rows,h){const all=data.cronograma||[];if(!all.length)return h
 const ASN_ET=["A solicitar","Solicitado","Recebido"];
 const asnKey=r=>String(r.descr||"Sem descrição").trim().toLowerCase();
 const asnReemb=r=>r.reemb!=="Não";
-const asnEt=r=>ASN_ET.includes(r.etapa)?r.etapa:"A solicitar";
+const asnRc=r=>(data["reemb-corp"]||[]).find(x=>x.id==="asn-"+r.id);
+const RC2ET={"A solicitar":"A solicitar","Solicitado":"Solicitado","Pago":"Recebido","Negado":"Recebido"},ET2RC={"A solicitar":"A solicitar","Solicitado":"Solicitado","Recebido":"Pago"};
+const asnEt=r=>{const c=asnRc(r);if(c)return RC2ET[c.status||"A solicitar"]||"A solicitar";return ASN_ET.includes(r.etapa)?r.etapa:"A solicitar"};
+/* cada cobrança de assinatura reembolsável vira um gasto em Reembolsos corporativos (id asn-<cobrança>), na tabela do titular do cartão */
+const asnBusy=new Set();
+function asnSync(){if(!subs["reemb-corp"]||!subs.assinaturas||!isLoaded("reemb-corp")||!isLoaded("assinaturas"))return;const A=data.assinaturas||[],RC=data["reemb-corp"]||[];if(!A.length)return;
+  const pes=r=>/let[ií]cia/i.test(r.cartao||"")?"Leticia":"Fernando";
+  A.forEach(r=>{const id="asn-"+r.id,c=RC.find(x=>x.id===id);if(asnBusy.has(id))return;
+    if(asnReemb(r)&&!c){asnBusy.add(id);setRow("reemb-corp",id,{asn:r.id,pessoa:pes(r),data:r.data||"",descr:"Assinatura · "+(r.descr||""),cat:"Assinaturas de software",ref:r.data?fmtMonth(r.data.slice(0,7)):"",brl:hasV(r.brl)?+r.brl:null,formapg:"Cartão de crédito"+(r.final?" final "+r.final:""),status:ET2RC[ASN_ET.includes(r.etapa)?r.etapa:"A solicitar"]}).catch(e=>console.warn(e)).finally(()=>setTimeout(()=>asnBusy.delete(id),3000))}
+    else if(c&&!asnReemb(r)&&(c.status||"A solicitar")==="A solicitar"){asnBusy.add(id);delRow("reemb-corp",id).catch(e=>console.warn(e)).finally(()=>setTimeout(()=>asnBusy.delete(id),3000))}
+    else if(c&&asnReemb(r)&&hasV(r.brl)&&+r.brl!==+c.brl&&(c.status||"A solicitar")==="A solicitar"){asnBusy.add(id);updRow("reemb-corp",id,{brl:+r.brl}).catch(e=>console.warn(e)).finally(()=>setTimeout(()=>asnBusy.delete(id),3000))}})}
 function asnServicos(){const q=(state.qs.assinaturas||"").toLowerCase().trim();const G={};
   (data.assinaturas||[]).filter(execOk).forEach(r=>{const k=asnKey(r);(G[k]=G[k]||[]).push(r)});
   let L=Object.values(G).map(rs=>{rs.sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));const u=rs[0],vs=rs.map(r=>+r.brl||0).filter(Boolean).slice(0,3);
@@ -1191,7 +1196,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
   try{if(d.asnv){state.asnView=d.asnv;render();return}
   if(d.asngo!==undefined){state.asnView="reemb";if(d.asngo)(state.filters.assinaturas=state.filters.assinaturas||{})._mes=d.asngo;go("assinaturas");return}
   if(d.asnr){const rs=(data.assinaturas||[]).filter(r=>asnKey(r)===d.asnr);const on=!asnReemb(rs.sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")))[0]);for(const r of rs)await updRow("assinaturas",r.id,{reemb:on?"Sim":"Não"});toast(on?"Marcada como reembolso da companhia":"Marcada como não reembolsável");return}
-  if(d.asne){const r=(data.assinaturas||[]).find(x=>x.id===d.asne);if(!r)return;const nx=ASN_ET[(ASN_ET.indexOf(asnEt(r))+1)%ASN_ET.length];const p={etapa:nx};if(nx==="Solicitado")p.solicitadoEm=new Date().toISOString().slice(0,10);if(nx==="Recebido")p.recebidoEm=new Date().toISOString().slice(0,10);await updRow("assinaturas",r.id,p);return}
+  if(d.asne){const r=(data.assinaturas||[]).find(x=>x.id===d.asne);if(!r)return;const nx=ASN_ET[(ASN_ET.indexOf(asnEt(r))+1)%ASN_ET.length];const c=asnRc(r);if(c)await updStamp("reemb-corp",c.id,{status:ET2RC[nx]});else await updRow("assinaturas",r.id,{etapa:nx});return}
   }catch(err){console.warn(err);toast("Não foi possível salvar.")}},true);
 /* ---------- Cartões: próximos meses, por motivo e fechamento do mês ---------- */
 const CC_LIST=["Itaú The One","Itaú LATAM","Itaú Personnalité","Santander Black","C6 Bank"];
