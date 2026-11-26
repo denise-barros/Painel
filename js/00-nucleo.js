@@ -46,7 +46,7 @@ const NAV=[
   {id:'capa',l:'Capa'},
   {sep:true},
   {id:'sec',l:'Operação',mod:'modulos/secretariado.html?v=9'},
-  {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=477'},
+  {id:'fin',l:'Financeiro',mod:'modulos/financeiro.html?v=478'},
   {id:'dp',l:'DP',native:true},
   {id:'fac',l:'Facilities',native:true},
   {id:'sau',l:'Saúde',native:true},
@@ -409,3 +409,7 @@ function renderCad(){
   h+='</div>';el.innerHTML=h;
 }
 
+/* listas de opções dos formulários: incluem os valores já usados e "Outro…" para digitar uma opção nova (sem depender do Claude) */
+const OPT_OUTRO='__outro';
+function optList(opts,used,cur){const o=(opts||[]).slice();(used||[]).concat(cur?[cur]:[]).forEach(x=>{if(x&&typeof x==='string'&&!o.includes(x))o.push(x);});return o;}
+document.addEventListener('change',e=>{const s=e.target;if(!s||!s.matches||!s.matches('select')||s.value!==OPT_OUTRO)return;const i=document.createElement('input');i.id=s.id;i.className=s.className;i.placeholder='Digite a nova opção';i.autocomplete='off';s.replaceWith(i);i.focus();});
