@@ -1449,7 +1449,7 @@ function openFicha(tid,id,focusFirst){
   const ed=tb.cols.filter(c=>c.t!=="calc"),calc=tb.cols.filter(c=>c.t==="calc");
   const val=c=>c.month?mon(base,ctx)[c.month]:base[c.k];
   const field=c=>{const v=val(c);const fid="fi-"+c.k;const lab=c.month?c.l.replace(" no mês","").replace(" do mês","")+" · "+fmtMonth(ctx.month):c.l;let inp;
-    if(c.t==="select")inp=`<select id="${fid}">${["",...c.opts].map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}${v&&!c.opts.includes(v)?`<option selected>${esc(v)}</option>`:""}</select>`;
+    if(c.t==="select"){const L=["",...c.opts];(data[tid]||[]).map(x=>x[c.k]).concat(v?[v]:[]).forEach(x=>{if(x&&typeof x==="string"&&!L.includes(x))L.push(x)});inp=`<select id="${fid}">${L.map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}<option value="__outro">Outro…</option></select>`}
     else if(c.t==="long")inp=`<textarea id="${fid}">${esc(v||"")}</textarea>`;
     else if(c.t==="date")inp=`<input id="${fid}" type="date" value="${esc(v||"")}">`;
     else if(c.t==="month")inp=`<input id="${fid}" type="month" value="${esc(v||"")}">`;
@@ -1500,6 +1500,8 @@ async function saveCellFicha(tid,id,i){
   if(st==="Pago"&&!dp)dp=new Date().toISOString().slice(0,10);
   try{await updRow(tid,id,{st:{[i]:st},dp:{[i]:dp},cp:{[i]:cp}});closeFicha();toast("Status salvo");render()}catch(e){toast("Não foi possível salvar. Tente de novo.")}
 }
+/* "Outro…" numa lista: vira campo de texto para digitar uma opção nova */
+document.addEventListener("change",e=>{const s=e.target;if(!s||!s.matches||!s.matches("select")||s.value!=="__outro")return;const i=document.createElement("input");i.id=s.id;i.className=s.className;i.placeholder="Digite a nova opção";i.autocomplete="off";s.replaceWith(i);i.focus()});
 function closeFicha(){const d=$("#fin-drawer");d.hidden=true;d.innerHTML=""}
 async function saveFicha(tid,id){
   const tb=tbById(tid),ctx=ctxFor();const r=id?(data[tid]||[]).find(x=>x.id===id):null;
@@ -2157,7 +2159,7 @@ function topHTML(tab){
   if(isList&&!multi&&!tab.parcelas&&tab.id!=="contas")more.push(tableTools(first));
   if(tab.matrix)more.push(`<button class="btn sm" data-csv="${tab.id}">Exportar CSV</button>`);
   if(tab.src&&tab.src.length)more.push(`<a class="btn sm" href="${tab.src[0][1]}" target="_blank" rel="noopener" title="${esc(tab.src.map(x=>x[0]).join(" · "))}">Planilha no Drive ↗</a>`);
-  if(isList&&!multi&&!tab.parcelas&&tab.id!=="emprestimos"&&tab.id!=="contas")h+=`<button class="btn sm primary ico" data-add="${first.id}" title="Novo lançamento" aria-label="Novo lançamento"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
+  if(isList&&!multi&&tab.id!=="emprestimos"&&tab.id!=="contas")h+=`<button class="btn sm primary ico" data-add="${first.id}" title="${tab.parcelas?"Nova compra parcelada":"Novo lançamento"}" aria-label="${tab.parcelas?"Nova compra parcelada":"Novo lançamento"}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
   if(more.length)h+=`<details class="more"><summary class="btn sm ico" title="Mais opções" aria-label="Mais opções"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></summary><div class="more-m">${more.join("")}</div></details>`;
   h+=`</div>`;
   if(isList&&!multi&&!inl&&tab.id!=="contas"&&tab.id!=="cronograma"){const fh=filtersHTML(first);const fl=state.filters[first.id]||{};const act=Object.keys(fl).some(k=>fl[k]&&k!=="_sem"&&k!=="_pend");if(fh)h+=`<div class="toolbar filters"><span class="lbl">Filtrar</span>${fh}${act?`<button class="btn sm" data-fclear="${first.id}">Limpar filtros</button>`:""}${pendBtns(first,fl)}</div>`}
