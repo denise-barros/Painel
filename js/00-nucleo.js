@@ -331,8 +331,9 @@ function renderCapa(){
   // Atenção + próximos 15 dias
   h+='<div class="grid2"><div><div class="sec-h"><h3>Precisa de atenção</h3><span class="cnt">'+att+'</span></div>';
   if(!att)h+='<ul class="list"><li><div class="empty"><b>Tudo em dia</b>Nenhuma demanda atrasada, pagamento vencido ou espera longa.</div></li></ul>';
-  else{const rows=capaRows(attV,'vencido');
-    h+='<div class="att-scroll"><ul class="list">'+rows.map(r=>r.grp?grpHtml(r,'att'):attLi(r)).join('')+'</ul></div>';}
+  else{const rows=capaRows(attV,'vencido'),all=!!S.capaAll.att,shown=all?rows:rows.slice(0,CAPA_LIM);
+    h+='<div class="att-scroll"><ul class="list">'+shown.map(r=>r.grp?grpHtml(r,'att'):attLi(r)).join('')+'</ul></div>'+
+      (rows.length>CAPA_LIM?'<button class="btn sm ghost capa-more" data-capa-all="att">'+(all?'Mostrar menos':'Ver todos ('+att+')')+'</button>':'');}
   h+='</div><div><div class="sec-h"><h3>Próximos 3 dias</h3><span class="cnt">'+c.upcoming.length+'</span></div>';
   if(!c.upcoming.length)h+='<ul class="list"><li><div class="empty"><b>Agenda livre</b>Prazos de demandas e vencimentos de pagamentos aparecem aqui.</div></li></ul>';
   else{const g={};c.upcoming.forEach(u=>{(g[u.date]=g[u.date]||[]).push(u);});
