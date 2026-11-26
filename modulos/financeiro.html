@@ -732,7 +732,7 @@ const groupOf=id=>GROUPS.find(g=>g.tabs.includes(id));
 /* ---------- camada de dados ---------- */
 let db=null, downloads=null, userNs=null, myId=null, pending=0;
 const data={}, subs={};
-const cfg={parcelasRef:today()};
+const cfg={parcelasRef:today()};let cfgOk=false;
 function setSync(){const dot=$("#syncDot"),tx=$("#syncText");if(!dot||!tx)return;dot.className="sync-dot";
   if(!db){dot.classList.add("local");tx.textContent="Alterações não são salvas nesta visualização"}
   else if(pending>0){dot.classList.add("busy");tx.textContent="Salvando…"}
@@ -764,7 +764,7 @@ async function delRow(tid,id){
   if(db){await track(colRef(tid).doc(id).delete());return}
   data[tid]=(data[tid]||[]).filter(x=>x.id!==id);scheduleRender();
 }
-async function saveCfg(){if(db){try{await track(db.doc("config/painel").set({parcelasRef:cfg.parcelasRef,fdcEnv:cfg.fdcEnv||{},fdcCaixa:cfg.fdcCaixa||{}}))}catch(e){console.warn(e)}}}
+async function saveCfg(){if(db){try{await track(db.doc("config/painel").set({parcelasRef:cfg.parcelasRef,fdcEnv:cfg.fdcEnv||{},fdcCaixa:cfg.fdcCaixa||{},asnIgn:cfg.asnIgn||{}}))}catch(e){console.warn(e)}}}
 const fmtStampBR=ts=>{if(!ts)return"";const d=new Date(ts);const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} às ${p(d.getHours())}:${p(d.getMinutes())}`};
 const fmtStampShort=ts=>{if(!ts)return"";const d=new Date(ts);const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)} ${p(d.getHours())}:${p(d.getMinutes())}`};
 function stampPatch(tid,r,patch){
@@ -1215,9 +1215,11 @@ const asnEt=r=>{const c=asnRc(r);return c?RC2ET[c.status||"A solicitar"]||"A sol
 /* reembolso das assinaturas: uma linha por mês × titular do cartão × Business Unit em Reembolsos corporativos (id asnbu-…) */
 const asnBusy=new Set();
 const asnLater=(id,p)=>{asnBusy.add(id);p.catch(e=>console.warn(e)).finally(()=>setTimeout(()=>{asnBusy.delete(id);scheduleRender()},1500))};
-function asnSync(){if(!subs["reemb-corp"]||!subs.assinaturas||!isLoaded("reemb-corp")||!isLoaded("assinaturas"))return;const A=data.assinaturas||[],RC=data["reemb-corp"]||[];
+/* linha de assinaturas excluída à mão em Reembolsos corporativos: fica registrada para a sincronização não recriá-la */
+async function asnIgnore(t,id){if(t!=="reemb-corp"||!String(id).startsWith("asnbu-"))return;cfg.asnIgn=Object.assign({},cfg.asnIgn||{},{[id]:new Date().toISOString().slice(0,10)});await saveCfg()}
+function asnSync(){if(db&&!cfgOk)return;if(!subs["reemb-corp"]||!subs.assinaturas||!isLoaded("reemb-corp")||!isLoaded("assinaturas"))return;const A=data.assinaturas||[],RC=data["reemb-corp"]||[];
   const G={};A.filter(r=>asnReemb(r)&&r.data).forEach(r=>{const id=asnGid(r);(G[id]=G[id]||[]).push(r)});
-  Object.entries(G).forEach(([id,l])=>{if(asnBusy.has(id))return;const u=l[0],m=u.data.slice(0,7),bu=u.bu||"",tot=Math.round(l.reduce((n,r)=>n+(+r.brl||0),0)*100)/100;
+  Object.entries(G).forEach(([id,l])=>{if(asnBusy.has(id)||(cfg.asnIgn||{})[id])return;const u=l[0],m=u.data.slice(0,7),bu=u.bu||"",tot=Math.round(l.reduce((n,r)=>n+(+r.brl||0),0)*100)/100;
     const want={asnbu:1,bu,pessoa:asnPes(u),data:l.map(r=>r.data).sort().pop(),descr:"Assinaturas "+(bu||"(Business Unit a definir)")+" · "+fmtMonth(m),cat:"Assinaturas de software",ref:fmtMonth(m),brl:tot,formapg:"Cartão de crédito",qtd:l.length};
     const c=RC.find(x=>x.id===id);
     if(!c)asnLater(id,setRow("reemb-corp",id,Object.assign({status:"A solicitar"},want)));
@@ -2435,12 +2437,12 @@ document.addEventListener("click",async e=>{
   if(d.fclose!==undefined)return closeFicha();
   if(d.fsave!==undefined){const[t,id]=d.fsave.split("|");return saveFicha(t,id||null)}
   if(d.fdel!==undefined){if(!fichaArm){fichaArm=true;b.classList.add("armed");b.textContent="Confirmar exclusão";return}
-    const[t,id]=$("[data-fsave]").dataset.fsave.split("|");try{const rr=(data[t]||[]).find(x=>x.id===id);if(rr&&window.CS){const ks=t==="cronograma"?Object.values(rr.meses||{}).map(x=>x.kanbanId):[rr.kanbanId];ks.filter(Boolean).forEach(k=>{const kt=window.CS.getTask(k);if(kt&&kt.status!=="concluido")window.CS.removeTask(k)})}await delRow(t,id);closeFicha();toast("Lançamento excluído");render()}catch(err){toast("Não foi possível excluir.")}return}
+    const[t,id]=$("[data-fsave]").dataset.fsave.split("|");try{const rr=(data[t]||[]).find(x=>x.id===id);if(rr&&window.CS){const ks=t==="cronograma"?Object.values(rr.meses||{}).map(x=>x.kanbanId):[rr.kanbanId];ks.filter(Boolean).forEach(k=>{const kt=window.CS.getTask(k);if(kt&&kt.status!=="concluido")window.CS.removeTask(k)})}await asnIgnore(t,id);await delRow(t,id);closeFicha();toast("Lançamento excluído");render()}catch(err){toast("Não foi possível excluir.")}return}
   if(d.tab)return go(d.tab);
   if(d.add)return openFicha(d.add,null);
   if(d.del){state.confirm=d.del;return render()}
   if(d.delno!==undefined){state.confirm=null;return render()}
-  if(d.delyes){const[t,id]=d.delyes.split("|");state.confirm=null;try{await delRow(t,id);toast("Excluído")}catch(err){toast("Não foi possível excluir.")}return render()}
+  if(d.delyes){const[t,id]=d.delyes.split("|");state.confirm=null;try{await asnIgnore(t,id);await delRow(t,id);toast("Excluído")}catch(err){toast("Não foi possível excluir.")}return render()}
   if(d.fclear){const f=state.filters[d.fclear]||{};Object.keys(f).forEach(k=>{if(k!=="_sem"&&k!=="_pend")f[k]=""});return render()}
   if(d.pend!==undefined){const f=(state.filters.cronograma=state.filters.cronograma||{});f._pend=f._pend===d.pend?"":d.pend;return render()}
   if(d.csv)return exportCsv(d.csv);
@@ -2508,7 +2510,7 @@ window.FIN={
 (async()=>{
   try{if(window.claude&&claude.use){const [d,dl,u,as]=await Promise.all([claude.use("db"),claude.use("downloads"),claude.use("user"),claude.use("assets")]);db=d;downloads=dl;userNs=u;assetsNs=as||null;try{myId=u?await u.id():null}catch(e){myId=null}}}catch(e){console.warn(e)}
   if(db){try{db.doc("config/cartao").onSnapshot(s=>{if(s.exists){const v=s.data()||{};const m=v.meses||{};Object.keys(m).forEach(k=>{if(/^\d{4}-\d{2}$/.test(k)&&m[k]&&typeof m[k]==="object"){const x=m[k];CC_MESES[k]={nome:String(x.nome||k),pasta:/^https:\/\//.test(x.pasta||"")?x.pasta:CC_PASTA,planilha:/^https:\/\//.test(x.planilha||"")?x.planilha:PARC_SHEET}}});scheduleRender()}},()=>{})}catch(e){}}
-  if(db){try{db.doc("config/painel").onSnapshot(s=>{if(s.exists){const v=s.data();if(v.parcelasRef&&v.parcelasRef!==cfg.parcelasRef){cfg.parcelasRef=v.parcelasRef;scheduleRender()}if(v.fdcEnv&&JSON.stringify(v.fdcEnv)!==JSON.stringify(cfg.fdcEnv||{})){cfg.fdcEnv=v.fdcEnv;scheduleRender()}if(v.fdcCaixa&&JSON.stringify(v.fdcCaixa)!==JSON.stringify(cfg.fdcCaixa||{})){cfg.fdcCaixa=v.fdcCaixa;scheduleRender()}}},()=>{})}catch(e){}}
+  if(db){try{db.doc("config/painel").onSnapshot(s=>{if(s.exists){const v=s.data();if(v.parcelasRef&&v.parcelasRef!==cfg.parcelasRef){cfg.parcelasRef=v.parcelasRef;scheduleRender()}if(v.fdcEnv&&JSON.stringify(v.fdcEnv)!==JSON.stringify(cfg.fdcEnv||{})){cfg.fdcEnv=v.fdcEnv;scheduleRender()}if(v.fdcCaixa&&JSON.stringify(v.fdcCaixa)!==JSON.stringify(cfg.fdcCaixa||{})){cfg.fdcCaixa=v.fdcCaixa;scheduleRender()}if(v.asnIgn&&JSON.stringify(v.asnIgn)!==JSON.stringify(cfg.asnIgn||{})){cfg.asnIgn=v.asnIgn;scheduleRender()}}if(!cfgOk){cfgOk=true;scheduleRender()}},()=>{cfgOk=true})}catch(e){}}
   setSync();for(const k in subs)delete subs[k];
   TABS.forEach(t=>tableIds(t).forEach(subscribe));
   render();
