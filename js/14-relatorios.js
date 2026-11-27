@@ -237,7 +237,8 @@ function relBuild(){
       rrP.length+rrN.length?pl(rrP.length,'reunião','reuniões')+' · '+rrN.length+' nos próximos 30 dias':'Nada no período',
       [{t:'Reuniões no período',head:['Reunião','Conselho ou programa','Situação','Data'],w:[0.38,0.28,0.16,0.18],rows:rrP.slice().sort((x,y)=>x.data.localeCompare(y.data)).map(r=>[r.titulo||'Reunião',bnm(r.board),r.status||'Agendada',brD(r.data)])},
        {t:'Eventos no período',head:['Evento','Conselho ou programa','Data'],w:[0.46,0.34,0.2],rows:evP.map(e=>[e.titulo||'Evento',bnm(e.board),brD(e.data)])},
-       /* os próximos 30 dias dos conselhos já estão na lista geral de Próximos 30 dias */]);
+       /* as reuniões de conselho (fixas) ficam só aqui, não no Próximos 30 dias geral */
+       {t:'Próximas reuniões (30 dias)',head:['Reunião','Conselho ou programa','Data'],w:[0.46,0.34,0.2],rows:rrN.slice().sort((x,y)=>x.data.localeCompare(y.data)).map(r=>[r.titulo||'Reunião',bnm(r.board),brD(r.data)])}]);
     /* Família, Rotina e Viagens */
     area('Família, Rotina e Viagens',vP.length+vN.length+fe.length+fd.length+vg.length?[B1(pl(vP.length,'viagem','viagens')),N(' no período e '+vN.length+' nos próximos 30 dias. ')].concat(vg.length?[B1(fmtMoney(sum(vg,'valor'))),N(' em gastos de viagem a reembolsar. ')]:[]).concat(fd.length?[fd.some(docLate)?R2(pl(fd.length,'documento vencido ou a vencer','documentos vencidos ou a vencer')):B1(pl(fd.length,'documento a vencer','documentos a vencer')),N('.')]:[]):[N('Nada registrado no período.')],
       [vP.length+vN.length?pl(vP.length+vN.length,'viagem','viagens'):'',fd.length?pl(fd.length,'documento a vencer','documentos a vencer'):''].filter(Boolean).join(' · ')||'Nada no período',
@@ -259,7 +260,8 @@ function relBuild(){
     fd.filter(docLate).forEach(d=>A((d.tipo||'Documento')+', '+(fn(d.pessoa)||''),'Família','Documento vencido',d.validade,null));
     at.sort((x,y)=>x.d.localeCompare(y.d));
     const precisaR=tk.filter(t=>isOpen(t)&&t.needsExec).sort((x,y)=>(x.due||'9999').localeCompare(y.due||'9999')).map(t=>[t.title||'',catN(t)||'Operação',t.due?brD(t.due):'Sem prazo']);
-    let proxR=[];try{proxR=compute(30).upcoming.filter(u=>u.date&&u.date>t0&&EXK.has(u.kind)).map(u=>({d:u.date,r:[u.title||'',u.kind==='Conselho/Programa'?'Mandato':u.kind||'',d5(u.date)]}));}catch(e){proxR=[];}
+    /* Próximos 30 dias: só o que é diferente do dia a dia (eventos, viagens, contratos, fim de mandato…); reuniões de conselho ficam em Conselhos e Programas */
+    let proxR=[];try{proxR=compute(30).upcoming.filter(u=>u.date&&u.date>t0&&EXK.has(u.kind)&&u.kind!=='Reunião').map(u=>({d:u.date,r:[u.title||'',u.kind==='Conselho/Programa'?'Mandato':u.kind||'',d5(u.date)]}));}catch(e){proxR=[];}
     proxR=proxR.concat(tk.filter(t=>isOpen(t)&&t.reportRel&&t.due&&t.due>t0&&t.due<=t30).map(t=>({d:t.due,r:[t.title||'',catN(t)||'Demanda',d5(t.due)]}))).sort((x,y)=>x.d.localeCompare(y.d)).map(x=>x.r);
     /* abertura em texto */
     const fe1=[];if(done.length)fe1.push([B1(pl(done.length,'demanda concluída','demandas concluídas'))]);
