@@ -404,11 +404,17 @@ async function relExport(kind){
       const secH=(sc,w)=>TT+frH(sc.frase,w)+sc.blocks.reduce((a2,bk)=>a2+bkH(bk,w),0)+8;
       const drawBk=(bk,x,y,w,full)=>{const v=full&&bk.full?Object.assign({},bk,bk.full):bk;if(v.t)y=sub(v.t,v.rows.length,x,y);
         y=v.rows.length?table(v.head,v.rows,x,y,w,Object.assign({w:v.w},v.o||{})):empty(v.empty||'Nada a listar.',x,y,{h:v.head,w:v.w},w);return y+12;};
-      let cy=[TOP,TOP];const openPage=()=>{newPage();cy=[TOP,TOP];};const pageEmpty=()=>cy[0]===TOP&&cy[1]===TOP;
-      const drawSmall=(sc,c)=>{const x=M+c*(cw2+GAP);let y=sect(sc.t,x,cy[c],cw2,sc.n);if(sc.frase)y=rich(sc.frase,x,y,cw2,sz,lh)+16;sc.blocks.forEach(bk=>{y=drawBk(bk,x,y,cw2,false);});cy[c]=y+8;};
+      /* as seções pequenas são planejadas por slide e só desenhadas no fim dele: se ninguém ocupa a coluna da direita, elas vão na largura toda */
+      let cy=[TOP,TOP],pend=[];const pageEmpty=()=>cy[0]===TOP&&cy[1]===TOP;
+      const drawSec=(sc,x,y,w)=>{const full=w>cw2+1;y=sect(sc.t,x,y,w,sc.n);if(sc.frase)y=rich(sc.frase,x,y,full?CW*0.86:w,sz,lh)+16;sc.blocks.forEach(bk=>{y=drawBk(bk,x,y,w,full);});return y+8;};
+      const flush=()=>{if(!pend.length)return null;let e;if(pend.every(p2=>p2.c===0)){let y=pend[0].y;pend.forEach(p2=>{y=drawSec(p2.sc,M,y,CW);});e=y;}
+        else{e=0;pend.forEach(p2=>{e=Math.max(e,drawSec(p2.sc,M+p2.c*(cw2+GAP),p2.y,cw2));});}pend=[];return e;};
+      const openPage=()=>{flush();newPage();cy=[TOP,TOP];};
+      const drawSmall=(sc,c)=>{pend.push({sc,c,y:cy[c]});cy[c]+=secH(sc,cw2);};
       const drawBig=(sc,y0)=>{let y=sect(sc.t,M,y0||TOP,CW,sc.n);if(sc.frase)y=rich(sc.frase,M,y,CW*0.86,sz,lh)+16;let yc=[y,y];
         const cont=()=>{openPage();const t=sect(sc.t,M,TOP,CW,null,true);yc=[t,t];};
         sc.blocks.forEach(bk=>{const h=bkH(bk,cw2);
+          /* lista única da seção: largura toda */if(sc.blocks.length===1){let y0=Math.max(yc[0],yc[1]);if(y0+HDR+60>BOT){cont();y0=yc[0];}contHead=[sc.t,M,CW];const ye=drawBk(bk,M,y0,CW,true);contHead=null;yc=[ye,ye];return;}
           if(h<=BOT-TOP-TT){const c=yc[0]<=yc[1]?0:1;let cc=yc[c]+h<=BOT?c:(yc[1-c]+h<=BOT?1-c:-1);if(cc<0){cont();cc=0;}yc[cc]=drawBk(bk,M+cc*(cw2+GAP),yc[cc],cw2,false);return;}
           let y0=Math.max(yc[0],yc[1]);if(y0+HDR+60>BOT){cont();y0=yc[0];}contHead=[sc.t,M,CW];const ye=drawBk(bk,M,y0,CW,true);contHead=null;yc=[ye,ye];});
         const e=Math.max(yc[0],yc[1])+8;cy=[e,e];};
@@ -417,12 +423,13 @@ async function relExport(kind){
         /* Precisa, Atenção e Próximos 30 dias ficam sempre nessa ordem, antes das áreas; só as áreas podem subir para aproveitar espaço */
         const lim=q[0].k<3?1:q.length;
         for(let i=0;i<lim;i++){const sc=q[i],h=secH(sc,cw2);
-          if(h>BOT-TOP){const used=Math.max(cy[0],cy[1]);const b0=sc.blocks[0],need=TT+frH(sc.frase,CW*0.86)+(b0?(bkH(b0,cw2)<=BOT-TOP-TT?bkH(b0,cw2):HDR+80):0);if(i===0&&(pageEmpty()||(BOT-used>(BOT-TOP)*0.5&&BOT-used>=need))){drawBig(sc,pageEmpty()?TOP:used+4);q.splice(0,1);done1=true;break;}continue;}
+          if(h>BOT-TOP){const used=Math.max(cy[0],cy[1]);const b0=sc.blocks[0],need=TT+frH(sc.frase,CW*0.86)+(b0?(bkH(b0,cw2)<=BOT-TOP-TT?bkH(b0,cw2):HDR+80):0);if(i===0&&(pageEmpty()||(BOT-used>(BOT-TOP)*0.5&&BOT-used>=need))){const fe=flush();drawBig(sc,pageEmpty()?TOP:(fe!=null?fe:used)+4);q.splice(0,1);done1=true;break;}continue;}
           const c=cy[0]+h<=BOT?0:(cy[1]+h<=BOT?1:-1);if(c>=0){drawSmall(sc,c);q.splice(i,1);done1=true;break;}}
         if(!done1)openPage();}
+      const fe=flush(),yv=fe!=null?fe:Math.max(cy[0],cy[1]);
       const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
-        /* nunca abre um slide só para esta linha: vai no espaço livre ou no pé do último slide, à esquerda */
-        const c=cy[0]+24<=BOT?0:(cy[1]+24<=BOT?1:-1);B(10,'i');tc('faint');if(c>=0)doc.text(doc.splitTextToSize(txt,cw2),M+c*(cw2+GAP),cy[c]+4);else doc.text(txt,M,H-28);}}
+        /* nunca abre um slide só para esta linha: vai logo abaixo do conteúdo ou no pé do último slide, à esquerda */
+        B(10,'i');tc('faint');doc.text(txt,M,yv+20<=BOT?yv+4:H-28);}}
     /* rodapé */
     const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);
       /* faixa verde e rosa no alto de cada página, como no modelo original */const bh=LAND?5:4;fc('green');doc.rect(0,0,W,bh,'F');fc('rose2');doc.rect(W*0.72,0,W*0.28,bh,'F');
