@@ -394,42 +394,43 @@ async function relExport(kind){
           full:{head:['Item','Área','Situação','Desde','Valor'],w:[0.36,0.14,0.2,0.13,0.17],rows:P.atencao,o:{rose:2}}}]},
         {t:'Próximos 30 dias',n:P.prox.length,blocks:[{head:['Compromisso','Tipo','Data'],w:[0.6,0.24,0.16],rows:P.prox,empty:'Nada agendado.'}]}]
         .concat(P.areas.filter(z=>!z.vazio).map(z=>({t:z.t,frase:z.frase,blocks:z.blocks.map(bk=>({t:bk.t,head:bk.head,w:bk.w,rows:bk.rows,o:{total:bk.total}}))})));
-      /* cada lista fica inteira num lugar só (nunca pula para a coluna ao lado): seções pequenas dividem o slide em duas colunas;
-         uma seção que não cabe numa coluna abre slide próprio, com as listas lado a lado ou, se uma lista for maior que a coluna,
-         na largura toda continuando no slide seguinte. Seções pequenas podem subir para aproveitar espaço livre. */
-      const FS=9,PV=4.2,LHF=1.15,HDR=2*PV+8*LHF+1,TT=27,BOT=H-38;/* o rodapé tem só o número da página, à direita */
+      /* listas empilhadas, sempre na largura toda (decidido 27/11/2026): uma seção que não cabe no espaço que sobra começa no slide seguinte;
+         uma lista maior que o slide continua no próximo, com o título repetido */
+      const FS=9,PV=4.2,LHF=1.15,HDR=2*PV+8*LHF+1,TT=27,BOT=H-38,FW=CW*0.86;
       const rowH=(r,ws,w)=>{B(FS);let ln=1;r.forEach((c,i)=>{ln=Math.max(ln,doc.splitTextToSize(String(c),ws[i]*w-8).length);});return 2*PV+ln*FS*LHF;};
-      const frH=(fr,w)=>{if(!fr)return 0;B(sz,'b');return doc.splitTextToSize(fr.map(f=>f[0]).join(''),w).length*lh+16;};
-      const bkH=(bk,w)=>(bk.t?16:0)+(bk.rows.length?HDR+bk.rows.reduce((a2,r)=>a2+rowH(r,bk.w,w),0):42)+12;
-      const secH=(sc,w)=>TT+frH(sc.frase,w)+sc.blocks.reduce((a2,bk)=>a2+bkH(bk,w),0)+8;
-      const drawBk=(bk,x,y,w,full)=>{const v=full&&bk.full?Object.assign({},bk,bk.full):bk;if(v.t)y=sub(v.t,v.rows.length,x,y);
-        y=v.rows.length?table(v.head,v.rows,x,y,w,Object.assign({w:v.w},v.o||{})):empty(v.empty||'Nada a listar.',x,y,{h:v.head,w:v.w},w);return y+12;};
-      /* as seções pequenas são planejadas por slide e só desenhadas no fim dele: se ninguém ocupa a coluna da direita, elas vão na largura toda */
-      let cy=[TOP,TOP],pend=[];const pageEmpty=()=>cy[0]===TOP&&cy[1]===TOP;
-      const drawSec=(sc,x,y,w)=>{const full=w>cw2+1;y=sect(sc.t,x,y,w,sc.n);if(sc.frase)y=rich(sc.frase,x,y,full?CW*0.86:w,sz,lh)+16;sc.blocks.forEach(bk=>{y=drawBk(bk,x,y,w,full);});return y+8;};
-      const flush=()=>{if(!pend.length)return null;let e;if(pend.every(p2=>p2.c===0)){let y=pend[0].y;pend.forEach(p2=>{y=drawSec(p2.sc,M,y,CW);});e=y;}
-        else{e=0;pend.forEach(p2=>{e=Math.max(e,drawSec(p2.sc,M+p2.c*(cw2+GAP),p2.y,cw2));});}pend=[];return e;};
-      const openPage=()=>{flush();newPage();cy=[TOP,TOP];};
-      const drawSmall=(sc,c)=>{pend.push({sc,c,y:cy[c]});cy[c]+=secH(sc,cw2);};
-      const drawBig=(sc,y0)=>{let y=sect(sc.t,M,y0||TOP,CW,sc.n);if(sc.frase)y=rich(sc.frase,M,y,CW*0.86,sz,lh)+16;let yc=[y,y];
-        const cont=()=>{openPage();const t=sect(sc.t,M,TOP,CW,null,true);yc=[t,t];};
-        sc.blocks.forEach(bk=>{const h=bkH(bk,cw2);
-          /* lista única da seção: largura toda */if(sc.blocks.length===1){let y0=Math.max(yc[0],yc[1]);if(y0+HDR+60>BOT){cont();y0=yc[0];}contHead=[sc.t,M,CW];const ye=drawBk(bk,M,y0,CW,true);contHead=null;yc=[ye,ye];return;}
-          if(h<=BOT-TOP-TT){const c=yc[0]<=yc[1]?0:1;let cc=yc[c]+h<=BOT?c:(yc[1-c]+h<=BOT?1-c:-1);if(cc<0){cont();cc=0;}yc[cc]=drawBk(bk,M+cc*(cw2+GAP),yc[cc],cw2,false);return;}
-          let y0=Math.max(yc[0],yc[1]);if(y0+HDR+60>BOT){cont();y0=yc[0];}contHead=[sc.t,M,CW];const ye=drawBk(bk,M,y0,CW,true);contHead=null;yc=[ye,ye];});
-        const e=Math.max(yc[0],yc[1])+8;cy=[e,e];};
-      const q=secs.map((sc,k)=>Object.assign(sc,{k}));openPage();
-      while(q.length){let done1=false;
-        /* Precisa, Atenção e Próximos 30 dias ficam sempre nessa ordem, antes das áreas; só as áreas podem subir para aproveitar espaço */
-        const lim=q[0].k<3?1:q.length;
-        for(let i=0;i<lim;i++){const sc=q[i],h=secH(sc,cw2);
-          if(h>BOT-TOP){const used=Math.max(cy[0],cy[1]);const b0=sc.blocks[0],need=TT+frH(sc.frase,CW*0.86)+(b0?(bkH(b0,cw2)<=BOT-TOP-TT?bkH(b0,cw2):HDR+80):0);if(i===0&&(pageEmpty()||(BOT-used>(BOT-TOP)*0.5&&BOT-used>=need))){const fe=flush();drawBig(sc,pageEmpty()?TOP:(fe!=null?fe:used)+4);q.splice(0,1);done1=true;break;}continue;}
-          const c=cy[0]+h<=BOT?0:(cy[1]+h<=BOT?1:-1);if(c>=0){drawSmall(sc,c);q.splice(i,1);done1=true;break;}}
-        if(!done1)openPage();}
-      const fe=flush(),yv=fe!=null?fe:Math.max(cy[0],cy[1]);
+      const frH=fr=>{if(!fr)return 0;B(sz,'b');return doc.splitTextToSize(fr.map(f=>f[0]).join(''),FW).length*lh+14;};
+      const fv=bk=>bk.full?Object.assign({},bk,bk.full):bk;
+      const bkH=bk=>{const v=fv(bk);return (v.t?16:0)+(v.rows.length?HDR+v.rows.reduce((a2,r)=>a2+rowH(r,v.w,CW),0)+8:40);};
+      const firstH=bk=>{const v=fv(bk);return (v.t?16:0)+(v.rows.length?HDR+v.rows.slice(0,3).reduce((a2,r)=>a2+rowH(r,v.w,CW),0):42);};
+      const secH=sc=>TT+frH(sc.frase)+sc.blocks.reduce((a2,bk)=>a2+bkH(bk),0)+14;
+      secs.forEach((sc,k)=>{sc.k=k;});let y=TOP;newPage();const fresh=()=>{newPage();y=TOP;};
+      const drawSec=sc=>{y=sect(sc.t,M,y,CW,sc.n);if(sc.frase)y=rich(sc.frase,M,y,FW,sz,lh)+14;
+        sc.blocks.forEach((bk,k)=>{const v=fv(bk),bh=bkH(bk);
+          if(k>0&&y+bh>BOT&&(bh<=BOT-TOP-TT||BOT-y<firstH(bk)+20)){fresh();y=sect(sc.t,M,y,CW,null,true);}
+          if(v.t)y=sub(v.t,v.rows.length,M,y);
+          if(!v.rows.length){y=empty(v.empty||'Nada a listar.',M,y,{h:v.head,w:v.w},CW)+6;return;}
+          contHead=[sc.t,M,CW];y=table(v.head,v.rows,M,y,CW,Object.assign({w:v.w},v.o||{}))+8;contHead=null;});
+        y+=14;};
+      /* 2º slide: Precisa de vocês e Próximos 30 dias à esquerda, Atenção à direita; o que não couber na coluna continua no slide seguinte, na largura toda */
+      const cwc=(CW-44)/2,XR=M+cwc+44,rest=[];
+      const colSec=(sc,x,y0)=>{let yy=sect(sc.t,x,y0,cwc,sc.n);const bk=sc.blocks[0];
+        if(!bk.rows.length)return empty(bk.empty||'Nada a listar.',x,yy,{h:bk.head,w:bk.w},cwc)+16;
+        let h=HDR,j=0;while(j<bk.rows.length&&yy+h+rowH(bk.rows[j],bk.w,cwc)<=BOT){h+=rowH(bk.rows[j],bk.w,cwc);j++;}
+        if(j===0){rest.push({sc,from:0});return yy;}
+        yy=table(bk.head,bk.rows.slice(0,j),x,yy,cwc,Object.assign({w:bk.w},bk.o||{}))+16;if(j<bk.rows.length)rest.push({sc,from:j});return yy;};
+      let yl=colSec(secs[0],M,TOP);if(yl+TT+HDR+20<=BOT)colSec(secs[2],M,yl+4);else rest.push({sc:secs[2],from:0,whole:true});colSec(secs[1],XR,TOP);
+      if(rest.length){fresh();rest.sort((x1,x2)=>x1.sc.k-x2.sc.k).forEach(r=>{const bk=fv(r.sc.blocks[0]);const rows=(r.sc.blocks[0].full?r.sc.blocks[0].full.rows:bk.rows).slice(r.from);
+        if(y>TOP&&y+TT+HDR+rowH(rows[0],bk.w,CW)*3>BOT)fresh();y=sect(r.sc.t,M,y,CW,r.whole?r.sc.n:null,!r.whole);
+        if(!rows.length){y=empty(bk.empty||'Nada a listar.',M,y,{h:bk.head,w:bk.w},CW)+6;}else{contHead=[r.sc.t,M,CW];y=table(bk.head,rows,M,y,CW,Object.assign({w:bk.w},bk.o||{}))+8;contHead=null;}y+=14;});}
+      else fresh();
+      /* daí em diante, as áreas uma embaixo da outra; uma área pequena pode subir para ocupar o espaço que sobra no slide */
+      const q=secs.slice(3);
+      while(q.length){const sc=q[0],h=secH(sc),room=BOT-y;
+        if(y>TOP&&h>room){const head=TT+frH(sc.frase)+(sc.blocks[0]?firstH(sc.blocks[0]):0);
+          if(h<=BOT-TOP||room<Math.max(head,(BOT-TOP)*0.4)){const i=q.findIndex(z=>secH(z)<=room);if(i>0){drawSec(q.splice(i,1)[0]);continue;}fresh();}}
+        drawSec(q.shift());}
       const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
-        /* nunca abre um slide só para esta linha: vai logo abaixo do conteúdo ou no pé do último slide, à esquerda */
-        B(10,'i');tc('faint');doc.text(txt,M,yv+20<=BOT?yv+4:H-28);}}
+        /* nunca abre um slide só para esta linha */B(10,'i');tc('faint');doc.text(txt,M,y+16<=BOT?y+2:H-28);}}
     /* rodapé */
     const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);
       /* faixa verde e rosa no alto de cada página, como no modelo original */const bh=LAND?5:4;fc('green');doc.rect(0,0,W,bh,'F');fc('rose2');doc.rect(W*0.72,0,W*0.28,bh,'F');
