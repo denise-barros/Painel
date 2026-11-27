@@ -277,21 +277,10 @@ function relBuild(){
     if(precisaR.length)lede.push(B1(pl(precisaR.length,'item aguarda','itens aguardam')),N(S.exec?' a sua decisão. ':' a decisão de vocês. '));
     if(proxR[0])lede.push(N('O próximo compromisso é '),B1(proxR[0][0]),N(', em '+proxR[0][2]+'.'));
     const MESC=MESN.map(cap);
-    /* o que foi feito: só os números de cada área, sem listar item por item (decidido 27/11/2026) */
-    const recebR=FMs.reduce((s,f)=>s+(f.reemb.recebidoMes||0),0);const exPagos=exItems.filter(r=>r.status==='Pago');
-    const mvN=mv.filter(m=>m.tipo!=='Outro'&&m.tipo!=='Registro inicial').length;const pgV2=pgPago.reduce((s,p)=>s+(+p.valor||0),0);
-    const ciclo=cicloM==null?'':', em média em '+(cicloM===0?'menos de um dia útil':String(cicloM).replace('.',',')+(cicloM===1?' dia útil':' dias úteis'));
-    const FEITO={'Operação':done.length?pl(done.length,'demanda concluída','demandas concluídas')+ciclo:'',
-      'Financeiro':[pagN?pl(pagN,'conta recorrente paga','contas recorrentes pagas')+(pago>0?' ('+fmtMoney(pago)+')':''):'',exPagos.length?pl(exPagos.length,'pagamento extraordinário','pagamentos extraordinários'):'',recebR>0?fmtMoney(recebR)+' em reembolsos recebidos':''].filter(Boolean).join(', '),
-      'DP':[pgPago.length?pl(pgPago.length,'pagamento à equipe','pagamentos à equipe')+(pgV2?' ('+fmtMoney(pgV2)+')':''):'',mvN?pl(mvN,'movimentação registrada','movimentações registradas'):''].filter(Boolean).join(', '),
-      'Facilities':[chCon.length?pl(chCon.length,'chamado concluído','chamados concluídos'):'',svc.length?pl(svc.length,'serviço registrado','serviços registrados')+' ('+fmtMoney(sum(svc,'custo'))+')':''].filter(Boolean).join(', '),
-      'Saúde':svR.length?pl(svR.length,'consulta ou exame realizado','consultas e exames realizados'):'',
-      'Conselhos e Programas':[rrP.length?pl(rrP.length,'reunião','reuniões'):'',evP.length?pl(evP.length,'evento','eventos'):''].filter(Boolean).join(' e '),
-      'Família, Rotina e Viagens':vP.length?pl(vP.length,'viagem','viagens'):''};
-    const feito=areas.filter(z=>FEITO[z.t]).map(z=>[z.t,cap(FEITO[z.t])]);
+    /* as áreas não listam item por item o que foi feito (decidido 27/11/2026) */
     const SO_FEITO=new Set(['Concluídas no período','Contas recorrentes pagas','Pagamentos extraordinários','Pagamentos à equipe','Movimentações','Faltas, atestados e ocorrências','Chamados concluídos','Serviços registrados','Reuniões no período','Eventos no período']);
     areas.forEach(z=>{z.blocks=z.blocks.filter(bk=>!SO_FEITO.has(bk.t));});
-    return {feito,entregas:entregas.slice(),lede,precisa:precisaR,atencao:at.map(x=>x.r),prox:proxR,areas,perLbl:oneM?MESC[+a.slice(5,7)-1]+' de '+a.slice(0,4):brD(a)+' a '+brD(b),datas:brD(a)+' a '+brD(b)};
+    return {lede,precisa:precisaR,atencao:at.map(x=>x.r),prox:proxR,areas,perLbl:oneM?MESC[+a.slice(5,7)-1]+' de '+a.slice(0,4):brD(a)+' a '+brD(b),datas:brD(a)+' a '+brD(b)};
   })();
   return {a,b,secs,pd:PD,hl:hl.slice(0,5),done:done.length,hero:{feito,entregas,precisa,prox,pT:S.exec?'Precisa de você':'Precisa de vocês',pNo:S.exec?'Nada pendente com você.':'Nada pendente com vocês.'}};
 }
@@ -370,14 +359,6 @@ async function relExport(kind){
       return doc.lastAutoTable.finalY;};
     const more=(n,x,y,txt)=>{if(n<=0)return y;B(LAND?8.5:7.6,'i');tc('faint');doc.text(txt||('e mais '+n+(n===1?' item':' itens')+' no relatório completo'),x,y+11);return y+16;};
     const who=S.exec?'você':'vocês';
-    /* o que foi feito: uma linha por área (nome e números) e as entregas marcadas como relevantes */
-    const feitoSec=(x,y,w,cols,maxE)=>{y=sect('O que foi feito',x,y,w);if(!P.feito.length&&!P.entregas.length)return empty('Nada registrado no período.',x,y);
-      const gap=24,cw=(w-gap*(cols-1))/cols,sz=LAND?10:8.6,lh=LAND?13:11;let rowY=y,colH=[y,y];
-      P.feito.forEach((f,i)=>{const c=cols>1?i%cols:0;const xx=x+c*(cw+gap);let yy=cols>1?colH[c]:rowY;B(sz,'b');tc('ink');doc.text(f[0],xx,yy);yy+=lh;B(sz);tc('muted');const ln=doc.splitTextToSize(f[1],cw);doc.text(ln,xx,yy);yy+=ln.length*lh+(LAND?9:7);if(cols>1)colH[c]=yy;else rowY=yy;});
-      y=cols>1?Math.max(...colH):rowY;
-      if(P.entregas.length){y+=4;y=sub('Entregas em destaque',P.entregas.length,x,y)+8;const r=P.entregas.slice(0,maxE||99);
-        r.forEach(e=>{B(sz);tc('ink');const t=doc.splitTextToSize(e[0],w-110);doc.text(t[0],x,y);B(sz-0.6);tc('faint');doc.text([e[1],e[2]].filter(Boolean).join(', '),x+w,y,{align:'right'});y+=lh+4;});y=more(P.entregas.length-r.length,x,y-10)+4;}
-      return y;};
     const precisa=(x,y,w,max)=>{y=sect('Precisa de '+who,x,y,w,P.precisa.length);if(!P.precisa.length)return empty('Nada pendente com '+who+'.',x,y);
       const r=max?P.precisa.slice(0,max):P.precisa;y=table(['Decisão ou assinatura','Área','Prazo'],r,x,y,w,{w:[0.6,0.2,0.2]});return more(P.precisa.length-r.length,x,y);};
     const atencao=(x,y,w,max,compact)=>{y=sect('Atenção',x,y,w,P.atencao.length);if(!P.atencao.length)return empty('Nada vencido ou atrasado.',x,y);
@@ -393,8 +374,9 @@ async function relExport(kind){
       z.blocks.forEach(bk=>{if(y>BOT-60){newPage();y=sect(z.t,x,TOP,w,null,true);}y=sub(bk.t,bk.rows.length,x,y);const r=max&&bk.rows.length>max?bk.rows.slice(0,max):bk.rows;
         y=table(bk.head,r,x,y,w,{w:bk.w,total:bk.total&&r.length===bk.rows.length})+4;y=more(bk.rows.length-r.length,x,y);y+=LAND?16:14;});contHead=null;return y+(LAND?10:12);};
     if(MODEL==='resumo'){let y=head(46);y=rich(P.lede,M,y,CW,10.5,15.5)+30;
-      y=feitoSec(M,y,CW,2,3)+14;y=precisa(M,y,CW,3)+18;y=atencao(M,y,CW,5)+18;y=proximos(M,y,CW,Math.max(2,Math.floor((BOT-y-60)/18)));}
-    if(MODEL==='completo'){let y=head(46);y=rich(P.lede,M,y,CW,10.5,15.5)+30;y=feitoSec(M,y,CW,2)+18;
+      y=precisa(M,y,CW,4)+18;y=atencao(M,y,CW,6)+18;y=proximos(M,y,CW,6)+18;
+      if(y<BOT-120){y=sect('Por área',M,y,CW);const cw=(CW-24)/2;P.areas.forEach((z,i)=>{const x=M+(i%2)*(cw+24),yy=y+Math.floor(i/2)*25;B(8.6,'b');tc('ink');doc.text(z.t,x,yy);B(8.3);tc('muted');doc.text(doc.splitTextToSize(z.resumo,cw)[0],x,yy+11);});}}
+    if(MODEL==='completo'){let y=head(46);y=rich(P.lede,M,y,CW,10.5,15.5)+30;
       contHead=['Precisa de '+who,M,CW];y=precisa(M,y,CW)+22;contHead=['Atenção',M,CW];if(y>BOT-90){newPage();y=TOP;}y=atencao(M,y,CW)+22;contHead=['Próximos 30 dias',M,CW];if(y>BOT-90){newPage();y=TOP;}y=proximos(M,y,CW)+26;contHead=null;
       P.areas.filter(z=>!z.vazio).forEach(z=>{if(y>BOT-(z.blocks.length?130:60)){newPage();y=TOP;}y=drawArea(z,M,y,CW);});
       const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){if(y>BOT-30){newPage();y=TOP;}B(9,'i');tc('faint');doc.text(doc.splitTextToSize('Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.',CW),M,y);}}
@@ -402,8 +384,7 @@ async function relExport(kind){
       fc('mint');doc.rect(0,0,W,H,'F');
       T(40);tc('ink');doc.text(P.perLbl,M,100);B(14);tc('muted');doc.text(relScopeLabel(),M,126);dc('green');doc.setLineWidth(1);doc.line(M,150,W-M,150);
       rich(P.lede,M,190,CW*0.86,15,22);
-      newPage();const cw2=(CW-44)/2;feitoSec(M,TOP,cw2,1,4);precisa(M+cw2+44,TOP,cw2,11);
-      newPage();atencao(M,TOP,cw2,12,true);proximos(M+cw2+44,TOP,cw2,12);
+      newPage();const cw2=(CW-44)/2;let y1=precisa(M,TOP,cw2,5);proximos(M,y1+26,cw2,Math.max(3,9-Math.min(P.precisa.length,5)));atencao(M+cw2+44,TOP,cw2,11,true);
       /* áreas: as menores dividem o slide em duas colunas; as maiores abrem slide próprio, com as listas em duas colunas (até 10 linhas por lista) */
       const MAXR=10;const bH=bk=>16+22+Math.min(bk.rows.length,MAXR)*21+(bk.rows.length>MAXR?16:0)+18;
       const est=(z,w)=>{B(11,'b');const ln=doc.splitTextToSize(z.frase.map(f=>f[0]).join(''),w).length;return 27+ln*16+20+z.blocks.reduce((s,bk)=>s+bH(bk),0)+10;};
