@@ -329,7 +329,7 @@ async function relExport(kind){
     const W=LAND?960:595.28,H=LAND?540:841.89,M=LAND?60:54,CW=W-2*M,PG=LAND?[960,540]:'a4',OR=LAND?'landscape':'portrait';
     const doc=new J.jsPDF({unit:'pt',format:PG,orientation:OR});
     const fok=await relFonts(doc);const FD=fok?'Sora':'helvetica',FB=fok?'Jakarta':'helvetica';
-    const C={ink:[31,42,37],muted:[82,97,89],faint:[126,140,132],line:[211,224,216],hair:[228,236,231],green:[63,122,98],rose:[200,52,104],mint:[230,240,234],mint2:[243,248,245]};
+    const C={ink:[31,42,37],muted:[82,97,89],faint:[126,140,132],line:[211,224,216],hair:[228,236,231],green:[63,122,98],rose:[200,52,104],mint:[230,240,234],mint2:[243,248,245],rose2:[219,68,121]};
     const tc=k=>doc.setTextColor(...C[k]),fc=k=>doc.setFillColor(...C[k]),dc=k=>doc.setDrawColor(...C[k]);
     const T=sz=>{doc.setFont(FD,'normal');doc.setFontSize(sz);},B=(sz,st)=>{doc.setFont(FB,st==='b'?'bold':st==='i'?'italic':'normal');doc.setFontSize(sz);};
     const newPage=()=>doc.addPage(PG,OR);const TOP=LAND?70:60,BOT=H-56;
@@ -411,7 +411,9 @@ async function relExport(kind){
       const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
         const c=place(30),x=M+c*(cw2+GAP);B(10,'i');tc('faint');doc.text(doc.splitTextToSize(txt,cw2),x,cy[c]+4);}}
     /* rodapé */
-    const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);B(LAND?8:7.5);tc('faint');doc.text(pg+' de '+np,W-M,H-28,{align:'right'});}
+    const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);
+      /* faixa verde e rosa no alto de cada página, como no modelo original */const bh=LAND?5:4;fc('green');doc.rect(0,0,W,bh,'F');fc('rose2');doc.rect(W*0.72,0,W*0.28,bh,'F');
+      B(LAND?8:7.5);tc('faint');doc.text(pg+' de '+np,W-M,H-28,{align:'right'});}
     return relSave(relFileBase(R)+'-'+REL_PDF_MODELS[MODEL].f+'.pdf',doc.output('blob'));}
   if(kind==='drive'){const m=await getMcp();if(!m){toast('O Google Drive não está disponível agora.');return;}
     const html='<h1>'+esc(title)+'</h1><p><i>Gerado em '+brD(todayISO())+' pelo Painel.</i></p>'+('<h2>Destaques</h2><h3>O que foi feito</h3><ul>'+R.hero.feito.map(f=>'<li><b>'+esc(String(f[0]))+'</b> '+esc(f[1])+'</li>').join('')+R.hero.entregas.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul><h3>'+R.hero.pT+'</h3>'+(R.hero.precisa.length?'<ul>'+R.hero.precisa.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada pendente.</p>')+'<h3>Próximos 30 dias</h3>'+(R.hero.prox.length?'<ul>'+R.hero.prox.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada agendado.</p>'))+
