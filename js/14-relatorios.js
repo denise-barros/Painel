@@ -351,7 +351,7 @@ async function relExport(kind){
     /* tabelas em faixas (formato C, 27/11/2026): títulos em verde sobre faixa menta arredondada, linhas alternadas, sem fios; texto longo quebra a linha */
     const table=(head,rows,x,y,w,o={})=>{if(!rows.length)return y;const wr=o.w||head.map(()=>1/head.length);const cs={};wr.forEach((f,i)=>cs[i]={cellWidth:f*w,halign:i===0?'left':'center'});
       const isTot=d=>o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total';const pv=LAND?4.2:4.4,ph=LAND?8:7;
-      doc.autoTable({startY:y,head:[head],body:rows,margin:{left:x,right:W-x-w,top:TOP+(contHead?28:0),bottom:LAND?24:H-BOT+4},tableWidth:w,theme:'plain',columnStyles:cs,showHead:'everyPage',rowPageBreak:'avoid',
+      doc.autoTable({startY:y,head:[head],body:rows,margin:{left:x,right:W-x-w,top:TOP+(contHead?28:0),bottom:LAND?36:H-BOT+4},tableWidth:w,theme:'plain',columnStyles:cs,showHead:'everyPage',rowPageBreak:'avoid',
         styles:{font:FB,fontStyle:'normal',fontSize:LAND?9:8.5,textColor:C.ink,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2},overflow:'linebreak',valign:'middle',lineWidth:0},
         headStyles:{font:FB,fontStyle:'bold',fontSize:LAND?8:7.6,textColor:C.green,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2}},
         alternateRowStyles:{fillColor:C.mint2},
@@ -394,25 +394,35 @@ async function relExport(kind){
           full:{head:['Item','Área','Situação','Desde','Valor'],w:[0.36,0.14,0.2,0.13,0.17],rows:P.atencao,o:{rose:2}}}]},
         {t:'Próximos 30 dias',n:P.prox.length,blocks:[{head:['Compromisso','Tipo','Data'],w:[0.6,0.24,0.16],rows:P.prox,empty:'Nada agendado.'}]}]
         .concat(P.areas.filter(z=>!z.vazio).map(z=>({t:z.t,frase:z.frase,blocks:z.blocks.map(bk=>({t:bk.t,head:bk.head,w:bk.w,rows:bk.rows,o:{total:bk.total}}))})));
-      /* tudo corre em duas colunas, como num jornal: quando a coluna enche, a lista continua na coluna ao lado e depois no slide seguinte */
-      const FS=9,PV=4.2,LHF=1.15,rowH=(r,ws,w)=>{B(FS);let ln=1;r.forEach((c,i)=>{ln=Math.max(ln,doc.splitTextToSize(String(c),ws[i]*w-10).length);});return 2*PV+ln*FS*LHF+0.6;};
-      const HDR=2*PV+8*LHF+1,TT=27;let col=0,y=TOP;newPage();
-      const colX=()=>M+col*(cw2+GAP);const nextCol=()=>{if(col===0){col=1;y=TOP;}else{newPage();col=0;y=TOP;}};
-      const frH=fr=>{if(!fr)return 0;B(sz,'b');return doc.splitTextToSize(fr.map(f=>f[0]).join(''),cw2).length*lh+16;};
-      secs.forEach(sc=>{const b0=sc.blocks[0];const first=b0?(b0.t?16:0)+(b0.rows.length?HDR+rowH(b0.rows[0],b0.w,cw2):42):0;
-        if(y>TOP&&y+TT+frH(sc.frase)+first>BOT)nextCol();
-        y=sect(sc.t,colX(),y,cw2,sc.n);if(sc.frase){y=rich(sc.frase,colX(),y,cw2,sz,lh)+16;}
-        sc.blocks.forEach(bk=>{
-          if(!bk.rows.length){if(y+(bk.t?16:0)+42>BOT){nextCol();y=sect(sc.t,colX(),y,cw2,null,true);}if(bk.t)y=sub(bk.t,0,colX(),y);y=empty(bk.empty||'Nada a listar.',colX(),y,{h:bk.head,w:bk.w},cw2)+12;return;}
-          if(y+(bk.t?16:0)+HDR+rowH(bk.rows[0],bk.w,cw2)>BOT){nextCol();y=sect(sc.t,colX(),y,cw2,null,true);}
-          if(bk.t)y=sub(bk.t,bk.rows.length,colX(),y);
-          let i=0;while(i<bk.rows.length){let h=HDR,j=i;while(j<bk.rows.length&&y+h+rowH(bk.rows[j],bk.w,cw2)<=BOT-4){h+=rowH(bk.rows[j],bk.w,cw2);j++;}
-            if(j===i)j=i+1;/* uma ou duas linhas que sobrariam sozinhas entram no fim da coluna */if(bk.rows.length-j>0&&bk.rows.length-j<=2){const rest=bk.rows.slice(j).reduce((a2,r)=>a2+rowH(r,bk.w,cw2),0);if(y+h+rest<=BOT+26)j=bk.rows.length;}
-            const chunk=bk.rows.slice(i,j);const last=j>=bk.rows.length;
-            y=table(bk.head,chunk,colX(),y,cw2,Object.assign({w:bk.w},bk.o||{},{total:bk.o&&bk.o.total&&last}))+12;i=j;
-            if(!last){nextCol();y=sect(sc.t,colX(),y,cw2,null,true);}}});
-        y+=8;});
-      const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){if(y+30>BOT)nextCol();B(10,'i');tc('faint');doc.text(doc.splitTextToSize('Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.',cw2),colX(),y+4);}}
+      /* cada lista fica inteira num lugar só (nunca pula para a coluna ao lado): seções pequenas dividem o slide em duas colunas;
+         uma seção que não cabe numa coluna abre slide próprio, com as listas lado a lado ou, se uma lista for maior que a coluna,
+         na largura toda continuando no slide seguinte. Seções pequenas podem subir para aproveitar espaço livre. */
+      const FS=9,PV=4.2,LHF=1.15,HDR=2*PV+8*LHF+1,TT=27,BOT=H-38;/* o rodapé tem só o número da página, à direita */
+      const rowH=(r,ws,w)=>{B(FS);let ln=1;r.forEach((c,i)=>{ln=Math.max(ln,doc.splitTextToSize(String(c),ws[i]*w-8).length);});return 2*PV+ln*FS*LHF;};
+      const frH=(fr,w)=>{if(!fr)return 0;B(sz,'b');return doc.splitTextToSize(fr.map(f=>f[0]).join(''),w).length*lh+16;};
+      const bkH=(bk,w)=>(bk.t?16:0)+(bk.rows.length?HDR+bk.rows.reduce((a2,r)=>a2+rowH(r,bk.w,w),0):42)+12;
+      const secH=(sc,w)=>TT+frH(sc.frase,w)+sc.blocks.reduce((a2,bk)=>a2+bkH(bk,w),0)+8;
+      const drawBk=(bk,x,y,w,full)=>{const v=full&&bk.full?Object.assign({},bk,bk.full):bk;if(v.t)y=sub(v.t,v.rows.length,x,y);
+        y=v.rows.length?table(v.head,v.rows,x,y,w,Object.assign({w:v.w},v.o||{})):empty(v.empty||'Nada a listar.',x,y,{h:v.head,w:v.w},w);return y+12;};
+      let cy=[TOP,TOP];const openPage=()=>{newPage();cy=[TOP,TOP];};const pageEmpty=()=>cy[0]===TOP&&cy[1]===TOP;
+      const drawSmall=(sc,c)=>{const x=M+c*(cw2+GAP);let y=sect(sc.t,x,cy[c],cw2,sc.n);if(sc.frase)y=rich(sc.frase,x,y,cw2,sz,lh)+16;sc.blocks.forEach(bk=>{y=drawBk(bk,x,y,cw2,false);});cy[c]=y+8;};
+      const drawBig=(sc,y0)=>{let y=sect(sc.t,M,y0||TOP,CW,sc.n);if(sc.frase)y=rich(sc.frase,M,y,CW*0.86,sz,lh)+16;let yc=[y,y];
+        const cont=()=>{openPage();const t=sect(sc.t,M,TOP,CW,null,true);yc=[t,t];};
+        sc.blocks.forEach(bk=>{const h=bkH(bk,cw2);
+          if(h<=BOT-TOP-TT){const c=yc[0]<=yc[1]?0:1;let cc=yc[c]+h<=BOT?c:(yc[1-c]+h<=BOT?1-c:-1);if(cc<0){cont();cc=0;}yc[cc]=drawBk(bk,M+cc*(cw2+GAP),yc[cc],cw2,false);return;}
+          let y0=Math.max(yc[0],yc[1]);if(y0+HDR+60>BOT){cont();y0=yc[0];}contHead=[sc.t,M,CW];const ye=drawBk(bk,M,y0,CW,true);contHead=null;yc=[ye,ye];});
+        const e=Math.max(yc[0],yc[1])+8;cy=[e,e];};
+      const q=secs.map((sc,k)=>Object.assign(sc,{k}));openPage();
+      while(q.length){let done1=false;
+        /* Precisa, Atenção e Próximos 30 dias ficam sempre nessa ordem, antes das áreas; só as áreas podem subir para aproveitar espaço */
+        const lim=q[0].k<3?1:q.length;
+        for(let i=0;i<lim;i++){const sc=q[i],h=secH(sc,cw2);
+          if(h>BOT-TOP){const used=Math.max(cy[0],cy[1]);const b0=sc.blocks[0],need=TT+frH(sc.frase,CW*0.86)+(b0?(bkH(b0,cw2)<=BOT-TOP-TT?bkH(b0,cw2):HDR+80):0);if(i===0&&(pageEmpty()||(BOT-used>(BOT-TOP)*0.5&&BOT-used>=need))){drawBig(sc,pageEmpty()?TOP:used+4);q.splice(0,1);done1=true;break;}continue;}
+          const c=cy[0]+h<=BOT?0:(cy[1]+h<=BOT?1:-1);if(c>=0){drawSmall(sc,c);q.splice(i,1);done1=true;break;}}
+        if(!done1)openPage();}
+      const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
+        /* nunca abre um slide só para esta linha: vai no espaço livre ou no pé do último slide, à esquerda */
+        const c=cy[0]+24<=BOT?0:(cy[1]+24<=BOT?1:-1);B(10,'i');tc('faint');if(c>=0)doc.text(doc.splitTextToSize(txt,cw2),M+c*(cw2+GAP),cy[c]+4);else doc.text(txt,M,H-28);}}
     /* rodapé */
     const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);
       /* faixa verde e rosa no alto de cada página, como no modelo original */const bh=LAND?5:4;fc('green');doc.rect(0,0,W,bh,'F');fc('rose2');doc.rect(W*0.72,0,W*0.28,bh,'F');
