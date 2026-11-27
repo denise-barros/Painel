@@ -223,7 +223,6 @@ async function relExport(kind){
     if(C.bar2&&!C.panel&&!C.repAccent){fc('bar2');if(LAND)doc.rect(0,Hh-14,W,14,'F');else doc.rect(0,246,W,4,'F');}
     const ci=C.band?'bandInk':'ink',cm=C.band?'bandMuted':'muted';
     const cy=LAND?[74,250,302,338]:[60,128,170,198];
-    fc('dot');doc.circle(L+4,cy[0]-3,4,'F');B(9*S1+1,'b');tc(cm);doc.text('CENTRAL EXECUTIVA',L+16,cy[0]+0.5,{charSpace:1.5});
     if(!LAND){B(8);tc(cm);doc.text('Gerado em '+brD(todayISO()),W-L,cy[0]+0.5,{align:'right'});}
     B(LAND?11:9,'b');tc(C.repAccent||C.accent2!==C.accent?'accent2':cm);doc.text('REPORT',L,cy[1],{charSpace:2});
     D(LAND?46:30);tc(ci);doc.text(relScopeLabel(),L,cy[2]);
