@@ -364,8 +364,8 @@ async function relExport(kind){
       return more(P.atencao.length-r.length,x,y);};
     const proximos=(x,y,w,max)=>{y=sect('Próximos 30 dias',x,y,w,P.prox.length);if(!P.prox.length)return empty('Nada agendado.',x,y);
       const r=max?P.prox.slice(0,max):P.prox;y=table(['Compromisso','Tipo','Data'],r,x,y,w,{w:[0.6,0.24,0.16]});return more(P.prox.length-r.length,x,y);};
-    const head=y=>{B(8);tc('muted');doc.text(MODEL==='resumo'?'Relatório resumido':'Relatório',M,y);doc.text('Gerado em '+brD(todayISO()),W-M,y,{align:'right'});
-      T(26);tc('ink');doc.text(P.perLbl,M,y+36);B(10.5);tc('muted');doc.text(relScopeLabel()+'  ·  '+P.datas,M,y+54);dc('ink');doc.setLineWidth(0.8);doc.line(M,y+70,W-M,y+70);return y+96;};
+    /* cabeçalho: só o período e de quem é o relatório (sem "gerado em" nem nome do modelo) */
+    const head=y=>{T(26);tc('ink');doc.text(P.perLbl,M,y+20);B(10.5);tc('muted');doc.text(relScopeLabel(),M,y+38);dc('ink');doc.setLineWidth(0.8);doc.line(M,y+54,W-M,y+54);return y+80;};
     /* área: frase e blocos; max limita as linhas de cada bloco (slides) */
     const drawArea=(z,x,y,w,max)=>{contHead=[z.t,x,w];y=sect(z.t,x,y,w);const sz=LAND?11:9.6,lh=LAND?16:14;y=rich(z.frase,x,y,w,sz,lh)+(LAND?20:16);
       z.blocks.forEach(bk=>{if(y>BOT-60){newPage();y=sect(z.t,x,TOP,w,null,true);}y=sub(bk.t,bk.rows.length,x,y);const r=max&&bk.rows.length>max?bk.rows.slice(0,max):bk.rows;
@@ -378,9 +378,9 @@ async function relExport(kind){
       P.areas.filter(z=>!z.vazio).forEach(z=>{if(y>BOT-(z.blocks.length?130:60)){newPage();y=TOP;}y=drawArea(z,M,y,CW);});
       const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){if(y>BOT-30){newPage();y=TOP;}B(9,'i');tc('faint');doc.text(doc.splitTextToSize('Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.',CW),M,y);}}
     if(MODEL==='slides'){
-      fc('mint');doc.rect(0,0,W,H,'F');B(10);tc('muted');doc.text('Relatório',M,60);doc.text('Gerado em '+brD(todayISO()),W-M,60,{align:'right'});
-      T(40);tc('ink');doc.text(P.perLbl,M,118);B(14);tc('muted');doc.text(relScopeLabel()+'  ·  '+P.datas,M,142);dc('green');doc.setLineWidth(1);doc.line(M,166,W-M,166);
-      rich(P.lede,M,206,CW*0.86,15,22);
+      fc('mint');doc.rect(0,0,W,H,'F');
+      T(40);tc('ink');doc.text(P.perLbl,M,100);B(14);tc('muted');doc.text(relScopeLabel(),M,126);dc('green');doc.setLineWidth(1);doc.line(M,150,W-M,150);
+      rich(P.lede,M,190,CW*0.86,15,22);
       newPage();const cw2=(CW-44)/2;let y1=precisa(M,TOP,cw2,5);proximos(M,y1+26,cw2,Math.max(3,9-Math.min(P.precisa.length,5)));atencao(M+cw2+44,TOP,cw2,11,true);
       /* áreas: as menores dividem o slide em duas colunas; as maiores abrem slide próprio, com as listas em duas colunas (até 10 linhas por lista) */
       const MAXR=10;const bH=bk=>16+22+Math.min(bk.rows.length,MAXR)*21+(bk.rows.length>MAXR?16:0)+18;
@@ -395,7 +395,7 @@ async function relExport(kind){
       const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
         const x=col===2?M:M+col*(cw2+44),w=col===2?CW:cw2;if(col===2||cy+30>BOT){newPage();cy=TOP;}B(10,'i');tc('faint');doc.text(doc.splitTextToSize(txt,col===2?CW:w),col===2?M:x,cy+4);}}
     /* rodapé */
-    const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){doc.setPage(pg);B(LAND?8:7.5);tc('faint');doc.text(relScopeLabel()+'  ·  '+P.perLbl,M,H-28);doc.text(pg+' de '+np,W-M,H-28,{align:'right'});}
+    const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);B(LAND?8:7.5);tc('faint');doc.text(pg+' de '+np,W-M,H-28,{align:'right'});}
     return relSave(relFileBase(R)+'-'+REL_PDF_MODELS[MODEL].f+'.pdf',doc.output('blob'));}
   if(kind==='drive'){const m=await getMcp();if(!m){toast('O Google Drive não está disponível agora.');return;}
     const html='<h1>'+esc(title)+'</h1><p><i>Gerado em '+brD(todayISO())+' pelo Painel.</i></p>'+('<h2>Destaques</h2><h3>O que foi feito</h3><ul>'+R.hero.feito.map(f=>'<li><b>'+esc(String(f[0]))+'</b> '+esc(f[1])+'</li>').join('')+R.hero.entregas.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul><h3>'+R.hero.pT+'</h3>'+(R.hero.precisa.length?'<ul>'+R.hero.precisa.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada pendente.</p>')+'<h3>Próximos 30 dias</h3>'+(R.hero.prox.length?'<ul>'+R.hero.prox.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada agendado.</p>'))+
