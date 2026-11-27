@@ -48,14 +48,14 @@ function finCpMes(r,ym){if(ym<FIN_CP_INI)return (r.meses||{})[ym]||{};const t=r.
   return{s:all?'Pago':'',v:vs.length?vs.reduce((a,b)=>a+(+b||0),0):undefined};}
 function finCrono(ym,ex,t0){
   t0=t0||todayISO();
-  const o={ym,n:0,naoAplica:0,previsto:0,prevSemValor:0,pago:0,pagoN:0,pagoSemValor:0,cartoes:0,
+  const o={ym,n:0,naoAplica:0,previsto:0,prevSemValor:0,pago:0,pagoN:0,pagoSemValor:0,cartoes:0,pagos:[],
     venc:{n:0,v:0,semValor:0,items:[]},aVencer:{n:0,v:0,semValor:0,items:[]},semData:{n:0,v:0,semValor:0,items:[]},pend:[]};
   (S.fin.cronograma||[]).filter(r=>r.despesa&&finOk(ex,r.quem)).forEach(r=>{
     const x=finCpMes(r,ym);if(x.skip||x.s==='Não se aplica'||!cronoDue(r,ym)){o.naoAplica++;return;}
     o.n++;const med=fnum(r.medio),pv=fnum(x.v),paid=x.s==='Pago'||x.s==='Emitido';
     const prev=med>0?med:(paid&&pv>0?pv:null);
     if(prev==null)o.prevSemValor++;else{o.previsto+=prev;if(fatCardOf(r))o.cartoes+=prev;}
-    if(paid){o.pagoN++;if(pv==null)o.pagoSemValor++;else o.pago+=pv;return;}
+    if(paid){o.pagoN++;if(pv==null)o.pagoSemValor++;else o.pago+=pv;o.pagos.push({id:r.id,t:r.despesa,quem:r.quem||'',v:pv,ym});return;}
     const d=+r.venc?dayIn(ym,+r.venc):null;
     const b=!d?o.semData:d<t0?o.venc:o.aVencer;
     b.n++;if(prev==null)b.semValor++;else b.v+=prev;

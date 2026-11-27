@@ -152,7 +152,134 @@ function relBuild(){
   const t30=addDays(t0,30);const EXK=new Set(['Reunião','Conselho/Programa','Viagem','Visitante','Evento','Família','Contrato','Agendamento']);
   let prox=[];try{prox=compute(30).upcoming.filter(u=>u.date&&u.date>t0&&EXK.has(u.kind)).map(u=>[u.title||'',u.kind==='Conselho/Programa'?'Mandato':u.kind||'',u.date]);}catch(e){prox=[];}
   prox=prox.concat(tk.filter(t=>isOpen(t)&&t.reportRel&&t.due&&t.due>t0&&t.due<=t30).map(t=>[t.title||'',catN(t),t.due])).sort((x,y)=>x[2].localeCompare(y[2])).map(r=>[r[0],r[1],brD(r[2])]);
-  return {a,b,secs,hl:hl.slice(0,5),done:done.length,hero:{feito,entregas,precisa,prox,pT:S.exec?'Precisa de você':'Precisa de vocês',pNo:S.exec?'Nada pendente com você.':'Nada pendente com vocês.'}};
+  /* ===== dados do PDF (definido em 27/11/2026): abertura em texto; precisa de vocês, atenção e próximos 30 dias;
+     cada área com uma frase e as listas do que foi feito no período e do que segue em aberto ===== */
+  const PD=(()=>{
+    const N=t=>[t],B1=t=>[t,1],R2=t=>[t,2];const pl=(n,s,p)=>n+' '+(n===1?s:p);
+    const jseg=ps=>{const o=[];ps.forEach((p,i)=>{if(i)o.push(N(i===ps.length-1?' e ':', '));o.push(...p);});return o;};
+    const MESN=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const lastD=ym=>{const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();};
+    const oneM=a.slice(0,7)===b.slice(0,7)&&a.slice(8)==='01'&&+b.slice(8)===lastD(b.slice(0,7));
+    const perTxt=oneM?'Em '+MESN[+a.slice(5,7)-1]:'Entre '+brD(a).slice(0,5)+' e '+brD(b);
+    const cap=s=>String(s||'').replace(/^./,c=>c.toUpperCase());const mv0=v=>v==null||v===''?'–':fmtMoney(v);const d5=s=>s?brD(s).slice(0,5):'–';
+    const nm=pid=>refName('equipe',pid)||'–';
+    const areas=[];const area=(t,frase,resumo,blocks)=>{const bl=blocks.filter(x=>x&&x.rows.length);areas.push({t,frase,resumo,blocks:bl,vazio:!bl.length&&frase.length===1&&/^(Nada registrado|Nenhuma demanda)/.test(frase[0][0])});};
+    /* Operação */
+    const doneS=done.slice().sort((x,y)=>String(x.completedAt).localeCompare(String(y.completedAt)));
+    area('Operação',!tk.length?[N('Nenhuma demanda registrada.')]:[N('Entraram '),B1(String(novas.length)),N(' e foram concluídas '),B1(String(done.length)),N(cicloM==null?'':', em média em '+(cicloM===0?'menos de um dia útil':String(cicloM).replace('.',',')+(cicloM===1?' dia útil':' dias úteis'))),N('. Seguem '),B1(abertas.length+' em aberto')].concat(atras.length?[N(', das quais '),R2(pl(atras.length,'atrasada','atrasadas'))]:[]).concat([N('.')]),
+      tk.length?pl(done.length,'concluída','concluídas')+(atras.length?' · '+pl(atras.length,'atrasada','atrasadas'):''):'Nenhuma demanda registrada',
+      [{t:'Concluídas no período',head:['Demanda','Categoria','Concluída em'],w:[0.6,0.22,0.18],rows:doneS.map(t=>[t.title||'',catN(t)||'Sem categoria',brD(String(t.completedAt||'').slice(0,10))])},
+       {t:'Atrasadas',head:['Demanda','Categoria','Prazo'],w:[0.6,0.22,0.18],rows:atras.slice().sort((x,y)=>x.due.localeCompare(y.due)).map(t=>[t.title||'',catN(t)||'Sem categoria',brD(t.due)])},
+       oRows.length>2?{t:'Por categoria',head:['Categoria','Entradas','Concluídas','Em aberto','Atrasadas'],w:[0.36,0.16,0.16,0.16,0.16],total:true,rows:oRows.map(r=>r.slice(0,5).map(String))}:null]);
+    /* Financeiro */
+    const pagos=FMs.flatMap(f=>f.crono.pagos.map(i=>Object.assign({ym:f.ym},i))).sort((x,y)=>String(x.t).localeCompare(String(y.t),'pt'));const pagN=pagos.length;
+    const porCat={};FMs.forEach(f=>Object.entries(f.desp.porCat||{}).forEach(([k,v])=>{porCat[k]=(porCat[k]||0)+v;}));
+    let cats=Object.entries(porCat).filter(x=>x[1]).sort((x,y)=>y[1]-x[1]);if(cats.length>10){const rest=cats.slice(9).reduce((s,x)=>s+x[1],0);cats=cats.slice(0,9).concat([['Outras categorias',rest]]);}
+    const pagoD=FMs.reduce((s,f)=>s+(f.desp.pago||0),0),aPagD=FMs.reduce((s,f)=>s+(f.desp.naoPago||0),0);
+    const exItems=FMs.flatMap(f=>f.extra.items);
+    const fOpen=[];
+    pendI.forEach(i=>fOpen.push([i.t+(i.quem?', '+i.quem:''),'Conta recorrente',d5(i.d),i.v==null?'Sem valor':fmtMoney(i.v)]));
+    sol.filter(r=>!(r.venc&&r.venc<t0)).forEach(r=>fOpen.push([r.descr||'Solicitação de pagamento','Pagamento extraordinário',r.venc?brD(r.venc):'–',mv0(r.valor)]));
+    CA.cards.filter(cc=>cc.status!=='Vencida').forEach(cc=>fOpen.push(['Fatura '+cc.cartao+(cc.titular?', '+cc.titular:''),'Cartão ('+String(cc.status||'').toLowerCase()+')',cc.venc?brD(cc.venc):'–',cc.total==null?'Sem valor':fmtMoney(cc.total)]));
+    RB.items.forEach(x=>fOpen.push([(x.tipo==='Médico'?[x.r.paciente,x.r.descr].filter(Boolean).join(', ')||'Reembolso médico':x.r.descr||'Reembolso corporativo')+(x.r.pessoa||x.r.titular?', '+(x.r.pessoa||x.r.titular):''),'Reembolso a receber',x.r.data?brD(x.r.data):'–',fmtMoney(x.v)]));
+    RB.pagar.items.filter(r=>!(r.venc&&r.venc<t0)).forEach(r=>fOpen.push([(r.descr||'Reembolso')+(r.pessoa?', '+r.pessoa:''),'Reembolso a pagar',r.venc?brD(r.venc):'–',mv0(r.valor)]));
+    EM.items.filter(x=>!(x.r.prevista&&x.r.prevista<t0)).forEach(x=>fOpen.push([(x.r.razao||'Empréstimo')+', '+(x.r.titular||'Leticia'),'Empréstimo a '+(x.lado==='receber'?'receber':'pagar'),x.r.prevista?brD(x.r.prevista):'–',fmtMoney(x.v)]));
+    FL.assin.anuais.filter(x=>x.renova&&x.renova<=addDays(t0,90)).forEach(x=>fOpen.push([x.descr,'Renovação de assinatura anual',brD(x.renova),mv0(x.v)]));
+    FMs.forEach(f=>f.desp.pend.forEach(p=>fOpen.push([p.cat+', '+p.pessoa,'Despesa a pagar ('+fmtYm(f.ym)+')','–',fmtMoney(p.v)])));
+    const fFr=[];if(desp!=null){fFr.push(N('As despesas somaram '),B1(fmtMoney(desp)));if(despVar!=null&&Math.abs(despVar)>=0.05)fFr.push(N(', '+String(Math.abs(Math.round(despVar*10)/10)).replace('.',',')+'% '+(despVar>0?'acima':'abaixo')+' do período anterior'));fFr.push(N(pagoD||aPagD?'; '+fmtMoney(pagoD)+' pagos e '+fmtMoney(aPagD)+' a pagar. ':'. '));}
+    if(pagN)fFr.push(B1(pl(pagN,'conta recorrente paga','contas recorrentes pagas')),N(pago>0?', somando '+fmtMoney(pago)+'. ':'. '));
+    if(vencI.length)fFr.push(R2(pl(vencI.length,'conta vencida','contas vencidas')),N(' sem pagamento. '));
+    if(RB.aReceber)fFr.push(N('Há '),B1(fmtMoney(RB.aReceber)),N(' em reembolsos a receber. '));
+    if(!fFr.length)fFr.push(N('Nada registrado no período.'));
+    area('Financeiro',fFr,[desp!=null?fmtMoney(desp)+' em despesas':pl(pagN,'conta paga','contas pagas'),vencI.length?pl(vencI.length,'conta vencida','contas vencidas'):''].filter(Boolean).join(' · '),
+      [cats.length?{t:'Despesas por categoria',head:['Categoria','Valor'],w:[0.7,0.3],total:true,rows:cats.map(x=>[x[0],fmtMoney(x[1])]).concat([['Total',fmtMoney(desp||0)]])}:null,
+       {t:'Contas recorrentes pagas',head:nM>1?['Conta','Responsável','Mês','Valor']:['Conta','Responsável','Valor'],w:nM>1?[0.46,0.2,0.16,0.18]:[0.56,0.24,0.2],rows:pagos.map(i=>nM>1?[i.t,i.quem||'–',fmtYm(i.ym),mv0(i.v)]:[i.t,i.quem||'–',mv0(i.v)])},
+       {t:'Pagamentos extraordinários',head:['Descrição','Situação','Data','Valor'],w:[0.46,0.2,0.16,0.18],rows:exItems.map(r=>[r.descr||'Pagamento',r.status||'Pendente',brD(r.data||r.venc)||'–',mv0(r.valor)])},
+       {t:'A pagar e a receber',head:['Item','Tipo','Data','Valor'],w:[0.36,0.24,0.18,0.22],rows:fOpen}]);
+    /* DP */
+    {const ocr=ocResumo(a,b).filter(r=>pOk(r.pid));const fdD=ocr.reduce((x,r)=>x+r.fd,0),adD=ocr.reduce((x,r)=>x+r.ad,0);
+     const gp={};pgPago.forEach(p=>{const k=p.pessoa+'|'+(p.tipo||'Pagamento');(gp[k]=gp[k]||{p:p.pessoa,t:p.tipo||'Pagamento',n:0,v:0});gp[k].n++;gp[k].v+=+p.valor||0;});
+     const gpr=Object.values(gp).sort((x,y)=>nm(x.p).localeCompare(nm(y.p),'pt'));const pgV=pgPago.reduce((s,p)=>s+(+p.valor||0),0);
+     const mvS=mv.filter(m=>m.tipo!=='Outro'&&m.tipo!=='Registro inicial').sort((x,y)=>String(x.data).localeCompare(String(y.data)));
+     const ocS=oc.slice().sort((x,y)=>String(x.data).localeCompare(String(y.data)));
+     const frt=dpEventos().filter(e=>(!e.p||ownerOk(e.p.executivo))&&e.d>=ref&&e.d<=addDays(ref,90)).sort((x,y)=>x.d.localeCompare(y.d));
+     const fr=[];if(pgPago.length)fr.push(B1(pl(pgPago.length,'pagamento','pagamentos')),N(' à equipe'+(pgV?', somando '+fmtMoney(pgV):'')+'. '));
+     if(mvS.length)fr.push(B1(pl(mvS.length,'movimentação','movimentações')),N(' no período. '));
+     if(fdD+adD)fr.push(N('Ausências: '),B1(pl(fdD+adD,'dia','dias')),N(' ('+[fdD?fdD+' de falta':'',adD?adD+' de atestado':''].filter(Boolean).join(', ')+'). '));
+     if(frt.length)fr.push(N('Próxima obrigação: '),B1(frt[0].t.replace(' · ',', ')),N(' em '+d5(frt[0].d)+'.'));
+     if(!fr.length)fr.push(N('Nada registrado no período.'));
+     area('DP',fr,[pgPago.length?pl(pgPago.length,'pagamento','pagamentos'):'',fdD+adD?pl(fdD+adD,'dia de ausência','dias de ausência'):'',frt.length?frt[0].t.split(' · ')[0]+' em '+d5(frt[0].d):''].filter(Boolean).join(' · ')||'Nada no período',
+      [{t:'Pagamentos à equipe',head:['Pessoa','Tipo','Quantidade','Valor'],w:[0.38,0.26,0.16,0.2],rows:gpr.map(g=>[nm(g.p),g.t,String(g.n),fmtMoney(g.v)])},
+       {t:'Movimentações',head:['Pessoa','Movimentação','Detalhe','Data'],w:[0.24,0.22,0.36,0.18],rows:mvS.map(m=>[nm(m.pessoa),m.tipo||'Movimentação',String(m.descricao||m.obs||'').split('\n')[0].slice(0,90)||'–',brD(m.data)+(m.dataFim?' a '+brD(m.dataFim):'')])},
+       {t:'Faltas, atestados e ocorrências',head:['Pessoa','Tipo','Data'],w:[0.5,0.3,0.2],rows:ocS.map(o=>[nm(o.pessoa),(o.tipo||'Ocorrência')+(+o.dias>1?' ('+o.dias+' dias)':''),brD(o.data)])},
+       {t:'Pela frente',head:['Obrigação','Detalhe','Data'],w:[0.34,0.48,0.18],rows:frt.map(e=>[e.t.replace(' · ',', '),String(e.s||'').slice(0,90)||'–',brD(e.d)])}]);}
+    /* Facilities */
+    const anm=id=>{const x=ativoById(id);return x?x.nome:'–';};
+    area('Facilities',chAb.length+chCon.length+chOpen.length+svc.length+venc.length?[N('Foram abertos '),B1(String(chAb.length)),N(' chamados e concluídos '),B1(String(chCon.length)),N('. ')].concat(chOpen.length?[B1(pl(chOpen.length,'segue em aberto','seguem em aberto')),N('. ')]:[]).concat(svc.length?[N('Serviços registrados custaram '),B1(fmtMoney(sum(svc,'custo'))),N('. ')]:[]).concat(venc.length?[N('Vencimentos nos próximos 30 dias: '),venc.some(r=>r.proxima<t0)?R2(String(venc.length)):B1(String(venc.length)),N('.')]:[]):[N('Nada registrado no período.')],
+      chAb.length+chCon.length+chOpen.length?pl(chCon.length,'chamado concluído','chamados concluídos')+' · '+chOpen.length+' em aberto':'Nada no período',
+      [{t:'Chamados concluídos',head:['Chamado','Item','Concluído em'],w:[0.5,0.3,0.2],rows:chCon.map(t=>[t.title||'',facItem(t)||'–',brD(String(t.completedAt||'').slice(0,10))])},
+       {t:'Serviços registrados',head:['Serviço','Local','Data','Custo'],w:[0.4,0.24,0.16,0.2],rows:svc.map(c=>[c.titulo||'Serviço',anm(c.ativo),brD(c.concluidoEm),mv0(c.custo)])},
+       {t:'Em aberto',head:['Chamado','Situação','Prazo'],w:[0.5,0.3,0.2],rows:chOpen.map(t=>[t.title||'',ST[t.status]||'Aberto',t.due?brD(t.due):'–'])},
+       {t:'Vencimentos nos próximos 30 dias',head:['Item','Local','Data'],w:[0.5,0.3,0.2],rows:venc.slice().sort((x,y)=>x.proxima.localeCompare(y.proxima)).map(r=>[r.titulo||'',anm(r.ativo),brD(r.proxima)])}]);
+    /* Saúde: só agenda e reembolsos */
+    area('Saúde',svR.length+svP.length+rm.length?[N('Consultas e exames no período: '),B1(String(svR.length)),N('; agendados para os próximos 30 dias: '),B1(String(svP.length)),N('. ')].concat(rm.length?[B1(fmtMoney(sum(rm,'valor'))),N(' em reembolsos médicos em aberto.')]:[]):[N('Nada registrado no período.')],
+      svR.length+svP.length?pl(svR.length,'consulta','consultas')+' · '+svP.length+' agendada(s)':'Nada no período',
+      [{t:'Agenda',head:['Pessoa','Tipo','Situação','Data'],w:[0.3,0.3,0.2,0.2],rows:svR.map(e=>[fn(e.pessoa),e.tipo||'Consulta','Realizado',brD(e.data)]).concat(svP.map(e=>[fn(e.pessoa),e.tipo||'Consulta','Agendado',brD(e.data)]))}]);
+    /* Negócios */
+    const enm=id=>{const e=empById(id);return e?e.nome:'–';};
+    area('Negócios',obAt.length+obPx.length+dc.length?[].concat(obAt.length?[R2(pl(obAt.length,'obrigação atrasada','obrigações atrasadas')),N('; ')]:[]).concat([B1(String(obPx.length)),N(' prevista(s) para os próximos 30 dias. ')]).concat(dc.length?[B1(pl(dc.length,'contrato vencido ou a vencer','contratos vencidos ou a vencer')),N(' em 60 dias.')]:[]):[N('Nada registrado no período.')],
+      obAt.length+obPx.length+dc.length?[obAt.length?pl(obAt.length,'obrigação atrasada','obrigações atrasadas'):'',obPx.length+' em 30 dias'].filter(Boolean).join(' · '):'Nada no período',
+      [{t:'Obrigações',head:['Obrigação','Empresa','Situação','Data'],w:[0.4,0.24,0.18,0.18],rows:obAt.map(o=>[o.titulo||'',enm(o.empresa),'Atrasada',brD(o.proxima)]).concat(obPx.map(o=>[o.titulo||'',enm(o.empresa),'Próxima',brD(o.proxima)]))},
+       {t:'Contratos',head:['Contrato','Empresa','Situação','Vencimento'],w:[0.4,0.24,0.18,0.18],rows:dc.map(d=>[d.titulo||'',enm(d.empresa),d.vencimento<t0?'Vencido':'A vencer',brD(d.vencimento)])}]);
+    /* Conselhos e Programas */
+    const bnm=id=>{const x=boardById(id);return x?x.nome:'–';};
+    area('Conselhos e Programas',rrP.length+rrN.length+evP.length+evN.length?[B1(pl(rrP.length,'reunião','reuniões')),N(' no período'),N(evP.length?' e ':'. '),...(evP.length?[B1(pl(evP.length,'evento','eventos')),N('. ')]:[]),N('Nos próximos 30 dias: '),B1(pl(rrN.length,'reunião','reuniões')),N(evN.length?' e '+pl(evN.length,'evento','eventos')+'.':'.')]:[N('Nada registrado no período.')],
+      rrP.length+rrN.length?pl(rrP.length,'reunião','reuniões')+' · '+rrN.length+' nos próximos 30 dias':'Nada no período',
+      [{t:'Reuniões no período',head:['Reunião','Conselho ou programa','Situação','Data'],w:[0.38,0.28,0.16,0.18],rows:rrP.slice().sort((x,y)=>x.data.localeCompare(y.data)).map(r=>[r.titulo||'Reunião',bnm(r.board),r.status||'Agendada',brD(r.data)])},
+       {t:'Eventos no período',head:['Evento','Conselho ou programa','Data'],w:[0.46,0.34,0.2],rows:evP.map(e=>[e.titulo||'Evento',bnm(e.board),brD(e.data)])},
+       {t:'Próximos 30 dias',head:['Reunião ou evento','Conselho ou programa','Data'],w:[0.46,0.34,0.2],rows:rrN.map(r=>({d:r.data,r:[r.titulo||'Reunião',bnm(r.board),brD(r.data)]})).concat(evN.map(e=>({d:e.data,r:[e.titulo||'Evento',bnm(e.board),brD(e.data)]}))).sort((x,y)=>x.d.localeCompare(y.d)).map(x=>x.r)}]);
+    /* Família, Rotina e Viagens */
+    area('Família, Rotina e Viagens',vP.length+vN.length+fe.length+fd.length+vg.length?[B1(pl(vP.length,'viagem','viagens')),N(' no período e '+vN.length+' nos próximos 30 dias. ')].concat(vg.length?[B1(fmtMoney(sum(vg,'valor'))),N(' em gastos de viagem a reembolsar. ')]:[]).concat(fd.length?[fd.some(docLate)?R2(pl(fd.length,'documento vencido ou a vencer','documentos vencidos ou a vencer')):B1(pl(fd.length,'documento a vencer','documentos a vencer')),N('.')]:[]):[N('Nada registrado no período.')],
+      [vP.length+vN.length?pl(vP.length+vN.length,'viagem','viagens'):'',fd.length?pl(fd.length,'documento a vencer','documentos a vencer'):''].filter(Boolean).join(' · ')||'Nada no período',
+      [{t:'Viagens',head:['Viagem','Situação','Datas'],w:[0.46,0.24,0.3],rows:vP.map(v=>[v.titulo||'Viagem',v.inicio>t0?'Próxima':'No período',brD(v.inicio)+(v.fim&&v.fim!==v.inicio?' a '+brD(v.fim):'')]).concat(vN.filter(v=>!vP.includes(v)).map(v=>[v.titulo||'Viagem','Próxima',brD(v.inicio)+(v.fim&&v.fim!==v.inicio?' a '+brD(v.fim):'')]))},
+       {t:'Eventos nos próximos 30 dias',head:['Evento','Tipo','Data'],w:[0.5,0.3,0.2],rows:fe.map(x=>[x.e.titulo||'Evento',x.e.tipo||'Evento',brD(x.n)])},
+       {t:'Documentos',head:['Documento','Pessoa','Situação','Validade'],w:[0.36,0.24,0.2,0.2],rows:fd.map(d=>[d.tipo||'Documento',fn(d.pessoa)||'–',docLate(d)?'Vencido':'A vencer',brD(d.validade)])}]);
+    /* atenção: tudo o que está vencido ou atrasado */
+    const at=[];const A=(item,ar,sit,d,v)=>at.push({d:d||'',r:[item,ar,sit,d?brD(d):'–',v==null?'–':v]});
+    atras.forEach(t=>A(t.title||'',catN(t)||'Operação','Demanda atrasada',t.due,null));
+    vencI.forEach(i=>A(i.t+(i.quem?', '+i.quem:''),'Financeiro','Conta vencida',i.d,i.v==null?'Sem valor':fmtMoney(i.v)));
+    sol.filter(r=>r.venc&&r.venc<t0).forEach(r=>A(r.descr||'Pagamento extraordinário','Financeiro','Pagamento vencido',r.venc,mv0(r.valor)));
+    RB.pagar.items.filter(r=>r.venc&&r.venc<t0).forEach(r=>A((r.descr||'Reembolso')+(r.pessoa?', '+r.pessoa:''),'Financeiro','Reembolso a pagar vencido',r.venc,mv0(r.valor)));
+    EM.items.filter(x=>x.r.prevista&&x.r.prevista<t0).forEach(x=>A((x.r.razao||'Empréstimo')+', '+(x.r.titular||'Leticia'),'Financeiro','Empréstimo vencido',x.r.prevista,fmtMoney(x.v)));
+    CA.cards.filter(cc=>cc.status==='Vencida').forEach(cc=>A('Fatura '+cc.cartao+(cc.titular?', '+cc.titular:''),'Financeiro','Fatura vencida',cc.venc,cc.total==null?'Sem valor':fmtMoney(cc.total)));
+    obAt.forEach(o=>A((o.titulo||'')+', '+enm(o.empresa),'Negócios','Obrigação atrasada',o.proxima,null));
+    dc.filter(d=>d.vencimento<t0).forEach(d=>A((d.titulo||'')+', '+enm(d.empresa),'Negócios','Contrato vencido',d.vencimento,null));
+    venc.filter(r=>r.proxima<t0).forEach(r=>A(r.titulo||'','Facilities','Vencimento em atraso',r.proxima,null));
+    chOpen.filter(t=>t.due&&t.due<t0).forEach(t=>A(t.title||'','Facilities','Chamado atrasado',t.due,null));
+    fd.filter(docLate).forEach(d=>A((d.tipo||'Documento')+', '+(fn(d.pessoa)||''),'Família','Documento vencido',d.validade,null));
+    at.sort((x,y)=>x.d.localeCompare(y.d));
+    const precisaR=tk.filter(t=>isOpen(t)&&t.needsExec).sort((x,y)=>(x.due||'9999').localeCompare(y.due||'9999')).map(t=>[t.title||'',catN(t)||'Operação',t.due?brD(t.due):'Sem prazo']);
+    let proxR=[];try{proxR=compute(30).upcoming.filter(u=>u.date&&u.date>t0&&EXK.has(u.kind)).map(u=>({d:u.date,r:[u.title||'',u.kind==='Conselho/Programa'?'Mandato':u.kind||'',d5(u.date)]}));}catch(e){proxR=[];}
+    proxR=proxR.concat(tk.filter(t=>isOpen(t)&&t.reportRel&&t.due&&t.due>t0&&t.due<=t30).map(t=>({d:t.due,r:[t.title||'',catN(t)||'Demanda',d5(t.due)]}))).sort((x,y)=>x.d.localeCompare(y.d)).map(x=>x.r);
+    /* abertura em texto */
+    const fe1=[];if(done.length)fe1.push([B1(pl(done.length,'demanda concluída','demandas concluídas'))]);
+    if(pagN)fe1.push([B1(pl(pagN,'conta recorrente paga','contas recorrentes pagas'))].concat(pago>0?[N(' ('+fmtMoney(pago)+')')]:[]));
+    if(pgPago.length)fe1.push([B1(pl(pgPago.length,'pagamento','pagamentos')),N(' à equipe')]);
+    if(chCon.length)fe1.push([B1(pl(chCon.length,'chamado de Facilities concluído','chamados de Facilities concluídos'))]);
+    if(rrP.length)fe1.push([B1(pl(rrP.length,'reunião de conselho','reuniões de conselho'))]);
+    if(vP.length)fe1.push([B1(pl(vP.length,'viagem','viagens'))]);
+    const lede=fe1.length?[N(perTxt+', o Painel registrou ')].concat(jseg(fe1)).concat([N('. ')]):[N(perTxt+', não houve entregas registradas no Painel. ')];
+    if(entregas.length){const ns=entregas.slice(0,3).map(r=>[N(r[0])]);lede.push(N('Entre as entregas: '),...jseg(ns),N(entregas.length>3?', entre outras. ':'. '));}
+    const att=[];if(atras.length)att.push([R2(pl(atras.length,'demanda atrasada','demandas atrasadas'))]);
+    if(vencI.length)att.push([R2(pl(vencI.length,'conta vencida','contas vencidas'))].concat(vencV?[N(' ('+fmtMoney(vencV)+')')]:[]));
+    const outrasAt=at.length-atras.length-vencI.length;if(outrasAt>0)att.push([R2(pl(outrasAt,'outro item vencido','outros itens vencidos'))]);
+    if(att.length)lede.push(N('Pedem atenção: '),...jseg(att),N('. '));else lede.push(N('Não há nada vencido ou atrasado. '));
+    if(precisaR.length)lede.push(B1(pl(precisaR.length,'item aguarda','itens aguardam')),N(S.exec?' a sua decisão. ':' a decisão de vocês. '));
+    if(proxR[0])lede.push(N('O próximo compromisso é '),B1(proxR[0][0]),N(', em '+proxR[0][2]+'.'));
+    const MESC=MESN.map(cap);
+    return {lede,precisa:precisaR,atencao:at.map(x=>x.r),prox:proxR,areas,perLbl:oneM?MESC[+a.slice(5,7)-1]+' de '+a.slice(0,4):brD(a)+' a '+brD(b),datas:brD(a)+' a '+brD(b)};
+  })();
+  return {a,b,secs,pd:PD,hl:hl.slice(0,5),done:done.length,hero:{feito,entregas,precisa,prox,pT:S.exec?'Precisa de você':'Precisa de vocês',pNo:S.exec?'Nada pendente com você.':'Nada pendente com vocês.'}};
 }
 function relHtmlTable(s){if(!s.rows.length)return '<ul class="list"><li><div class="empty">Nada a listar neste período.</div></li></ul>';
   return '<div class="rel-tbl'+(s.cls?' '+s.cls:'')+'"><table><thead><tr>'+s.head.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+s.rows.map(r=>'<tr>'+r.map((c,i)=>'<td'+(i===0?' class="nm"':'')+'>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';}
@@ -161,7 +288,7 @@ function renderRel(){
   let h='<div class="wrap"><div class="hello"><div><h2>Relatórios</h2><p>'+esc(relScopeLabel())+' · '+brD(R.a)+' a '+brD(R.b)+'. O executivo segue o filtro da barra superior.</p></div></div>';
   h+='<div class="rel-bar"><div class="seg" role="group" aria-label="Período">'+REL_PERS.map(([k,l])=>'<button data-rel-per="'+k+'" class="'+(S.rel.per===k?'on':'')+'">'+l+'</button>').join('')+'</div>'+
     (S.rel.per==='custom'?'<label class="sr" for="rel-a">De</label><input class="sel" type="date" id="rel-a" value="'+esc(R.a)+'"><span class="hint">até</span><label class="sr" for="rel-b">Até</label><input class="sel" type="date" id="rel-b" value="'+esc(R.b)+'">':'')+
-    '<span class="grow"></span><div class="rx-wrap"><button class="rx-btn" data-rx-toggle aria-haspopup="true" aria-expanded="false" title="Exportar" aria-label="Exportar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button><div class="rx-menu" hidden><button data-rel-x="pdf" data-orient="paisagem"><b>PDF · paisagem</b><small>Como apresentação, um slide por categoria</small></button><button data-rel-x="pdf" data-orient="retrato"><b>PDF · retrato</b><small>A4, seções em sequência</small></button><button data-rel-x="xlsx"><b>Excel</b><small>Todos os dados, para conferir e filtrar</small></button><button data-rel-x="drive"><b>Salvar no Drive</b><small>Na pasta 11 Relatórios</small></button></div></div><a class="rx-ico" href="https://drive.google.com/drive/folders/'+REL_FOLDER+'" target="_blank" rel="noopener" title="Relatórios mensais no Drive" aria-label="Relatórios mensais no Drive"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></div>';
+    '<span class="grow"></span><div class="rx-wrap"><button class="rx-btn" data-rx-toggle aria-haspopup="true" aria-expanded="false" title="Exportar" aria-label="Exportar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button><div class="rx-menu" hidden><button data-rel-x="pdf" data-model="slides"><b>PDF · apresentação</b><small>Slides, para mostrar numa tela ou reunião</small></button><button data-rel-x="pdf" data-model="resumo"><b>PDF · resumo</b><small>Uma página A4 com o essencial</small></button><button data-rel-x="pdf" data-model="completo"><b>PDF · completo</b><small>A4, com o que foi feito em cada área</small></button><button data-rel-x="xlsx"><b>Excel</b><small>Todos os dados, para conferir e filtrar</small></button><button data-rel-x="drive"><b>Salvar no Drive</b><small>Na pasta 11 Relatórios</small></button></div></div><a class="rx-ico" href="https://drive.google.com/drive/folders/'+REL_FOLDER+'" target="_blank" rel="noopener" title="Relatórios mensais no Drive" aria-label="Relatórios mensais no Drive"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></div>';
   {const Hh=R.hero;const li=(r)=>'<li><span class="t">'+esc(r[0])+'</span><span class="m">'+esc([r[1],r[2]].filter(Boolean).join(' · '))+'</span></li>';
    h+='<div class="sec-h"><h3>Destaques</h3></div><div class="hero3">'+
     '<div class="h3c"><h4>O que foi feito</h4>'+(Hh.feito.length?'<div class="h3n">'+Hh.feito.map(f=>'<div><b>'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></div>').join('')+'</div>':'<p class="hint">Sem registros no período.</p>')+
@@ -174,15 +301,8 @@ function renderRel(){
 }
 function relFileBase(R){return 'Report-'+(S.exec||'os-dois')+'-'+R.a+'-a-'+R.b;}
 
-const REL_PDF_THEME='mentarosa';const REL_PDF_ORIENT='paisagem';
-const REL_PDF_THEMES={
-  menta:{band:[230,240,234],bandInk:[31,42,37],bandMuted:[82,97,89],dot:[219,68,121],accent:[63,122,98]},
-  mentarosa:{band:[230,240,234],bandInk:[31,42,37],bandMuted:[82,97,89],dot:[219,68,121],accent:[63,122,98],accent2:[219,68,121],bar2:[219,68,121],repAccent:true},
-  mentarosa2:{band:[230,240,234],bandInk:[31,42,37],bandMuted:[82,97,89],dot:[219,68,121],accent:[63,122,98],accent2:[219,68,121],bar2:[242,184,203],rule:[242,184,203]},
-  rosa:{band:[251,225,234],bandInk:[58,28,40],bandMuted:[140,70,96],dot:[219,68,121],accent:[176,48,94]},
-  floresta:{band:[31,59,48],bandInk:[255,255,255],bandMuted:[191,221,209],dot:[239,160,180],accent:[63,122,98]},
-  branco:{band:null,dot:[219,68,121],accent:[62,150,138]}
-};
+const REL_PDF_MODEL='slides';
+const REL_PDF_MODELS={resumo:{f:'resumo'},completo:{f:'completo'},slides:{f:'apresentacao'}};
 let relFontB64=null;
 async function relFonts(doc){
   const list=[['Sora','normal','fonts/Sora_600SemiBold.ttf'],['Jakarta','normal','fonts/PlusJakartaSans_400Regular.ttf'],['Jakarta','bold','fonts/PlusJakartaSans_600SemiBold.ttf'],['Jakarta','italic','fonts/PlusJakartaSans_400Regular_Italic.ttf']];
@@ -201,76 +321,82 @@ async function relExport(kind){
     R.secs.forEach(s=>{const w=X.utils.aoa_to_sheet([s.head].concat(s.rows));w['!cols']=[{wch:55},{wch:40},{wch:30},{wch:22}];X.utils.book_append_sheet(wb,w,s.t.slice(0,31).replace(/[\\/?*\[\]:]/g,' '));});
     const buf=X.write(wb,{bookType:'xlsx',type:'array'});return relSave(relFileBase(R)+'.xlsx',new Blob([buf]));}
   if(kind==='pdf'){let J;try{J=await relLoad('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',()=>window.jspdf);await relLoad('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',()=>true);}catch(e){toast('Não foi possível preparar o PDF.');return;}
-    /* PDF: paisagem 16:9 (um slide por seção) ou retrato A4 (seções em sequência) */
-    const LAND=(window.__pdfOrient||REL_PDF_ORIENT)!=='retrato';
-    const W=LAND?960:595.28,Hh=LAND?540:841.89,L=LAND?56:48,CW=W-2*L,PG=LAND?[960,540]:'a4',OR=LAND?'landscape':'portrait';
+    /* três modelos (27/11/2026): resumo (A4, 1 página), completo (A4) e apresentação (slides 16:9) */
+    const MODEL=REL_PDF_MODELS[window.__pdfModel]?window.__pdfModel:REL_PDF_MODEL;const LAND=MODEL==='slides';const P=R.pd;
+    const W=LAND?960:595.28,H=LAND?540:841.89,M=LAND?60:54,CW=W-2*M,PG=LAND?[960,540]:'a4',OR=LAND?'landscape':'portrait';
     const doc=new J.jsPDF({unit:'pt',format:PG,orientation:OR});
     const fok=await relFonts(doc);const FD=fok?'Sora':'helvetica',FB=fok?'Jakarta':'helvetica';
-    const TH=REL_PDF_THEMES[window.__pdfTheme||REL_PDF_THEME]||REL_PDF_THEMES.menta;
-    const C=Object.assign({ink:[31,42,37],muted:[82,97,89],faint:[126,140,132],line:[211,224,216],hair:[228,236,231],mag:[219,68,121],white:[255,255,255],paper:[255,255,255]},TH);if(!C.accent2)C.accent2=C.accent;if(!C.rule)C.rule=C.line;
+    const C={ink:[31,42,37],muted:[82,97,89],faint:[126,140,132],line:[211,224,216],hair:[228,236,231],green:[63,122,98],rose:[200,52,104],mint:[230,240,234]};
     const tc=k=>doc.setTextColor(...C[k]),fc=k=>doc.setFillColor(...C[k]),dc=k=>doc.setDrawColor(...C[k]);
-    const D=sz=>{doc.setFont(FD,'normal');doc.setFontSize(sz);},B=(sz,st)=>{doc.setFont(FB,st==='b'?'bold':st==='i'?'italic':'normal');doc.setFontSize(sz);};
-    const fitD=(t,max,w)=>{let z=max;D(z);while(z>9&&doc.getTextWidth(t)>w){z-=0.5;D(z);}return z;};
-    const MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-    const sameM=R.a.slice(0,7)===R.b.slice(0,7)&&R.a.slice(8)==='01';const perLbl=sameM?(MES[+R.a.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+' de '+R.a.slice(0,4)):brD(R.a)+' a '+brD(R.b);
-    const S1=LAND?1:0.78;/* escala de tipos */
-    const paint=()=>{fc('paper');doc.rect(0,0,W,Hh,'F');fc('accent');doc.rect(0,0,W,LAND?5:4,'F');if(C.bar2){fc('bar2');doc.rect(W*0.72,0,W*0.28,LAND?5:4,'F');}};const newPage=()=>{doc.addPage(PG,OR);paint();};
-    const secHead=(num,t,y,cont)=>{const ts=17*S1,ns=13*S1;D(ns);tc('accent2');doc.text(num,L,y-(ts-ns)*0.36);const nw=doc.getTextWidth(num);D(ts);tc('ink');doc.text(t+(cont?'  ·  continuação':''),L+nw+10*S1,y);};
-    /* capa */
-    if(LAND){if(C.band){fc('band');doc.rect(0,0,W,Hh,'F');}else{fc('paper');doc.rect(0,0,W,Hh,'F');fc('accent');doc.rect(0,0,8,Hh,'F');}}
-    else{if(C.band){fc('band');doc.rect(0,0,W,250,'F');}else{fc('accent');doc.rect(0,0,W,4,'F');}}
-    if(C.panel){fc('panel');if(LAND)doc.rect(W*0.7,0,W*0.3,Hh,'F');else doc.rect(W*0.74,0,W*0.26,250,'F');}
-    if(C.bar2&&!C.panel&&!C.repAccent){fc('bar2');if(LAND)doc.rect(0,Hh-14,W,14,'F');else doc.rect(0,246,W,4,'F');}
-    const ci=C.band?'bandInk':'ink',cm=C.band?'bandMuted':'muted';
-    const cy=LAND?[74,250,302,338]:[60,128,170,198];
-    if(!LAND){B(8);tc(cm);doc.text('Gerado em '+brD(todayISO()),W-L,cy[0]+0.5,{align:'right'});}
-    B(LAND?11:9,'b');tc(C.repAccent||C.accent2!==C.accent?'accent2':cm);doc.text('REPORT',L,cy[1],{charSpace:2});
-    D(LAND?46:30);tc(ci);doc.text(relScopeLabel(),L,cy[2]);
-    D(LAND?20:14);tc(cm);doc.text(perLbl+(LAND?'':'  ·  '+brD(R.a)+' a '+brD(R.b)),L,cy[3]);
-    if(LAND){B(10);tc(cm);doc.text(brD(R.a)+' a '+brD(R.b)+'   ·   gerado em '+brD(todayISO()),L,Hh-60);}
-    let n=1,y=LAND?0:(C.band?290:240);
-    /* resumo: o que foi feito, precisa de você, próximos 30 dias */
-    {const Hx=R.hero;const num=String(n).padStart(2,'0');n++;
-     if(LAND){newPage();secHead(num,'Destaques',62);y=104;}else{secHead(num,'Destaques',y);y+=28;}
-     const colW=LAND?(CW-48)/3:CW,gx=LAND?24:0;const y0=y;let yMax=y;
-     const block=(ix,title,fn)=>{const x=L+(LAND?ix*(colW+gx):0);let yy=LAND?y0:y;if(!LAND&&yy>Hh-120){newPage();yy=64;}
-       B(LAND?7.5:6.8,'b');tc('accent2');doc.text(title.toUpperCase(),x,yy,{charSpace:0.8});yy+=6;dc('ink');doc.setLineWidth(0.7);doc.line(x,yy,x+colW,yy);yy+=(LAND?18:14);
-       yy=fn(x,yy);if(LAND)yMax=Math.max(yMax,yy);else y=yy+18;};
-     const items=(x,yy,rows,max,empty)=>{if(!rows.length){B(LAND?10:8.6,'i');tc('faint');doc.text(empty,x,yy);return yy+16;}
-       rows.slice(0,max).forEach(r=>{if(!LAND&&yy>Hh-80){newPage();yy=64;}const tl=doc.splitTextToSize(r[0],colW);B(LAND?10:8.6);tc('ink');doc.text(tl.slice(0,2),x,yy);yy+=Math.min(tl.length,2)*(LAND?12.5:10.5);
-         B(LAND?8:7);tc('faint');doc.text([r[1],r[2]].filter(Boolean).join('  ·  '),x,yy);yy+=(LAND?7:5);dc('hair');doc.setLineWidth(0.5);doc.line(x,yy,x+colW,yy);yy+=(LAND?13:11);});
-       if(rows.length>max){B(LAND?8:7,'i');tc('faint');doc.text('+ '+(rows.length-max)+' no detalhe',x,yy);yy+=12;}return yy;};
-     block(0,'O que foi feito',(x,yy)=>{const per=LAND?2:4;const cw2=colW/per;Hx.feito.forEach((f,i)=>{const cx=x+(i%per)*cw2,cy=yy+Math.floor(i/per)*(LAND?42:36);fitD(String(f[0]),LAND?20:15,cw2-8);tc('ink');doc.text(String(f[0]),cx,cy+(LAND?14:11));B(LAND?8:7);tc('faint');doc.text(doc.splitTextToSize(f[1],cw2-8).slice(0,2),cx,cy+(LAND?26:21));});
-       yy+=Math.ceil(Hx.feito.length/per)*(LAND?42:36)+(Hx.feito.length?6:0);if(!Hx.feito.length){B(LAND?10:8.6,'i');tc('faint');doc.text('Sem registros no período.',x,yy);yy+=16;}
-       if(Hx.entregas.length){B(LAND?7:6.3,'b');tc('faint');doc.text('ENTREGAS EM DESTAQUE',x,yy,{charSpace:0.6});yy+=14;yy=items(x,yy,Hx.entregas,LAND?4:6,'');}return yy;});
-     block(1,Hx.pT,(x,yy)=>items(x,yy,Hx.precisa,LAND?7:8,Hx.pNo));
-     block(2,'Próximos 30 dias',(x,yy)=>items(x,yy,Hx.prox,LAND?7:8,'Nada agendado.'));
-     if(LAND)y=yMax;else y+=10;}
-    /* seções */
-    R.secs.forEach(s=>{const num=String(n).padStart(2,'0');n++;
-      if(LAND){newPage();secHead(num,s.t,62);y=104;}
-      else{const need=120+(s.rows.length?60:0);if(y+need>Hh-60){newPage();y=64;}else{dc('rule');doc.setLineWidth(0.6);doc.line(L,y-22,W-L,y-22);}secHead(num,s.t,y);y+=26;}
-      if(s.kpis.length){const k5=s.kpis.length,cw=CW/k5,gap=LAND?16:10;
-        s.kpis.forEach((k,ix)=>{const x=L+ix*cw;const px=x+(ix?gap:0);const vw=cw-(ix?gap:0)-8;if(ix){dc('hair');doc.setLineWidth(0.7);doc.line(x,y,x,y+(LAND?58:46));}
-          B(LAND?7.5:6.5,'b');tc('faint');const lb=doc.splitTextToSize(String(k[0]).toUpperCase(),vw);doc.text(lb.slice(0,2),px,y+9,{charSpace:0.5});
-          const off=lb.length>1?(LAND?48:38):(LAND?42:32);fitD(String(k[1]),LAND?26:18,vw);tc(k[2]==='neg'?'mag':'ink');doc.text(String(k[1]),px,y+off);
-          if(k[3]){B(LAND?8:7);tc('faint');doc.text(doc.splitTextToSize(String(k[3]),vw)[0],px,y+off+(LAND?14:11));}});
-        y+=LAND?82:66;}
-      y+=LAND?4:2;/* legendas explicativas ficam só na tela, não no PDF */
-      if(s.rows.length){const numc=s.cls==='op';const cs={};s.head.forEach((h,c)=>{if((numc&&c>0)||/^valor/i.test(h))cs[c]={halign:'right'};});let first=true;
-        doc.autoTable({startY:y,head:[s.head.map(h=>String(h).toUpperCase())],body:s.rows,margin:{left:L,right:L,bottom:52,top:LAND?96:60},theme:'plain',columnStyles:cs,showHead:'everyPage',
-          styles:{font:FB,fontStyle:'normal',fontSize:LAND?9.5:8.2,textColor:C.ink,cellPadding:{top:LAND?6:4.5,bottom:LAND?6:4.5,left:0,right:12},overflow:'linebreak'},
-          headStyles:{font:FB,fontStyle:'bold',textColor:C.faint,fontSize:LAND?7.5:6.5,cellPadding:{top:4,bottom:6,left:0,right:12}},
-          willDrawPage:d=>{if(!first){paint();if(LAND)secHead(num,s.t,62,true);else secHead(num,s.t,40,true);}first=false;},
-          didParseCell:d=>{if(d.section==='head'&&cs[d.column.index])d.cell.styles.halign='right';if(d.column.index===s.head.length-1)d.cell.styles.cellPadding=Object.assign({},d.cell.styles.cellPadding,{right:0});if(numc&&d.section==='body'&&String(d.row.raw[0])==='Total')d.cell.styles.fontStyle='bold';},
-          didDrawCell:d=>{if(d.section==='head'){doc.setDrawColor(...C.ink);doc.setLineWidth(0.8);doc.line(d.cell.x,d.cell.y+d.cell.height,d.cell.x+d.cell.width,d.cell.y+d.cell.height);}
-            else{const tot=numc&&String(d.row.raw[0])==='Total';doc.setDrawColor(...(tot?C.ink:C.hair));doc.setLineWidth(tot?0.8:0.5);if(tot)doc.line(d.cell.x,d.cell.y,d.cell.x+d.cell.width,d.cell.y);else doc.line(d.cell.x,d.cell.y+d.cell.height,d.cell.x+d.cell.width,d.cell.y+d.cell.height);}}});
-        y=doc.lastAutoTable.finalY+(LAND?0:48);}
-      else{B(LAND?11:9,'i');tc('faint');doc.text('Nada a listar neste período.',L,y+8);y+=LAND?0:50;}
-    });
+    const T=sz=>{doc.setFont(FD,'normal');doc.setFontSize(sz);},B=(sz,st)=>{doc.setFont(FB,st==='b'?'bold':st==='i'?'italic':'normal');doc.setFontSize(sz);};
+    const newPage=()=>doc.addPage(PG,OR);const TOP=LAND?70:60,BOT=H-56;
+    /* texto corrido: trechos normais, em negrito (1) ou em negrito rosa (2) */
+    const rich=(segs,x,y,w,sz,lh)=>{const words=[];segs.forEach(([t,s])=>String(t).split(/(\s+)/).forEach(p=>{if(p)words.push([p,s||0]);}));
+      const lines=[[]];let cx=x;words.forEach(([t,s])=>{B(sz,s?'b':'');const ww=doc.getTextWidth(t);const L=lines[lines.length-1];
+        if(/^\s+$/.test(t)){if(L.length){L.push([' ',s,doc.getTextWidth(' ')]);cx+=doc.getTextWidth(' ');}return;}
+        if(cx+ww>x+w&&L.length){while(L.length&&L[L.length-1][0]===' ')L.pop();lines.push([]);cx=x;}lines[lines.length-1].push([t,s,ww]);cx+=ww;});
+      lines.forEach((L,i)=>{let px=x;L.forEach(([t,s,ww])=>{B(sz,s?'b':'');tc(s===2?'rose':'ink');doc.text(t,px,y+i*lh);px+=ww;});});return y+(lines.length-1)*lh;};
+    const sect=(t,x,y,w,count,cont)=>{T(LAND?15:12.5);tc('green');const tt=t+(cont?' (continuação)':'');doc.text(tt,x,y);if(count!=null&&!cont){const tw=doc.getTextWidth(tt);B(LAND?10:8.5);tc('faint');doc.text(String(count),x+tw+7,y);}
+      dc('line');doc.setLineWidth(0.6);doc.line(x,y+7,x+w,y+7);return y+(LAND?27:23);};
+    const sub=(t,n,x,y)=>{B(LAND?9.5:8.4,'b');tc('muted');doc.text(t,x,y);const tw=doc.getTextWidth(t);B(LAND?9:8);tc('faint');doc.text(String(n),x+tw+6,y);return y+(LAND?8:7);};
+    const empty=(t,x,y)=>{B(LAND?10.5:9,'i');tc('faint');doc.text(t,x,y+4);return y+(LAND?16:14);};
+    let contHead=null;/* título repetido quando uma tabela continua na página seguinte */
+    const table=(head,rows,x,y,w,o={})=>{if(!rows.length)return y;const wr=o.w||head.map(()=>1/head.length);const cs={};wr.forEach((f,i)=>cs[i]={cellWidth:f*w,halign:i===0?'left':'center'});
+      doc.autoTable({startY:y,head:[head],body:rows,margin:{left:x,right:W-x-w,top:TOP+(contHead?28:0),bottom:H-BOT+4},tableWidth:w,theme:'plain',columnStyles:cs,showHead:'everyPage',rowPageBreak:'avoid',
+        styles:{font:FB,fontStyle:'normal',fontSize:LAND?9.5:8.5,textColor:C.ink,cellPadding:{top:LAND?5:4.3,bottom:LAND?5:4.3,left:0,right:6},overflow:'linebreak',valign:'middle'},
+        headStyles:{font:FB,fontStyle:'bold',fontSize:LAND?8.5:7.6,textColor:C.muted,cellPadding:{top:2,bottom:5,left:0,right:6}},
+        willDrawPage:d=>{if(d.pageNumber>1&&contHead)sect(contHead[0],contHead[1],TOP,contHead[2],null,true);},
+        didParseCell:d=>{const lastC=d.column.index===head.length-1;if(lastC)d.cell.styles.cellPadding=Object.assign({},d.cell.styles.cellPadding,{right:0});
+          if(d.section==='head')d.cell.styles.halign=d.column.index===0?'left':'center';
+          if(d.section==='body'&&o.rose!=null&&d.column.index===o.rose)d.cell.styles.textColor=C.rose;
+          if(d.section==='body'&&o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total')d.cell.styles.fontStyle='bold';},
+        didDrawCell:d=>{const yb=d.cell.y+d.cell.height;if(d.section==='head'){dc('ink');doc.setLineWidth(0.6);doc.line(d.cell.x,yb,d.cell.x+d.cell.width,yb);}
+          else if(o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total'){dc('ink');doc.setLineWidth(0.6);doc.line(d.cell.x,d.cell.y,d.cell.x+d.cell.width,d.cell.y);}
+          else{dc('hair');doc.setLineWidth(0.5);doc.line(d.cell.x,yb,d.cell.x+d.cell.width,yb);}}});
+      return doc.lastAutoTable.finalY;};
+    const more=(n,x,y,txt)=>{if(n<=0)return y;B(LAND?8.5:7.6,'i');tc('faint');doc.text(txt||('e mais '+n+(n===1?' item':' itens')+' no relatório completo'),x,y+11);return y+16;};
+    const who=S.exec?'você':'vocês';
+    const precisa=(x,y,w,max)=>{y=sect('Precisa de '+who,x,y,w,P.precisa.length);if(!P.precisa.length)return empty('Nada pendente com '+who+'.',x,y);
+      const r=max?P.precisa.slice(0,max):P.precisa;y=table(['Decisão ou assinatura','Área','Prazo'],r,x,y,w,{w:[0.6,0.2,0.2]});return more(P.precisa.length-r.length,x,y);};
+    const atencao=(x,y,w,max,compact)=>{y=sect('Atenção',x,y,w,P.atencao.length);if(!P.atencao.length)return empty('Nada vencido ou atrasado.',x,y);
+      const r=max?P.atencao.slice(0,max):P.atencao;
+      y=compact?table(['Item','Situação','Desde'],r.map(z=>[z[0],z[2],z[3]]),x,y,w,{w:[0.52,0.28,0.2],rose:1}):table(['Item','Área','Situação','Desde','Valor'],r,x,y,w,{w:[0.36,0.14,0.2,0.13,0.17],rose:2});
+      return more(P.atencao.length-r.length,x,y);};
+    const proximos=(x,y,w,max)=>{y=sect('Próximos 30 dias',x,y,w,P.prox.length);if(!P.prox.length)return empty('Nada agendado.',x,y);
+      const r=max?P.prox.slice(0,max):P.prox;y=table(['Compromisso','Tipo','Data'],r,x,y,w,{w:[0.6,0.24,0.16]});return more(P.prox.length-r.length,x,y);};
+    const head=y=>{B(8);tc('muted');doc.text(MODEL==='resumo'?'Relatório resumido':'Relatório',M,y);doc.text('Gerado em '+brD(todayISO()),W-M,y,{align:'right'});
+      T(26);tc('ink');doc.text(P.perLbl,M,y+36);B(10.5);tc('muted');doc.text(relScopeLabel()+'  ·  '+P.datas,M,y+54);dc('ink');doc.setLineWidth(0.8);doc.line(M,y+70,W-M,y+70);return y+96;};
+    /* área: frase e blocos; max limita as linhas de cada bloco (slides) */
+    const drawArea=(z,x,y,w,max)=>{contHead=[z.t,x,w];y=sect(z.t,x,y,w);const sz=LAND?11:9.6,lh=LAND?16:14;y=rich(z.frase,x,y,w,sz,lh)+(LAND?20:16);
+      z.blocks.forEach(bk=>{if(y>BOT-60){newPage();y=sect(z.t,x,TOP,w,null,true);}y=sub(bk.t,bk.rows.length,x,y);const r=max&&bk.rows.length>max?bk.rows.slice(0,max):bk.rows;
+        y=table(bk.head,r,x,y,w,{w:bk.w,total:bk.total&&r.length===bk.rows.length})+4;y=more(bk.rows.length-r.length,x,y);y+=LAND?16:14;});contHead=null;return y+(LAND?10:12);};
+    if(MODEL==='resumo'){let y=head(46);y=rich(P.lede,M,y,CW,10.5,15.5)+30;
+      y=precisa(M,y,CW,4)+18;y=atencao(M,y,CW,6)+18;y=proximos(M,y,CW,6)+18;
+      if(y<BOT-120){y=sect('Por área',M,y,CW);const cw=(CW-24)/2;P.areas.forEach((z,i)=>{const x=M+(i%2)*(cw+24),yy=y+Math.floor(i/2)*25;B(8.6,'b');tc('ink');doc.text(z.t,x,yy);B(8.3);tc('muted');doc.text(doc.splitTextToSize(z.resumo,cw)[0],x,yy+11);});}}
+    if(MODEL==='completo'){let y=head(46);y=rich(P.lede,M,y,CW,10.5,15.5)+30;
+      contHead=['Precisa de '+who,M,CW];y=precisa(M,y,CW)+22;contHead=['Atenção',M,CW];if(y>BOT-90){newPage();y=TOP;}y=atencao(M,y,CW)+22;contHead=['Próximos 30 dias',M,CW];if(y>BOT-90){newPage();y=TOP;}y=proximos(M,y,CW)+26;contHead=null;
+      P.areas.filter(z=>!z.vazio).forEach(z=>{if(y>BOT-(z.blocks.length?130:60)){newPage();y=TOP;}y=drawArea(z,M,y,CW);});
+      const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){if(y>BOT-30){newPage();y=TOP;}B(9,'i');tc('faint');doc.text(doc.splitTextToSize('Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.',CW),M,y);}}
+    if(MODEL==='slides'){
+      fc('mint');doc.rect(0,0,W,H,'F');B(10);tc('muted');doc.text('Relatório',M,60);doc.text('Gerado em '+brD(todayISO()),W-M,60,{align:'right'});
+      T(40);tc('ink');doc.text(P.perLbl,M,118);B(14);tc('muted');doc.text(relScopeLabel()+'  ·  '+P.datas,M,142);dc('green');doc.setLineWidth(1);doc.line(M,166,W-M,166);
+      rich(P.lede,M,206,CW*0.86,15,22);
+      newPage();const cw2=(CW-44)/2;let y1=precisa(M,TOP,cw2,5);proximos(M,y1+26,cw2,Math.max(3,9-Math.min(P.precisa.length,5)));atencao(M+cw2+44,TOP,cw2,11,true);
+      /* áreas: as menores dividem o slide em duas colunas; as maiores abrem slide próprio, com as listas em duas colunas (até 10 linhas por lista) */
+      const MAXR=10;const bH=bk=>16+22+Math.min(bk.rows.length,MAXR)*21+(bk.rows.length>MAXR?16:0)+18;
+      const est=(z,w)=>{B(11,'b');const ln=doc.splitTextToSize(z.frase.map(f=>f[0]).join(''),w).length;return 27+ln*16+20+z.blocks.reduce((s,bk)=>s+bH(bk),0)+10;};
+      const bigArea=z=>{newPage();let y=sect(z.t,M,TOP,CW);y=rich(z.frase,M,y,CW*0.86,11,16)+20;let col=0,top=y;
+        z.blocks.forEach(bk=>{const h=bH(bk);if(y+h>BOT&&y>top){if(col===0){col=1;y=top;}else{newPage();top=y=sect(z.t,M,TOP,CW,null,true);col=0;}}
+          const x=M+col*(cw2+44);y=sub(bk.t,bk.rows.length,x,y);const r=bk.rows.slice(0,MAXR);y=table(bk.head,r,x,y,cw2,{w:bk.w,total:bk.total&&r.length===bk.rows.length})+4;y=more(bk.rows.length-r.length,x,y)+16;});};
+      let col=2,cy=TOP;
+      P.areas.filter(z=>!z.vazio).forEach(z=>{if(est(z,cw2)>BOT-TOP){bigArea(z);col=2;return;}
+        const h=est(z,cw2);if(col===0&&cy+h<=BOT){}else if(col===0){col=1;cy=TOP;}else if(col===1&&cy+h<=BOT){}else{newPage();col=0;cy=TOP;}
+        cy=drawArea(z,M+col*(cw2+44),cy,cw2,MAXR);});
+      const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
+        const x=col===2?M:M+col*(cw2+44),w=col===2?CW:cw2;if(col===2||cy+30>BOT){newPage();cy=TOP;}B(10,'i');tc('faint');doc.text(doc.splitTextToSize(txt,col===2?CW:w),col===2?M:x,cy+4);}}
     /* rodapé */
-    const np=doc.internal.getNumberOfPages();for(let pg=(LAND?2:1);pg<=np;pg++){doc.setPage(pg);B(LAND?8:7);tc('faint');doc.text('Painel  ·  '+relScopeLabel()+'  ·  '+perLbl,L,Hh-26);doc.text(String(pg).padStart(2,'0')+' / '+String(np).padStart(2,'0'),W-L,Hh-26,{align:'right'});}
-    return relSave(relFileBase(R)+'.pdf',doc.output('blob'));}
+    const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){doc.setPage(pg);B(LAND?8:7.5);tc('faint');doc.text(relScopeLabel()+'  ·  '+P.perLbl,M,H-28);doc.text(pg+' de '+np,W-M,H-28,{align:'right'});}
+    return relSave(relFileBase(R)+'-'+REL_PDF_MODELS[MODEL].f+'.pdf',doc.output('blob'));}
   if(kind==='drive'){const m=await getMcp();if(!m){toast('O Google Drive não está disponível agora.');return;}
     const html='<h1>'+esc(title)+'</h1><p><i>Gerado em '+brD(todayISO())+' pelo Painel.</i></p>'+('<h2>Destaques</h2><h3>O que foi feito</h3><ul>'+R.hero.feito.map(f=>'<li><b>'+esc(String(f[0]))+'</b> '+esc(f[1])+'</li>').join('')+R.hero.entregas.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul><h3>'+R.hero.pT+'</h3>'+(R.hero.precisa.length?'<ul>'+R.hero.precisa.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada pendente.</p>')+'<h3>Próximos 30 dias</h3>'+(R.hero.prox.length?'<ul>'+R.hero.prox.map(r=>'<li>'+esc(r[0])+' · '+esc(r[1])+' · '+esc(r[2])+'</li>').join('')+'</ul>':'<p>Nada agendado.</p>'))+
       R.secs.map(s=>'<h2>'+esc(s.t)+'</h2><ul>'+s.kpis.map(k=>'<li>'+esc(k[0])+': <b>'+esc(String(k[1]))+'</b>'+(k[3]?' ('+esc(k[3])+')':'')+'</li>').join('')+'</ul>'+(s.note?'<p><i>'+esc(s.note)+'</i></p>':'')+(s.rows.length?'<table border="1" cellpadding="4"><tr>'+s.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>'+s.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>':'')).join('');
@@ -280,7 +406,7 @@ async function relExport(kind){
 }
 document.addEventListener('click',e=>{const p=e.target.closest('[data-rel-per]');if(p){S.rel.per=p.dataset.relPer;try{localStorage.setItem('ce-rel',S.rel.per);}catch(x){}renderRel();return;}
   const tg=e.target.closest('[data-rx-toggle]');const mn=document.querySelector('.rx-menu');if(tg){if(mn){mn.hidden=!mn.hidden;tg.setAttribute('aria-expanded',String(!mn.hidden));}return;}if(mn&&!mn.hidden&&!e.target.closest('.rx-menu'))mn.hidden=true;
-  const x=e.target.closest('[data-rel-x]');if(x){if(mn)mn.hidden=true;if(x.dataset.orient)window.__pdfOrient=x.dataset.orient;relExport(x.dataset.relX);}});
+  const x=e.target.closest('[data-rel-x]');if(x){if(mn)mn.hidden=true;if(x.dataset.model)window.__pdfModel=x.dataset.model;relExport(x.dataset.relX);}});
 document.addEventListener('change',e=>{if(e.target.id==='rel-a'){S.rel.a=e.target.value;renderRel();}else if(e.target.id==='rel-b'){S.rel.b=e.target.value;renderRel();}});
 
 window.CE={empresas:()=>empresasPessoais().map(e=>({id:e.id,nome:e.nome,pai:e.pai||''})),goRel:()=>go('rel'),subList:r=>subList(r),desc:id=>[...descendants(id)],catName:id=>{const c=catById(id);return c?c.name:'';},
