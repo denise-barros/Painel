@@ -237,7 +237,7 @@ function relBuild(){
       rrP.length+rrN.length?pl(rrP.length,'reunião','reuniões')+' · '+rrN.length+' nos próximos 30 dias':'Nada no período',
       [{t:'Reuniões no período',head:['Reunião','Conselho ou programa','Situação','Data'],w:[0.38,0.28,0.16,0.18],rows:rrP.slice().sort((x,y)=>x.data.localeCompare(y.data)).map(r=>[r.titulo||'Reunião',bnm(r.board),r.status||'Agendada',brD(r.data)])},
        {t:'Eventos no período',head:['Evento','Conselho ou programa','Data'],w:[0.46,0.34,0.2],rows:evP.map(e=>[e.titulo||'Evento',bnm(e.board),brD(e.data)])},
-       {t:'Próximos 30 dias',head:['Reunião ou evento','Conselho ou programa','Data'],w:[0.46,0.34,0.2],rows:rrN.map(r=>({d:r.data,r:[r.titulo||'Reunião',bnm(r.board),brD(r.data)]})).concat(evN.map(e=>({d:e.data,r:[e.titulo||'Evento',bnm(e.board),brD(e.data)]}))).sort((x,y)=>x.d.localeCompare(y.d)).map(x=>x.r)}]);
+       /* os próximos 30 dias dos conselhos já estão na lista geral de Próximos 30 dias */]);
     /* Família, Rotina e Viagens */
     area('Família, Rotina e Viagens',vP.length+vN.length+fe.length+fd.length+vg.length?[B1(pl(vP.length,'viagem','viagens')),N(' no período e '+vN.length+' nos próximos 30 dias. ')].concat(vg.length?[B1(fmtMoney(sum(vg,'valor'))),N(' em gastos de viagem a reembolsar. ')]:[]).concat(fd.length?[fd.some(docLate)?R2(pl(fd.length,'documento vencido ou a vencer','documentos vencidos ou a vencer')):B1(pl(fd.length,'documento a vencer','documentos a vencer')),N('.')]:[]):[N('Nada registrado no período.')],
       [vP.length+vN.length?pl(vP.length+vN.length,'viagem','viagens'):'',fd.length?pl(fd.length,'documento a vencer','documentos a vencer'):''].filter(Boolean).join(' · ')||'Nada no período',
@@ -348,10 +348,10 @@ async function relExport(kind){
     let contHead=null;/* título repetido quando uma tabela continua na página seguinte */
     /* tabelas em faixas (formato C, 27/11/2026): títulos em verde sobre faixa menta arredondada, linhas alternadas, sem fios; texto longo quebra a linha */
     const table=(head,rows,x,y,w,o={})=>{if(!rows.length)return y;const wr=o.w||head.map(()=>1/head.length);const cs={};wr.forEach((f,i)=>cs[i]={cellWidth:f*w,halign:i===0?'left':'center'});
-      const isTot=d=>o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total';const pv=LAND?5.2:4.4,ph=LAND?8:7;
-      doc.autoTable({startY:y,head:[head],body:rows,margin:{left:x,right:W-x-w,top:TOP+(contHead?28:0),bottom:H-BOT+4},tableWidth:w,theme:'plain',columnStyles:cs,showHead:'everyPage',rowPageBreak:'avoid',
-        styles:{font:FB,fontStyle:'normal',fontSize:LAND?9.5:8.5,textColor:C.ink,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2},overflow:'linebreak',valign:'middle',lineWidth:0},
-        headStyles:{font:FB,fontStyle:'bold',fontSize:LAND?8.5:7.6,textColor:C.green,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2}},
+      const isTot=d=>o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total';const pv=LAND?4.2:4.4,ph=LAND?8:7;
+      doc.autoTable({startY:y,head:[head],body:rows,margin:{left:x,right:W-x-w,top:TOP+(contHead?28:0),bottom:LAND?24:H-BOT+4},tableWidth:w,theme:'plain',columnStyles:cs,showHead:'everyPage',rowPageBreak:'avoid',
+        styles:{font:FB,fontStyle:'normal',fontSize:LAND?9:8.5,textColor:C.ink,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2},overflow:'linebreak',valign:'middle',lineWidth:0},
+        headStyles:{font:FB,fontStyle:'bold',fontSize:LAND?8:7.6,textColor:C.green,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2}},
         alternateRowStyles:{fillColor:C.mint2},
         willDrawPage:d=>{if(d.pageNumber>1&&contHead)sect(contHead[0],contHead[1],TOP,contHead[2],null,true);},
         willDrawCell:d=>{if(d.section==='head'&&d.column.index===0){fc('mint');doc.roundedRect(x,d.cell.y,w,d.cell.height,3,3,'F');}},
@@ -386,30 +386,31 @@ async function relExport(kind){
       rich(P.lede,M,190,CW*0.86,15,22);
       /* listas completas, sem cortar (27/11/2026): cada seção cabe numa coluna quando dá; se não couber, abre slide próprio,
          com as listas em duas colunas ou, se uma lista for maior que a coluna, na largura toda continuando nos slides seguintes */
-      const cw2=(CW-44)/2,GAP=44,sz=11,lh=16;
+      const cw2=(CW-44)/2,GAP=44,sz=10.5,lh=15;
       const secs=[{t:'Precisa de '+who,n:P.precisa.length,blocks:[{head:['Decisão ou assinatura','Área','Prazo'],w:[0.6,0.2,0.2],rows:P.precisa,empty:'Nada pendente com '+who+'.'}]},
-        {t:'Atenção',n:P.atencao.length,blocks:[{head:['Item','Situação','Desde'],w:[0.52,0.28,0.2],rows:P.atencao.map(z=>[z[0],z[2],z[3]]),o:{rose:1},empty:'Nada vencido ou atrasado.',
+        {t:'Atenção',n:P.atencao.length,blocks:[{head:['Item','Situação','Desde','Valor'],w:[0.42,0.22,0.17,0.19],rows:P.atencao.map(z=>[z[0],z[2],z[3],z[4]]),o:{rose:1},empty:'Nada vencido ou atrasado.',
           full:{head:['Item','Área','Situação','Desde','Valor'],w:[0.36,0.14,0.2,0.13,0.17],rows:P.atencao,o:{rose:2}}}]},
         {t:'Próximos 30 dias',n:P.prox.length,blocks:[{head:['Compromisso','Tipo','Data'],w:[0.6,0.24,0.16],rows:P.prox,empty:'Nada agendado.'}]}]
         .concat(P.areas.filter(z=>!z.vazio).map(z=>({t:z.t,frase:z.frase,blocks:z.blocks.map(bk=>({t:bk.t,head:bk.head,w:bk.w,rows:bk.rows,o:{total:bk.total}}))})));
-      const estRows=(bk,w)=>{B(9.5);let h=21;bk.rows.forEach(r=>{let ln=1;r.forEach((c,i)=>{ln=Math.max(ln,doc.splitTextToSize(String(c),bk.w[i]*w-12).length);});h+=10.4+ln*11;});return h;};
-      const estBlock=(bk,w)=>(bk.t?16:0)+(bk.rows.length?estRows(bk,w):42)+18;
-      const estFr=(fr,w)=>{if(!fr)return 0;B(sz,'b');return doc.splitTextToSize(fr.map(f=>f[0]).join(''),w).length*lh+20;};
-      const estSec=(sc,w)=>27+estFr(sc.frase,w)+sc.blocks.reduce((a,bk)=>a+estBlock(bk,w),0)+10;
-      const drawBlock=(bk,x,y,w,full)=>{const v=full&&bk.full?Object.assign({},bk,bk.full):bk;if(v.t)y=sub(v.t,v.rows.length,x,y);
-        y=v.rows.length?table(v.head,v.rows,x,y,w,Object.assign({w:v.w},v.o||{})):empty(v.empty||'Nada a listar.',x,y,{h:v.head,w:v.w},w);return y+18;};
-      let col=2,cy=[TOP,TOP];
-      const place=h=>{if(col===2){newPage();col=0;cy=[TOP,TOP];}if(cy[col]+h<=BOT)return col;if(col===0){col=1;if(cy[1]+h<=BOT)return 1;}newPage();col=0;cy=[TOP,TOP];return 0;};
-      secs.forEach(sc=>{const h=estSec(sc,cw2);
-        if(h<=BOT-TOP){const c=place(h),x=M+c*(cw2+GAP);let y=sect(sc.t,x,cy[c],cw2,sc.n);if(sc.frase)y=rich(sc.frase,x,y,cw2,sz,lh)+20;sc.blocks.forEach(bk=>{y=drawBlock(bk,x,y,cw2,false);});cy[c]=y+10;return;}
-        const used=col===2?BOT:Math.max(cy[0],cy[1]);let top;const need=Math.max((BOT-TOP)*0.5,27+estFr(sc.frase,CW*0.86)+(sc.blocks[0]&&estBlock(sc.blocks[0],cw2)<=BOT-TOP-40?estBlock(sc.blocks[0],cw2):0));if(col!==2&&BOT-used>need)top=sect(sc.t,M,used+6,CW,sc.n);else{newPage();top=sect(sc.t,M,TOP,CW,sc.n);}if(sc.frase)top=rich(sc.frase,M,top,CW*0.86,sz,lh)+20;let yc=[top,top],c=0;
-        const cont=()=>{newPage();top=sect(sc.t,M,TOP,CW,null,true);yc=[top,top];c=0;};
-        sc.blocks.forEach(bk=>{const bh=estBlock(bk,cw2);
-          if(bh<=BOT-TOP-40){if(yc[c]+bh>BOT){if(c===0&&yc[1]+bh<=BOT)c=1;else cont();}yc[c]=drawBlock(bk,M+c*(cw2+GAP),yc[c],cw2,false);return;}
-          if(Math.max(yc[0],yc[1])>top+(BOT-top)*0.6)cont();const y0=Math.max(yc[0],yc[1]);contHead=[sc.t,M,CW];const y=drawBlock(bk,M,y0,CW,true);contHead=null;top=y;yc=[y,y];c=0;});
-        const endY=Math.max(yc[0],yc[1])+10;col=0;cy=[endY,endY];});
-      const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){const txt='Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.';
-        const c=place(30),x=M+c*(cw2+GAP);B(10,'i');tc('faint');doc.text(doc.splitTextToSize(txt,cw2),x,cy[c]+4);}}
+      /* tudo corre em duas colunas, como num jornal: quando a coluna enche, a lista continua na coluna ao lado e depois no slide seguinte */
+      const FS=9,PV=4.2,LHF=1.15,rowH=(r,ws,w)=>{B(FS);let ln=1;r.forEach((c,i)=>{ln=Math.max(ln,doc.splitTextToSize(String(c),ws[i]*w-10).length);});return 2*PV+ln*FS*LHF+0.6;};
+      const HDR=2*PV+8*LHF+1,TT=27;let col=0,y=TOP;newPage();
+      const colX=()=>M+col*(cw2+GAP);const nextCol=()=>{if(col===0){col=1;y=TOP;}else{newPage();col=0;y=TOP;}};
+      const frH=fr=>{if(!fr)return 0;B(sz,'b');return doc.splitTextToSize(fr.map(f=>f[0]).join(''),cw2).length*lh+16;};
+      secs.forEach(sc=>{const b0=sc.blocks[0];const first=b0?(b0.t?16:0)+(b0.rows.length?HDR+rowH(b0.rows[0],b0.w,cw2):42):0;
+        if(y>TOP&&y+TT+frH(sc.frase)+first>BOT)nextCol();
+        y=sect(sc.t,colX(),y,cw2,sc.n);if(sc.frase){y=rich(sc.frase,colX(),y,cw2,sz,lh)+16;}
+        sc.blocks.forEach(bk=>{
+          if(!bk.rows.length){if(y+(bk.t?16:0)+42>BOT){nextCol();y=sect(sc.t,colX(),y,cw2,null,true);}if(bk.t)y=sub(bk.t,0,colX(),y);y=empty(bk.empty||'Nada a listar.',colX(),y,{h:bk.head,w:bk.w},cw2)+12;return;}
+          if(y+(bk.t?16:0)+HDR+rowH(bk.rows[0],bk.w,cw2)>BOT){nextCol();y=sect(sc.t,colX(),y,cw2,null,true);}
+          if(bk.t)y=sub(bk.t,bk.rows.length,colX(),y);
+          let i=0;while(i<bk.rows.length){let h=HDR,j=i;while(j<bk.rows.length&&y+h+rowH(bk.rows[j],bk.w,cw2)<=BOT-4){h+=rowH(bk.rows[j],bk.w,cw2);j++;}
+            if(j===i)j=i+1;/* uma ou duas linhas que sobrariam sozinhas entram no fim da coluna */if(bk.rows.length-j>0&&bk.rows.length-j<=2){const rest=bk.rows.slice(j).reduce((a2,r)=>a2+rowH(r,bk.w,cw2),0);if(y+h+rest<=BOT+26)j=bk.rows.length;}
+            const chunk=bk.rows.slice(i,j);const last=j>=bk.rows.length;
+            y=table(bk.head,chunk,colX(),y,cw2,Object.assign({w:bk.w},bk.o||{},{total:bk.o&&bk.o.total&&last}))+12;i=j;
+            if(!last){nextCol();y=sect(sc.t,colX(),y,cw2,null,true);}}});
+        y+=8;});
+      const vz=P.areas.filter(z=>z.vazio).map(z=>z.t);if(vz.length){if(y+30>BOT)nextCol();B(10,'i');tc('faint');doc.text(doc.splitTextToSize('Sem movimento no período: '+(vz.length>1?vz.slice(0,-1).join(', ')+' e '+vz[vz.length-1]:vz[0])+'.',cw2),colX(),y+4);}}
     /* rodapé */
     const np=doc.internal.getNumberOfPages();for(let pg=1;pg<=np;pg++){if(LAND&&pg===1)continue;doc.setPage(pg);
       /* faixa verde e rosa no alto de cada página, como no modelo original */const bh=LAND?5:4;fc('green');doc.rect(0,0,W,bh,'F');fc('rose2');doc.rect(W*0.72,0,W*0.28,bh,'F');
