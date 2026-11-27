@@ -329,7 +329,7 @@ async function relExport(kind){
     const W=LAND?960:595.28,H=LAND?540:841.89,M=LAND?60:54,CW=W-2*M,PG=LAND?[960,540]:'a4',OR=LAND?'landscape':'portrait';
     const doc=new J.jsPDF({unit:'pt',format:PG,orientation:OR});
     const fok=await relFonts(doc);const FD=fok?'Sora':'helvetica',FB=fok?'Jakarta':'helvetica';
-    const C={ink:[31,42,37],muted:[82,97,89],faint:[126,140,132],line:[211,224,216],hair:[228,236,231],green:[63,122,98],rose:[200,52,104],mint:[230,240,234]};
+    const C={ink:[31,42,37],muted:[82,97,89],faint:[126,140,132],line:[211,224,216],hair:[228,236,231],green:[63,122,98],rose:[200,52,104],mint:[230,240,234],mint2:[243,248,245]};
     const tc=k=>doc.setTextColor(...C[k]),fc=k=>doc.setFillColor(...C[k]),dc=k=>doc.setDrawColor(...C[k]);
     const T=sz=>{doc.setFont(FD,'normal');doc.setFontSize(sz);},B=(sz,st)=>{doc.setFont(FB,st==='b'?'bold':st==='i'?'italic':'normal');doc.setFontSize(sz);};
     const newPage=()=>doc.addPage(PG,OR);const TOP=LAND?70:60,BOT=H-56;
@@ -342,30 +342,33 @@ async function relExport(kind){
     const sect=(t,x,y,w,count,cont)=>{T(LAND?15:12.5);tc('green');const tt=t+(cont?' (continuação)':'');doc.text(tt,x,y);if(count!=null&&!cont){const tw=doc.getTextWidth(tt);B(LAND?10:8.5);tc('faint');doc.text(String(count),x+tw+7,y);}
       dc('line');doc.setLineWidth(0.6);doc.line(x,y+7,x+w,y+7);return y+(LAND?27:23);};
     const sub=(t,n,x,y)=>{B(LAND?9.5:8.4,'b');tc('muted');doc.text(t,x,y);const tw=doc.getTextWidth(t);B(LAND?9:8);tc('faint');doc.text(String(n),x+tw+6,y);return y+(LAND?8:7);};
-    const empty=(t,x,y)=>{B(LAND?10.5:9,'i');tc('faint');doc.text(t,x,y+4);return y+(LAND?16:14);};
+    const empty=(t,x,y,head,w)=>{if(head){const hh=LAND?20:17;fc('mint');doc.roundedRect(x,y,w,hh,3,3,'F');B(LAND?8.5:7.6,'b');tc('green');const wr=head.w;let cx=x+(LAND?8:7);
+        head.h.forEach((h,i)=>{const cw=wr[i]*w;doc.text(h,i===0?cx:x+wr.slice(0,i).reduce((a,b)=>a+b,0)*w+cw/2,y+hh*0.66,{align:i===0?'left':'center'});});y+=hh+(LAND?4:3);B(LAND?10:8.6,'i');tc('faint');doc.text(t,x+(LAND?8:7),y+10);return y+(LAND?18:16);}
+      B(LAND?10.5:9,'i');tc('faint');doc.text(t,x,y+4);return y+(LAND?16:14);};
     let contHead=null;/* título repetido quando uma tabela continua na página seguinte */
+    /* tabelas em faixas (formato C, 27/11/2026): títulos em verde sobre faixa menta arredondada, linhas alternadas, sem fios; texto longo quebra a linha */
     const table=(head,rows,x,y,w,o={})=>{if(!rows.length)return y;const wr=o.w||head.map(()=>1/head.length);const cs={};wr.forEach((f,i)=>cs[i]={cellWidth:f*w,halign:i===0?'left':'center'});
+      const isTot=d=>o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total';const pv=LAND?5.2:4.4,ph=LAND?8:7;
       doc.autoTable({startY:y,head:[head],body:rows,margin:{left:x,right:W-x-w,top:TOP+(contHead?28:0),bottom:H-BOT+4},tableWidth:w,theme:'plain',columnStyles:cs,showHead:'everyPage',rowPageBreak:'avoid',
-        styles:{font:FB,fontStyle:'normal',fontSize:LAND?9.5:8.5,textColor:C.ink,cellPadding:{top:LAND?5:4.3,bottom:LAND?5:4.3,left:0,right:6},overflow:'linebreak',valign:'middle'},
-        headStyles:{font:FB,fontStyle:'bold',fontSize:LAND?8.5:7.6,textColor:C.muted,cellPadding:{top:2,bottom:5,left:0,right:6}},
+        styles:{font:FB,fontStyle:'normal',fontSize:LAND?9.5:8.5,textColor:C.ink,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2},overflow:'linebreak',valign:'middle',lineWidth:0},
+        headStyles:{font:FB,fontStyle:'bold',fontSize:LAND?8.5:7.6,textColor:C.green,cellPadding:{top:pv,bottom:pv,left:ph/2,right:ph/2}},
+        alternateRowStyles:{fillColor:C.mint2},
         willDrawPage:d=>{if(d.pageNumber>1&&contHead)sect(contHead[0],contHead[1],TOP,contHead[2],null,true);},
-        didParseCell:d=>{const lastC=d.column.index===head.length-1;if(lastC)d.cell.styles.cellPadding=Object.assign({},d.cell.styles.cellPadding,{right:0});
-          if(d.section==='head')d.cell.styles.halign=d.column.index===0?'left':'center';
-          if(d.section==='body'&&o.rose!=null&&d.column.index===o.rose)d.cell.styles.textColor=C.rose;
-          if(d.section==='body'&&o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total')d.cell.styles.fontStyle='bold';},
-        didDrawCell:d=>{const yb=d.cell.y+d.cell.height;if(d.section==='head'){dc('ink');doc.setLineWidth(0.6);doc.line(d.cell.x,yb,d.cell.x+d.cell.width,yb);}
-          else if(o.total&&d.row.index===rows.length-1&&String(d.row.raw[0])==='Total'){dc('ink');doc.setLineWidth(0.6);doc.line(d.cell.x,d.cell.y,d.cell.x+d.cell.width,d.cell.y);}
-          else{dc('hair');doc.setLineWidth(0.5);doc.line(d.cell.x,yb,d.cell.x+d.cell.width,yb);}}});
+        willDrawCell:d=>{if(d.section==='head'&&d.column.index===0){fc('mint');doc.roundedRect(x,d.cell.y,w,d.cell.height,3,3,'F');}},
+        didParseCell:d=>{const c=d.column.index;const pad=Object.assign({},d.cell.styles.cellPadding);if(c===0)pad.left=ph;if(c===head.length-1)pad.right=ph;d.cell.styles.cellPadding=pad;
+          if(d.section==='head')d.cell.styles.halign=c===0?'left':'center';
+          if(d.section==='body'&&o.rose!=null&&c===o.rose)d.cell.styles.textColor=C.rose;
+          if(d.section==='body'&&isTot(d)){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=C.mint;d.cell.styles.textColor=C.green;}}});
       return doc.lastAutoTable.finalY;};
     const more=(n,x,y,txt)=>{if(n<=0)return y;B(LAND?8.5:7.6,'i');tc('faint');doc.text(txt||('e mais '+n+(n===1?' item':' itens')+' no relatório completo'),x,y+11);return y+16;};
     const who=S.exec?'você':'vocês';
-    const precisa=(x,y,w,max)=>{y=sect('Precisa de '+who,x,y,w,P.precisa.length);if(!P.precisa.length)return empty('Nada pendente com '+who+'.',x,y);
+    const precisa=(x,y,w,max)=>{y=sect('Precisa de '+who,x,y,w,P.precisa.length);if(!P.precisa.length)return empty('Nada pendente com '+who+'.',x,y,{h:['Decisão ou assinatura','Área','Prazo'],w:[0.6,0.2,0.2]},w);
       const r=max?P.precisa.slice(0,max):P.precisa;y=table(['Decisão ou assinatura','Área','Prazo'],r,x,y,w,{w:[0.6,0.2,0.2]});return more(P.precisa.length-r.length,x,y);};
-    const atencao=(x,y,w,max,compact)=>{y=sect('Atenção',x,y,w,P.atencao.length);if(!P.atencao.length)return empty('Nada vencido ou atrasado.',x,y);
+    const atencao=(x,y,w,max,compact)=>{y=sect('Atenção',x,y,w,P.atencao.length);if(!P.atencao.length)return empty('Nada vencido ou atrasado.',x,y,compact?{h:['Item','Situação','Desde'],w:[0.52,0.28,0.2]}:{h:['Item','Área','Situação','Desde','Valor'],w:[0.36,0.14,0.2,0.13,0.17]},w);
       const r=max?P.atencao.slice(0,max):P.atencao;
       y=compact?table(['Item','Situação','Desde'],r.map(z=>[z[0],z[2],z[3]]),x,y,w,{w:[0.52,0.28,0.2],rose:1}):table(['Item','Área','Situação','Desde','Valor'],r,x,y,w,{w:[0.36,0.14,0.2,0.13,0.17],rose:2});
       return more(P.atencao.length-r.length,x,y);};
-    const proximos=(x,y,w,max)=>{y=sect('Próximos 30 dias',x,y,w,P.prox.length);if(!P.prox.length)return empty('Nada agendado.',x,y);
+    const proximos=(x,y,w,max)=>{y=sect('Próximos 30 dias',x,y,w,P.prox.length);if(!P.prox.length)return empty('Nada agendado.',x,y,{h:['Compromisso','Tipo','Data'],w:[0.6,0.24,0.16]},w);
       const r=max?P.prox.slice(0,max):P.prox;y=table(['Compromisso','Tipo','Data'],r,x,y,w,{w:[0.6,0.24,0.16]});return more(P.prox.length-r.length,x,y);};
     /* cabeçalho: só o período e de quem é o relatório (sem "gerado em" nem nome do modelo) */
     const head=y=>{T(26);tc('ink');doc.text(P.perLbl,M,y+20);B(10.5);tc('muted');doc.text(relScopeLabel(),M,y+38);dc('ink');doc.setLineWidth(0.8);doc.line(M,y+54,W-M,y+54);return y+80;};
